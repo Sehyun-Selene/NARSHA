@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+*.local
+
+# Logs
+npm-debug.log*
+logs
+*.log
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Cache
+.cache
+*.tsbuildinfo
