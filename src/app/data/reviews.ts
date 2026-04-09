@@ -1,5 +1,92 @@
 import { LearnerType } from './learnerTypes';
 
+const USER_REVIEWS_STORAGE_KEY = 'narsha-user-reviews';
+
+type StoredReview = Omit<Review, 'createdAt'> & { createdAt: string };
+
+function loadUserReviewsFromStorage(): Review[] {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(USER_REVIEWS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as StoredReview[];
+    return parsed.map((r) => ({
+      ...r,
+      createdAt: new Date(r.createdAt),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function persistUserReviews(reviews: Review[]) {
+  if (typeof localStorage === 'undefined') return;
+  const serializable: StoredReview[] = reviews.map((r) => ({
+    ...r,
+    createdAt:
+      r.createdAt instanceof Date
+        ? r.createdAt.toISOString()
+        : String(r.createdAt),
+  }));
+  localStorage.setItem(USER_REVIEWS_STORAGE_KEY, JSON.stringify(serializable));
+}
+
+/** Mock data + reviews saved from the Write Review form (localStorage). */
+export function getAllReviews(): Review[] {
+  const user = loadUserReviewsFromStorage();
+  return [...user, ...mockReviews].sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+export function mapFormGoalToReviewGoal(
+  form: string
+): Review['goal'] {
+  switch (form) {
+    case 'topik':
+      return 'topik';
+    case 'business':
+      return 'business';
+    case 'entertainment':
+      return 'culture';
+    case 'academic':
+      return 'daily';
+    case 'culture':
+      return 'culture';
+    case 'daily':
+    default:
+      return 'daily';
+  }
+}
+
+export function mapFormUsageToReviewUsage(
+  form: string
+): Review['usagePeriod'] {
+  const m: Record<string, Review['usagePeriod']> = {
+    '<6m': '<1m',
+    '<1y': '3-6m',
+    '1-3y': '6m+',
+    '3-5y': '6m+',
+    '5y+': '6m+',
+  };
+  return m[form] ?? '1-3m';
+}
+
+export function saveUserReview(
+  input: Omit<Review, 'id' | 'createdAt' | 'helpfulCount'>
+): Review {
+  const review: Review = {
+    ...input,
+    id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    createdAt: new Date(),
+    helpfulCount: 0,
+  };
+  const existing = loadUserReviewsFromStorage();
+  persistUserReviews([review, ...existing]);
+  return review;
+}
+
 export interface Review {
   id: string;
   appId: string;
@@ -105,7 +192,7 @@ export const mockReviews: Review[] = [
 
 // Calculate average rating by learner type for an app
 export function getAverageRatingByType(appId: string, learnerType: LearnerType): number {
-  const reviews = mockReviews.filter(r => r.appId === appId && r.learnerType === learnerType);
+  const reviews = getAllReviews().filter(r => r.appId === appId && r.learnerType === learnerType);
   if (reviews.length === 0) return 0;
   
   const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
@@ -114,7 +201,7 @@ export function getAverageRatingByType(appId: string, learnerType: LearnerType):
 
 // Get overall average rating for an app
 export function getOverallRating(appId: string): number {
-  const reviews = mockReviews.filter(r => r.appId === appId);
+  const reviews = getAllReviews().filter(r => r.appId === appId);
   if (reviews.length === 0) return 0;
   
   const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
@@ -123,5 +210,5 @@ export function getOverallRating(appId: string): number {
 
 // Get review count
 export function getReviewCount(appId: string): number {
-  return mockReviews.filter(r => r.appId === appId).length;
+  return getAllReviews().filter(r => r.appId === appId).length;
 }

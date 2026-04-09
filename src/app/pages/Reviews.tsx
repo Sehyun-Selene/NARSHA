@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Star, ThumbsUp } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { mockReviews } from '../data/reviews';
+import { getAllReviews } from '../data/reviews';
 import { apps } from '../data/apps';
 
 const learnerTypeLabels: Record<string, string> = {
@@ -58,8 +58,8 @@ export default function Reviews() {
     saveHelpfulData(newData);
   };
 
-  // Get all reviews with app info
-  const allReviews = mockReviews.map(review => {
+  // Get all reviews with app info (includes user-submitted from localStorage)
+  const allReviews = getAllReviews().map(review => {
     const app = apps.find(a => a.id === review.appId);
     return {
       ...review,
@@ -198,6 +198,10 @@ export default function Reviews() {
                             month: 'short', 
                             day: 'numeric' 
                           })}
+                        </span>
+                        <span className="text-[#cbd5e1] dark:text-[#3f4850]">•</span>
+                        <span className="font-['Inter:Medium',sans-serif] font-medium text-[14px] text-[#64748b] dark:text-[#94a3b8]">
+                          {review.nickname}
                         </span>
                       </div>
                     </div>

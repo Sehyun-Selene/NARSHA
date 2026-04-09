@@ -5,6 +5,11 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { apps } from '../data/apps';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
+import {
+  saveUserReview,
+  mapFormGoalToReviewGoal,
+  mapFormUsageToReviewUsage,
+} from '../data/reviews';
 
 type ReviewFieldKey = 'nickname' | 'rating' | 'content';
 
@@ -76,13 +81,13 @@ export default function ReviewWrite() {
 
     const errors: Partial<Record<ReviewFieldKey, string>> = {};
     if (!nickname.trim()) {
-      errors.nickname = '닉네임을 입력해 주세요.';
+      errors.nickname = 'Please enter a nickname.';
     }
     if (rating < 1) {
-      errors.rating = '별점을 선택해 주세요.';
+      errors.rating = 'Please select a star rating.';
     }
     if (!content.trim()) {
-      errors.content = '리뷰 내용을 입력해 주세요.';
+      errors.content = 'Please enter your review.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -97,8 +102,18 @@ export default function ReviewWrite() {
 
     setFieldErrors({});
 
-    // In a real app, this would submit to a backend
-    // For now, we'll just show success and redirect
+    saveUserReview({
+      appId: app.id,
+      nickname: nickname.trim(),
+      learnerType,
+      level,
+      goal: mapFormGoalToReviewGoal(goal),
+      usagePeriod: mapFormUsageToReviewUsage(usagePeriod),
+      rating,
+      content: content.trim(),
+      contentKo: '',
+    });
+
     setSubmitted(true);
 
     setTimeout(() => {
@@ -402,7 +417,7 @@ export default function ReviewWrite() {
                   role="alert"
                 >
                   <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#b91c1c] dark:text-[#f87171] mb-2">
-                    아래 항목을 확인해 주세요.
+                    Please complete the following.
                   </p>
                   <ul className="list-disc list-inside space-y-1 font-['Inter:Regular',sans-serif] text-[14px] text-[#dc2626] dark:text-[#fca5a5]">
                     {fieldErrors.nickname ? <li>{fieldErrors.nickname}</li> : null}

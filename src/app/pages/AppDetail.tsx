@@ -4,7 +4,7 @@ import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare } 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { apps } from '../data/apps';
-import { mockReviews, getOverallRating, getAverageRatingByType } from '../data/reviews';
+import { getAllReviews, getOverallRating, getAverageRatingByType } from '../data/reviews';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
 import imgDuolingo from "figma:asset/8ed1b2b30b72e2da116be745151d3aaa6c487b40.png";
 import { 
@@ -67,7 +67,7 @@ export default function AppDetail() {
   }
 
   const overallRating = getOverallRating(app.id);
-  const appReviews = mockReviews.filter(r => r.appId === app.id);
+  const appReviews = getAllReviews().filter(r => r.appId === app.id);
   const filteredReviews = selectedFilter === 'all' 
     ? appReviews 
     : appReviews.filter(r => r.learnerType === selectedFilter);
