@@ -76,6 +76,12 @@ export default function AppDetail() {
     return <div>App not found</div>;
   }
 
+  const allowedLevels = ['beginner', 'elementary', 'intermediate', 'advanced'] as const;
+  const normalizedLevels = allowedLevels.filter((level) => app.levels.includes(level));
+  const levelTags = normalizedLevels.length === allowedLevels.length
+    ? (['all levels'] as const)
+    : normalizedLevels;
+
   const overallRating = getOverallRating(app.id);
   const appReviews = getAllReviews().filter(r => r.appId === app.id);
   const filteredReviews = selectedFilter === 'all' 
@@ -120,13 +126,15 @@ export default function AppDetail() {
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase px-3 py-1 rounded-full">
-                        {app.levels[0]}
-                      </span>
-                      <span className="bg-[#f59e0b] dark:bg-[#78350f] text-[#ffffff] dark:text-[#fbbf24] font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase px-3 py-1 rounded-full">
-                        {app.category}
-                      </span>
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {levelTags.map((level) => (
+                        <span
+                          key={level}
+                          className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase px-3 py-1 rounded-full"
+                        >
+                          {level}
+                        </span>
+                      ))}
                     </div>
                     
                     <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[48px] leading-[56px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-1.2px] mb-3">
