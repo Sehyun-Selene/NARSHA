@@ -110,7 +110,7 @@ export default function Home() {
         {/* Hero Section */}
         <div className="max-w-[1280px] mx-auto px-6 pt-32 pb-16 flex flex-col items-center gap-12">
           <div className="flex flex-col items-center gap-6 w-full">
-            <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[72px] leading-[72px] tracking-[-3.6px] text-center bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]">
+            <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[72px] leading-[1.18] tracking-[-3.6px] text-center bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible">
               Find your path to fluency.
             </h1>
             
