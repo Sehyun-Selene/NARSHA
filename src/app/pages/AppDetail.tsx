@@ -4,7 +4,13 @@ import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare } 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { apps } from '../data/apps';
-import { getAllReviews, getOverallRating, getAverageRatingByType } from '../data/reviews';
+import {
+  getAllReviews,
+  getOverallRating,
+  getAverageRatingByType,
+  getRepliesForReview,
+  addReviewReply,
+} from '../data/reviews';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
 import imgDuolingo from "figma:asset/8ed1b2b30b72e2da116be745151d3aaa6c487b40.png";
 import { 
@@ -24,6 +30,7 @@ export default function AppDetail() {
   const [helpfulReviews, setHelpfulReviews] = useState<Record<string, { count: number, userMarked: boolean }>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [, setRepliesVersion] = useState(0);
 
   // Load helpful data from localStorage
   useEffect(() => {
@@ -52,14 +59,13 @@ export default function AppDetail() {
     saveHelpfulData(newData);
   };
 
-  // Submit reply
   const submitReply = (reviewId: string) => {
-    if (replyText.trim()) {
-      // Here you would typically save the reply to your backend
-      console.log('Reply to review', reviewId, ':', replyText);
-      setReplyText('');
-      setReplyingTo(null);
-    }
+    const text = replyText.trim();
+    if (!text) return;
+    addReviewReply(reviewId, text);
+    setReplyText('');
+    setReplyingTo(null);
+    setRepliesVersion((v) => v + 1);
   };
 
   if (!app) {
@@ -276,7 +282,8 @@ export default function AppDetail() {
               {filteredReviews.map(review => {
                 const typeInfo = learnerTypes[review.learnerType];
                 const helpfulData = helpfulReviews[review.id] || { count: 0, userMarked: false };
-                
+                const replies = getRepliesForReview(review.id);
+
                 return (
                   <div
                     key={review.id}
@@ -298,7 +305,8 @@ export default function AppDetail() {
                               {review.nickname}
                             </div>
                             <div className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#bec7d2]">
-                              {typeInfo.name} • {review.createdAt.toLocaleDateString()}
+                              {typeInfo.name} •{' '}
+                              {new Date(review.createdAt).toLocaleDateString()}
                             </div>
                           </div>
 
@@ -316,6 +324,33 @@ export default function AppDetail() {
                         <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] mb-4">
                           {review.content}
                         </p>
+
+                        {replies.length > 0 ? (
+                          <div className="mb-4 space-y-3">
+                            <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] uppercase tracking-wide text-[#64748b] dark:text-[#94a3b8]">
+                              Replies ({replies.length})
+                            </div>
+                            {replies.map((reply) => (
+                              <div
+                                key={reply.id}
+                                className="rounded-[12px] bg-[#e8eef4] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] px-4 py-3"
+                              >
+                                <p className="font-['Inter:Regular',sans-serif] font-normal text-[15px] leading-[22px] text-[#1e293b] dark:text-[#dce3f3]">
+                                  {reply.body}
+                                </p>
+                                <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] text-[#94a3b8] dark:text-[#64748b] mt-2">
+                                  {new Date(reply.createdAt).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
 
                         {/* Meta */}
                         <div className="flex items-center gap-6 text-[14px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#bec7d2]">

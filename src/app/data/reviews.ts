@@ -212,3 +212,64 @@ export function getOverallRating(appId: string): number {
 export function getReviewCount(appId: string): number {
   return getAllReviews().filter(r => r.appId === appId).length;
 }
+
+// --- Review replies (localStorage, keyed by review id) ---
+
+export interface ReviewReply {
+  id: string;
+  reviewId: string;
+  body: string;
+  createdAt: Date;
+}
+
+const REVIEW_REPLIES_STORAGE_KEY = 'narsha-review-replies';
+
+type StoredReply = Omit<ReviewReply, 'createdAt'> & { createdAt: string };
+
+function loadRepliesFromStorage(): ReviewReply[] {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(REVIEW_REPLIES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as StoredReply[];
+    return parsed.map((r) => ({
+      ...r,
+      createdAt: new Date(r.createdAt),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function persistReplies(replies: ReviewReply[]) {
+  if (typeof localStorage === 'undefined') return;
+  const serializable: StoredReply[] = replies.map((r) => ({
+    ...r,
+    createdAt:
+      r.createdAt instanceof Date
+        ? r.createdAt.toISOString()
+        : String(r.createdAt),
+  }));
+  localStorage.setItem(REVIEW_REPLIES_STORAGE_KEY, JSON.stringify(serializable));
+}
+
+export function getRepliesForReview(reviewId: string): ReviewReply[] {
+  return loadRepliesFromStorage()
+    .filter((r) => r.reviewId === reviewId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+}
+
+export function addReviewReply(reviewId: string, body: string): ReviewReply {
+  const trimmed = body.trim();
+  const reply: ReviewReply = {
+    id: `reply-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    reviewId,
+    body: trimmed,
+    createdAt: new Date(),
+  };
+  persistReplies([...loadRepliesFromStorage(), reply]);
+  return reply;
+}
