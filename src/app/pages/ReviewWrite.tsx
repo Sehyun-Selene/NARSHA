@@ -41,12 +41,6 @@ export default function ReviewWrite() {
     setLearnerType(savedType);
   }, [navigate, id]);
 
-  if (!app || !learnerType) {
-    return null;
-  }
-
-  const typeInfo = learnerTypes[learnerType];
-
   useEffect(() => {
     if (!scrollToField) return;
 
@@ -70,6 +64,12 @@ export default function ReviewWrite() {
 
     setScrollToField(null);
   }, [scrollToField]);
+
+  if (!app || !learnerType) {
+    return null;
+  }
+
+  const typeInfo = learnerTypes[learnerType];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
