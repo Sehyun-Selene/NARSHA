@@ -143,7 +143,7 @@ export default function ReviewWrite() {
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
       
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-16">
         <div className="max-w-[800px] mx-auto px-6 py-16">
           <div className="mb-12">
             <Link 

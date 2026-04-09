@@ -106,7 +106,7 @@ export default function Home() {
         <div className="w-full h-full rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]" />
       </div>
 
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-16">
         {/* Hero Section */}
         <div className="max-w-[1280px] mx-auto px-6 pt-32 pb-16 flex flex-col items-center gap-12">
           <div className="flex flex-col items-center gap-6 w-full">

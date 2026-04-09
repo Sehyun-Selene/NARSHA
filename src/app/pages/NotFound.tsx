@@ -7,7 +7,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
       
-      <main className="flex-1 pt-20 flex items-center justify-center">
+      <main className="flex-1 pt-16 flex items-center justify-center">
         <div className="text-center px-6">
           <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[120px] leading-none text-[transparent] bg-clip-text bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] mb-4">
             404

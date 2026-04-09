@@ -33,30 +33,30 @@ export default function SurveyResult() {
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
       
-      <main className="flex-1 pt-20">
-        <div className="max-w-[800px] mx-auto px-6 py-32">
+      <main className="flex-1 pt-16">
+        <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
           {/* Success Message */}
-          <div className="text-center mb-16">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center mx-auto mb-6 shadow-[0px_0px_40px_0px_rgba(142,205,255,0.4)]">
-              <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[48px] text-[#00344f]">
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="w-[4.5rem] h-[4.5rem] sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center mx-auto mb-4 shadow-[0px_0px_28px_0px_rgba(142,205,255,0.35)]">
+              <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[36px] sm:text-[40px] text-[#00344f]">
                 {learnerType}
               </span>
             </div>
 
-            <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[48px] leading-[56px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-1.2px] mb-4">
+            <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] sm:text-[36px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px] mb-2">
               Your Learner Type
             </h1>
             
-            <p className="font-['Inter:Regular',sans-serif] font-normal text-[20px] leading-[28px] text-[#64748b] dark:text-[#bec7d2]">
+            <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] sm:text-[18px] leading-[24px] text-[#64748b] dark:text-[#bec7d2]">
               Assessment Complete
             </p>
           </div>
 
           {/* Type Card */}
-          <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[24px] p-12 mb-12 border border-[#e2e8f0] dark:border-[#232a36]">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center">
-                <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[32px] text-[#00344f]">
+          <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[20px] p-6 sm:p-8 mb-8 border border-[#e2e8f0] dark:border-[#232a36]">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center shrink-0">
+                <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[26px] sm:text-[30px] text-[#00344f]">
                   {learnerType}
                 </span>
               </div>
@@ -65,31 +65,31 @@ export default function SurveyResult() {
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-1">
                   Detected Learner Type
                 </div>
-                <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] leading-[32px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.7px]">
+                <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[20px] sm:text-[24px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px]">
                   Type {learnerType}: {typeInfo.name}
                 </h2>
               </div>
             </div>
 
-            <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#1e293b] dark:text-[#dce3f3] mb-6">
+            <p className="font-['Inter:Regular',sans-serif] font-normal text-[15px] sm:text-[16px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] mb-4 sm:mb-5">
               {typeInfo.description}
             </p>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="bg-[#ffffff] dark:bg-[#0c141f] rounded-[12px] p-6 border border-[#e2e8f0] dark:border-[#232a36]">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-[#ffffff] dark:bg-[#0c141f] rounded-[12px] p-4 sm:p-5 border border-[#e2e8f0] dark:border-[#232a36]">
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#64748b] dark:text-[#bec7d2] mb-2">
                   Learning Pattern
                 </div>
-                <div className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] text-[#1e293b] dark:text-[#dce3f3]">
+                <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] sm:text-[18px] text-[#1e293b] dark:text-[#dce3f3]">
                   {typeInfo.sensory === 'visual' ? 'Visual' : typeInfo.sensory === 'auditory' ? 'Auditory' : 'Mixed (Visual + Auditory)'}
                 </div>
               </div>
 
-              <div className="bg-[#ffffff] dark:bg-[#0c141f] rounded-[12px] p-6 border border-[#e2e8f0] dark:border-[#232a36]">
+              <div className="bg-[#ffffff] dark:bg-[#0c141f] rounded-[12px] p-4 sm:p-5 border border-[#e2e8f0] dark:border-[#232a36]">
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#64748b] dark:text-[#bec7d2] mb-2">
                   Learning Style
                 </div>
-                <div className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] text-[#1e293b] dark:text-[#dce3f3]">
+                <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] sm:text-[18px] text-[#1e293b] dark:text-[#dce3f3]">
                   {typeInfo.style === 'exploratory' ? 'Exploratory' : 'Structured'}
                 </div>
               </div>
@@ -97,7 +97,7 @@ export default function SurveyResult() {
           </div>
 
           {/* Recommendations */}
-          <div className="bg-[#e0f2fe] dark:bg-[#0f3a4a] rounded-[16px] p-8 mb-12 border border-[#0ea5e9] dark:border-[#1b99dc]">
+          <div className="bg-[#e0f2fe] dark:bg-[#0f3a4a] rounded-[14px] p-5 sm:p-6 mb-8 border border-[#0ea5e9] dark:border-[#1b99dc]">
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-full bg-[#0ea5e9] dark:bg-[#1b99dc] flex items-center justify-center flex-shrink-0">
                 <span className="text-[#ffffff] text-[20px]">💡</span>

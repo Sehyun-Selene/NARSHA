@@ -32,6 +32,10 @@ export default function AppDetail() {
   const [replyText, setReplyText] = useState('');
   const [, setRepliesVersion] = useState(0);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
   // Load helpful data from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('review-helpful');
@@ -102,7 +106,7 @@ export default function AppDetail() {
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
       
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-16">
         <div className="max-w-[1280px] mx-auto px-6 py-16">
           {/* App Header */}
           <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[24px] p-12 mb-12 border border-[#e2e8f0] dark:border-[#232a36]">
@@ -133,17 +137,7 @@ export default function AppDetail() {
                       {app.description}
                     </p>
 
-                    <div className="flex gap-4">
-                      <a
-                        href={app.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] dark:text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] px-8 py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
-                      >
-                        Get App
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                      
+                    <div className="flex flex-wrap gap-4">
                       <a
                         href={app.url}
                         target="_blank"
@@ -151,6 +145,7 @@ export default function AppDetail() {
                         className="inline-flex items-center gap-2 bg-transparent border-2 border-[#1e293b] dark:border-[#8ecdff] text-[#1e293b] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[16px] px-8 py-3 rounded-[8px] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
                       >
                         Official Website
+                        <ExternalLink className="w-4 h-4" />
                       </a>
                     </div>
                   </div>

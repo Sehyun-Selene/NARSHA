@@ -81,7 +81,7 @@ export default function Reviews() {
         <div className="w-full h-full rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]" />
       </div>
 
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-16">
         <div className="max-w-[1280px] mx-auto px-6 pt-32 pb-24">
           {/* Header */}
           <div className="mb-12">
