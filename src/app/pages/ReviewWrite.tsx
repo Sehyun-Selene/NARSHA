@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { Star, Upload, Check } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { apps } from '../data/apps';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
+
+type ReviewFieldKey = 'nickname' | 'rating' | 'content';
 
 export default function ReviewWrite() {
   const { id } = useParams();
@@ -19,6 +21,14 @@ export default function ReviewWrite() {
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<ReviewFieldKey, string>>>({});
+  const [scrollToField, setScrollToField] = useState<ReviewFieldKey | null>(null);
+
+  const nicknameBlockRef = useRef<HTMLDivElement>(null);
+  const ratingBlockRef = useRef<HTMLDivElement>(null);
+  const contentBlockRef = useRef<HTMLDivElement>(null);
+  const nicknameInputRef = useRef<HTMLInputElement>(null);
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const savedType = localStorage.getItem('narsha-learner-type') as LearnerType;
@@ -37,13 +47,60 @@ export default function ReviewWrite() {
 
   const typeInfo = learnerTypes[learnerType];
 
+  useEffect(() => {
+    if (!scrollToField) return;
+
+    const blockRefs: Record<ReviewFieldKey, React.RefObject<HTMLDivElement | null>> = {
+      nickname: nicknameBlockRef,
+      rating: ratingBlockRef,
+      content: contentBlockRef,
+    };
+
+    const el = blockRefs[scrollToField].current;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    if (scrollToField === 'nickname') {
+      nicknameInputRef.current?.focus();
+    } else if (scrollToField === 'content') {
+      contentTextareaRef.current?.focus();
+    } else if (scrollToField === 'rating') {
+      const firstStar = ratingBlockRef.current?.querySelector('button');
+      (firstStar as HTMLButtonElement | undefined)?.focus();
+    }
+
+    setScrollToField(null);
+  }, [scrollToField]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const errors: Partial<Record<ReviewFieldKey, string>> = {};
+    if (!nickname.trim()) {
+      errors.nickname = '닉네임을 입력해 주세요.';
+    }
+    if (rating < 1) {
+      errors.rating = '별점을 선택해 주세요.';
+    }
+    if (!content.trim()) {
+      errors.content = '리뷰 내용을 입력해 주세요.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const order: ReviewFieldKey[] = ['nickname', 'rating', 'content'];
+      const firstInvalid = order.find((key) => errors[key]);
+      if (firstInvalid) {
+        setScrollToField(firstInvalid);
+      }
+      return;
+    }
+
+    setFieldErrors({});
+
     // In a real app, this would submit to a backend
     // For now, we'll just show success and redirect
     setSubmitted(true);
-    
+
     setTimeout(() => {
       navigate(`/apps/${app.id}`);
     }, 2000);
@@ -125,18 +182,38 @@ export default function ReviewWrite() {
                 </p>
 
                 {/* Nickname Input */}
-                <div>
+                <div ref={nicknameBlockRef}>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    Nickname
+                    Nickname <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
                   </label>
                   <input
+                    ref={nicknameInputRef}
                     type="text"
                     value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
+                    onChange={(e) => {
+                      setNickname(e.target.value);
+                      if (fieldErrors.nickname) {
+                        setFieldErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.nickname;
+                          return next;
+                        });
+                      }
+                    }}
                     placeholder="Enter your display name"
-                    className="w-full bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff]"
-                    required
+                    aria-invalid={Boolean(fieldErrors.nickname)}
+                    aria-describedby={fieldErrors.nickname ? 'review-nickname-error' : undefined}
+                    className={`w-full bg-[#ffffff] dark:bg-[#151c27] border rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff] ${
+                      fieldErrors.nickname
+                        ? 'border-[#ef4444] dark:border-[#f87171] ring-1 ring-[#ef4444]/40'
+                        : 'border-[#e2e8f0] dark:border-[#232a36]'
+                    }`}
                   />
+                  {fieldErrors.nickname ? (
+                    <p id="review-nickname-error" className="mt-2 text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
+                      {fieldErrors.nickname}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -231,39 +308,77 @@ export default function ReviewWrite() {
 
               <div className="space-y-6">
                 {/* Rating */}
-                <div>
+                <div ref={ratingBlockRef} className="mb-6">
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3 text-center">
-                    Overall Rating
+                    Overall Rating <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
                   </label>
-                  <div className="flex items-center justify-center gap-4 mb-6">
+                  <div
+                    className={`flex items-center justify-center gap-4 rounded-[12px] py-2 px-2 ${
+                      fieldErrors.rating ? 'ring-2 ring-[#ef4444]/50 dark:ring-[#f87171]/50' : ''
+                    }`}
+                  >
                     {[1, 2, 3, 4, 5].map(star => (
                       <button
                         key={star}
                         type="button"
-                        onClick={() => setRating(star)}
-                        className="transition-transform hover:scale-110"
+                        onClick={() => {
+                          setRating(star);
+                          if (fieldErrors.rating) {
+                            setFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.rating;
+                              return next;
+                            });
+                          }
+                        }}
+                        className="transition-transform hover:scale-110 p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ea5e9] dark:focus-visible:ring-[#8ecdff]"
                       >
                         <Star
-                          className={`w-12 h-12 ${star <= rating ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]' : 'text-[#cbd5e1] dark:text-[#3f4850]'}`}
+                          className={`pointer-events-none w-12 h-12 ${star <= rating ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]' : 'text-[#cbd5e1] dark:text-[#3f4850]'}`}
                         />
                       </button>
                     ))}
                   </div>
+                  {fieldErrors.rating ? (
+                    <p className="mt-2 text-center text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
+                      {fieldErrors.rating}
+                    </p>
+                  ) : null}
                 </div>
 
                 {/* Review Content */}
-                <div>
+                <div ref={contentBlockRef}>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    Your Review
+                    Your Review <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
                   </label>
                   <textarea
+                    ref={contentTextareaRef}
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    onChange={(e) => {
+                      setContent(e.target.value);
+                      if (fieldErrors.content) {
+                        setFieldErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.content;
+                          return next;
+                        });
+                      }
+                    }}
                     placeholder="Describe the curriculum's depth, cultural nuances, and pedagogical effectiveness..."
                     rows={6}
-                    className="w-full bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff] resize-none"
-                    required
+                    aria-invalid={Boolean(fieldErrors.content)}
+                    aria-describedby={fieldErrors.content ? 'review-content-error' : undefined}
+                    className={`w-full bg-[#ffffff] dark:bg-[#151c27] border rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff] resize-none ${
+                      fieldErrors.content
+                        ? 'border-[#ef4444] dark:border-[#f87171] ring-1 ring-[#ef4444]/40'
+                        : 'border-[#e2e8f0] dark:border-[#232a36]'
+                    }`}
                   />
+                  {fieldErrors.content ? (
+                    <p id="review-content-error" className="mt-2 text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
+                      {fieldErrors.content}
+                    </p>
+                  ) : null}
                 </div>
 
                 {/* Upload Photo */}
@@ -281,10 +396,24 @@ export default function ReviewWrite() {
 
             {/* Submit Button */}
             <div className="pt-6">
+              {Object.keys(fieldErrors).length > 0 ? (
+                <div
+                  className="mb-4 rounded-[8px] border border-[#fecaca] dark:border-[#7f1d1d]/60 bg-[#fef2f2] dark:bg-[#1c1214] px-4 py-3"
+                  role="alert"
+                >
+                  <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#b91c1c] dark:text-[#f87171] mb-2">
+                    아래 항목을 확인해 주세요.
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 font-['Inter:Regular',sans-serif] text-[14px] text-[#dc2626] dark:text-[#fca5a5]">
+                    {fieldErrors.nickname ? <li>{fieldErrors.nickname}</li> : null}
+                    {fieldErrors.rating ? <li>{fieldErrors.rating}</li> : null}
+                    {fieldErrors.content ? <li>{fieldErrors.content}</li> : null}
+                  </ul>
+                </div>
+              ) : null}
               <button
                 type="submit"
-                disabled={!rating || !content || !nickname}
-                className="w-full bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] px-8 py-5 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] px-8 py-5 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
               >
                 Submit Review
               </button>
