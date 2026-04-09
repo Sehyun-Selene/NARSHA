@@ -58,10 +58,15 @@ export default function Home() {
   }, []);
 
   const filteredApps = apps.filter(app => {
-    const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.purposes.some(p => p.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      app.nameKo.toLowerCase().includes(searchQuery.toLowerCase());
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const appKeywordQuery = ['app', 'apps', 'application', 'mobile app'].includes(normalizedQuery);
+
+    const matchesSearch = app.name.toLowerCase().includes(normalizedQuery) ||
+      app.description.toLowerCase().includes(normalizedQuery) ||
+      app.purposes.some(p => p.toLowerCase().includes(normalizedQuery)) ||
+      app.nameKo.toLowerCase().includes(normalizedQuery) ||
+      // Treat "app" keywords as platform-type search.
+      (appKeywordQuery && Boolean(app.url));
     
     const matchesLevel = !levelFilter || app.levels?.includes(levelFilter as any);
     const matchesPurpose = !purposeFilter || app.purposes?.includes(purposeFilter as any);

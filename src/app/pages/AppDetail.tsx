@@ -12,7 +12,6 @@ import {
   addReviewReply,
 } from '../data/reviews';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
-import imgDuolingo from "figma:asset/8ed1b2b30b72e2da116be745151d3aaa6c487b40.png";
 import { 
   RadarChart, 
   PolarGrid, 
@@ -21,6 +20,17 @@ import {
   Radar,
   ResponsiveContainer 
 } from 'recharts';
+
+const appLogos: Record<string, { bg: string, initial: string, color: string }> = {
+  duolingo: { bg: 'bg-gradient-to-br from-[#58cc02] to-[#89e219]', initial: 'D', color: 'text-white' },
+  ttmik: { bg: 'bg-gradient-to-br from-[#ff6b6b] to-[#ff8787]', initial: 'T', color: 'text-white' },
+  anki: { bg: 'bg-gradient-to-br from-[#0093d0] to-[#00b4e6]', initial: 'A', color: 'text-white' },
+  lingodeer: { bg: 'bg-gradient-to-br from-[#ff6f3d] to-[#ff8f61]', initial: 'L', color: 'text-white' },
+  teuida: { bg: 'bg-gradient-to-br from-[#4a90e2] to-[#6ba5e7]', initial: 'T', color: 'text-white' },
+  sejong: { bg: 'bg-gradient-to-br from-[#1e3a8a] to-[#3b5998]', initial: 'K', color: 'text-white' },
+  memrise: { bg: 'bg-gradient-to-br from-[#ffd950] to-[#ffe57a]', initial: 'M', color: 'text-gray-800' },
+  drops: { bg: 'bg-gradient-to-br from-[#7c4dff] to-[#9d6dff]', initial: 'D', color: 'text-white' }
+};
 
 export default function AppDetail() {
   const { id } = useParams();
@@ -118,8 +128,12 @@ export default function AppDetail() {
           <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[24px] p-12 mb-12 border border-[#e2e8f0] dark:border-[#232a36]">
             <div className="flex gap-12">
               {/* App Icon */}
-              <div className="w-32 h-32 rounded-[24px] bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center flex-shrink-0">
-                <img src={imgDuolingo} alt={app.name} className="w-20 h-20 object-contain" />
+              <div className="w-32 h-32 rounded-[24px] bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center flex-shrink-0">
+                <div className={`w-16 h-16 rounded-full ${appLogos[app.image]?.bg || 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]'} flex items-center justify-center`}>
+                  <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] ${appLogos[app.image]?.color || 'text-white'}`}>
+                    {appLogos[app.image]?.initial || app.name.charAt(0)}
+                  </span>
+                </div>
               </div>
 
               {/* App Info */}
