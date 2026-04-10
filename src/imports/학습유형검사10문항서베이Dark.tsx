@@ -411,7 +411,7 @@ function Container16() {
   return (
     <div className="content-stretch flex flex-col items-start relative shrink-0" data-name="Container">
       <div className="flex flex-col font-['Inter:Regular',sans-serif] font-normal h-[20px] justify-center leading-[0] not-italic relative shrink-0 text-[#64748b] text-[14px] w-[280.3px]">
-        <p className="leading-[20px]">© 2024 NARSHA. The Scholarly Architect.</p>
+        <p className="leading-[20px]">© 2026 NARSHA. The Scholarly Architect.</p>
       </div>
     </div>
   );
