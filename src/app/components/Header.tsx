@@ -12,13 +12,14 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
       : 'text-[#94a3b8] dark:text-[#94a3b8] hover:text-[#8ecdff] dark:hover:text-[#8ecdff]',
   ].join(' ');
 
-const learningTypeNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+const learningTypeButtonClass = ({ isActive }: { isActive: boolean }) =>
   [
-    "font-['Manrope:Medium',sans-serif] font-medium text-[14px] sm:text-[15px] tracking-[-0.4px] transition-colors",
-    isActive
-      ? 'text-[#0ea5e9] dark:text-[#8ecdff]'
-      : 'text-[#94a3b8] dark:text-[#94a3b8] hover:text-[rgb(246,193,230)] dark:hover:text-[rgb(246,193,230)]',
-  ].join(' ');
+    "font-['Manrope:Medium',sans-serif] font-medium text-[14px] sm:text-[15px] tracking-[-0.4px] transition-all",
+    "rounded-full px-4 py-2 text-white whitespace-nowrap",
+    "bg-[#0ea5e9] dark:bg-[#1b5a7a]",
+    "hover:opacity-90 dark:hover:opacity-90",
+    isActive ? "ring-2 ring-[#8ecdff] ring-offset-2 ring-offset-[#f8fafc] dark:ring-offset-[#0c141f]" : "",
+  ].join(" ");
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -45,7 +46,7 @@ export default function Header() {
             </NavLink>
             <NavLink
               to="/survey"
-              className={learningTypeNavLinkClass}
+              className={learningTypeButtonClass}
               onClick={() => localStorage.removeItem('narsha-return-app-id')}
             >
               Want to know your Learning Type?
