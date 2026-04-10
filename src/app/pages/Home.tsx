@@ -385,8 +385,8 @@ export default function Home() {
                   to={`/apps/${app.id}`}
                   className="group relative bg-[#ffffff] dark:bg-[#151c27] rounded-[16px] overflow-hidden shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] hover:shadow-[0px_8px_32px_rgba(0,0,0,0.12)] dark:hover:border-[#8ecdff] transition-all"
                 >
-                  {/* Level tags — same source as app detail (`getAppLevelDisplayTags`) */}
-                  <div className="absolute top-4 right-4 z-10 flex flex-wrap gap-1 justify-end max-w-[70%]">
+                  {/* Level tags — one per row, right-aligned (same source as app detail) */}
+                  <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1 max-w-[75%]">
                     {getAppLevelDisplayTags(app).map((label) => (
                       <span
                         key={label}
