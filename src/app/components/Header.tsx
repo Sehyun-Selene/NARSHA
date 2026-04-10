@@ -12,6 +12,14 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
       : 'text-[#94a3b8] dark:text-[#94a3b8] hover:text-[#8ecdff] dark:hover:text-[#8ecdff]',
   ].join(' ');
 
+const learningTypeNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+  [
+    "font-['Manrope:Medium',sans-serif] font-medium text-[14px] sm:text-[15px] tracking-[-0.4px] transition-colors",
+    isActive
+      ? 'text-[#0ea5e9] dark:text-[#8ecdff]'
+      : 'text-[#94a3b8] dark:text-[#94a3b8] hover:text-[rgb(246,193,230)] dark:hover:text-[rgb(246,193,230)]',
+  ].join(' ');
+
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
 
@@ -25,22 +33,22 @@ export default function Header() {
               NARSHA
             </span>
           </Link>
-          <NavLink
-            to="/survey"
-            className={navLinkClass}
-            onClick={() => localStorage.removeItem('narsha-return-app-id')}
-          >
-            Want to know your Learning Type?
-          </NavLink>
         </div>
 
-        <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-          <nav className="flex items-center gap-4 sm:gap-6" aria-label="Main">
+        <div className="flex items-center justify-end gap-4 sm:gap-6 shrink-0 flex-1 min-w-0">
+          <nav className="flex items-center justify-end gap-4 sm:gap-6 flex-wrap" aria-label="Main">
             <NavLink to="/" end className={navLinkClass}>
               Discover
             </NavLink>
             <NavLink to="/reviews" className={navLinkClass}>
               Reviews
+            </NavLink>
+            <NavLink
+              to="/survey"
+              className={learningTypeNavLinkClass}
+              onClick={() => localStorage.removeItem('narsha-return-app-id')}
+            >
+              Want to know your Learning Type?
             </NavLink>
           </nav>
           <button

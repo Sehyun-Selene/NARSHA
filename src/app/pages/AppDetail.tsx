@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router';
 import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { apps } from '../data/apps';
+import { apps, getAppLevelDisplayTags } from '../data/apps';
 import {
   getAllReviews,
   getOverallRating,
@@ -86,11 +86,7 @@ export default function AppDetail() {
     return <div>App not found</div>;
   }
 
-  const allowedLevels = ['beginner', 'elementary', 'intermediate', 'advanced'] as const;
-  const normalizedLevels = allowedLevels.filter((level) => app.levels.includes(level));
-  const levelTags = normalizedLevels.length === allowedLevels.length
-    ? (['all levels'] as const)
-    : normalizedLevels;
+  const levelTags = getAppLevelDisplayTags(app);
 
   const overallRating = getOverallRating(app.id);
   const appReviews = getAllReviews().filter(r => r.appId === app.id);

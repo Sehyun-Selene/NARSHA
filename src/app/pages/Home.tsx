@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { apps } from '../data/apps';
+import { apps, getAppLevelDisplayTags } from '../data/apps';
 import { getOverallRating, getReviewCount } from '../data/reviews';
 
 const appLogos: Record<string, { bg: string, initial: string, color: string }> = {
@@ -385,11 +385,16 @@ export default function Home() {
                   to={`/apps/${app.id}`}
                   className="group relative bg-[#ffffff] dark:bg-[#151c27] rounded-[16px] overflow-hidden shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] hover:shadow-[0px_8px_32px_rgba(0,0,0,0.12)] dark:hover:border-[#8ecdff] transition-all"
                 >
-                  {/* Category Badge */}
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full">
-                      {app.category}
-                    </span>
+                  {/* Level tags — same source as app detail (`getAppLevelDisplayTags`) */}
+                  <div className="absolute top-4 right-4 z-10 flex flex-wrap gap-1 justify-end max-w-[70%]">
+                    {getAppLevelDisplayTags(app).map((label) => (
+                      <span
+                        key={label}
+                        className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full"
+                      >
+                        {label}
+                      </span>
+                    ))}
                   </div>
 
                   {/* App Image */}
