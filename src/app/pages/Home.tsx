@@ -125,24 +125,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="w-full max-w-[768px] relative">
-            <div className="bg-[#f1f5f9] dark:bg-[#070e19] rounded-[12px] shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden">
-              <div className="flex items-center pl-16 pr-6 py-6">
-                <input
-                  type="text"
-                  placeholder="Search resources (e.g., 'Grammar', 'TOPIK', 'Apps')"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#3f4850] outline-none"
-                />
-              </div>
-              <div className="absolute left-6 top-1/2 -translate-y-1/2">
-                <Search className="w-[18px] h-[18px] text-[#0ea5e9] dark:text-[#8ecdff]" />
-              </div>
-            </div>
-          </div>
-
           {/* Filter Buttons */}
           <div className="flex gap-4 relative">
             <div className="relative">
@@ -369,6 +351,24 @@ export default function Home() {
                 Clear All ({activeFilterCount})
               </button>
             )}
+          </div>
+
+          {/* Search Bar */}
+          <div className="w-full max-w-[768px] relative">
+            <div className="bg-[#f1f5f9] dark:bg-[#070e19] rounded-[12px] shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden">
+              <div className="flex items-center pl-16 pr-6 py-6">
+                <input
+                  type="text"
+                  placeholder="Search resources (e.g., 'Grammar', 'TOPIK', 'Apps')"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-transparent font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#3f4850] outline-none"
+                />
+              </div>
+              <div className="absolute left-6 top-1/2 -translate-y-1/2">
+                <Search className="w-[18px] h-[18px] text-[#0ea5e9] dark:text-[#8ecdff]" />
+              </div>
+            </div>
           </div>
         </div>
 

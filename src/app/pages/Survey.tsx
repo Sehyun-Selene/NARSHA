@@ -52,6 +52,10 @@ export default function Survey() {
 
       <main className="flex-1 pt-16 relative">
         <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-8">
+          <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[clamp(1.375rem,3.5vw,1.75rem)] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.04em] mb-6 sm:mb-7">
+            Learning Type Test
+          </h1>
+
           {/* Progress Section */}
           <div className="mb-5">
             <div className="flex items-end justify-between mb-2">
@@ -59,9 +63,9 @@ export default function Survey() {
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[11px] tracking-[1.2px] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-1">
                   Assessment Phase
                 </div>
-                <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[17px] sm:text-[18px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.4px]">
+                <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[17px] sm:text-[18px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.4px]">
                   Question {String(currentQuestion + 1).padStart(2, '0')} of {surveyQuestions.length}
-                </h1>
+                </h2>
               </div>
               
               <div className="font-['Inter:Regular',sans-serif] font-normal text-[12px] sm:text-[13px] text-[#64748b] dark:text-[#bec7d2]">

@@ -3,6 +3,7 @@ import Root from './pages/Root';
 import Home from './pages/Home';
 import AppDetail from './pages/AppDetail';
 import Survey from './pages/Survey';
+import SurveyIntro from './pages/SurveyIntro';
 import SurveyResult from './pages/SurveyResult';
 import ReviewWrite from './pages/ReviewWrite';
 import Reviews from './pages/Reviews';
@@ -18,8 +19,9 @@ export const router = createBrowserRouter([
       { path: 'reviews', Component: Reviews },
       { path: 'apps/:id', Component: AppDetail },
       { path: 'apps/:id/review/new', Component: ReviewWrite },
-      { path: 'survey', Component: Survey },
+      { path: 'survey/questions', Component: Survey },
       { path: 'survey/result', Component: SurveyResult },
+      { path: 'survey', Component: SurveyIntro },
       { path: '*', Component: NotFound }
     ]
   }

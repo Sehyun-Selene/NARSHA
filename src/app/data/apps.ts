@@ -78,7 +78,7 @@ export const apps: App[] = [
     style: 'structured',
     levels: ['beginner', 'elementary', 'intermediate'],
     purposes: ['academic'],
-    url: 'https://www.lingodeer.com',
+    url: 'https://www.lingodeer.com/en/',
     description: 'Specifically designed for Asian languages with superior grammar explanations.',
     descriptionKo: '아시아 언어를 위해 특별히 설계된 우수한 문법 설명을 제공합니다.',
     image: 'lingodeer'
@@ -91,7 +91,7 @@ export const apps: App[] = [
     style: 'exploratory',
     levels: ['elementary', 'intermediate'],
     purposes: ['business', 'entertainment'],
-    url: 'https://teuida.net',
+    url: 'https://www.teuida.net/en',
     description: 'Unique first-person perspective interactive speaking practice with real scenarios.',
     descriptionKo: '실제 시나리오를 활용한 독특한 1인칭 대화 연습입니다.',
     image: 'teuida'
@@ -104,7 +104,7 @@ export const apps: App[] = [
     style: 'structured',
     levels: ['beginner', 'elementary', 'intermediate'],
     purposes: ['academic', 'topik'],
-    url: 'https://www.ksif.or.kr',
+    url: 'https://www.ksif.or.kr/index.do?lang=eng',
     description: 'Official learning materials provided by the Korean government institute.',
     descriptionKo: '한국 정부 기관에서 제공하는 공식 학습 자료입니다.',
     image: 'sejong'
@@ -117,7 +117,7 @@ export const apps: App[] = [
     style: 'exploratory',
     levels: ['beginner', 'elementary'],
     purposes: ['entertainment'],
-    url: 'https://www.memrise.com',
+    url: 'https://www.memrise.com/courses/english/korean/',
     description: 'Learn with natives using real-world video clips and mnemonic techniques.',
     descriptionKo: '실제 영상 클립과 암기 기법을 사용하여 원어민과 함께 배웁니다.',
     image: 'memrise'
@@ -130,7 +130,7 @@ export const apps: App[] = [
     style: 'exploratory',
     levels: ['beginner', 'elementary'],
     purposes: ['entertainment'],
-    url: 'https://languagedrops.com',
+    url: 'https://languagedrops.com/en/',
     description: 'Highly visual and fast-paced vocabulary builder for short daily practice.',
     descriptionKo: '짧은 일일 연습을 위한 시각적이고 빠른 속도의 어휘 학습입니다.',
     image: 'drops'

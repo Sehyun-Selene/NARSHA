@@ -46,6 +46,7 @@ export default function Header() {
             </NavLink>
             <NavLink
               to="/survey"
+              end
               className={learningTypeButtonClass}
               onClick={() => localStorage.removeItem('narsha-return-app-id')}
             >
