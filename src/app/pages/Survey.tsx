@@ -36,9 +36,11 @@ export default function Survey() {
   };
 
   const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
+    if (currentQuestion === 0) {
+      navigate('/survey');
+      return;
     }
+    setCurrentQuestion(currentQuestion - 1);
   };
 
   return (
@@ -142,11 +144,10 @@ export default function Survey() {
             <button
               type="button"
               onClick={handlePrevious}
-              disabled={currentQuestion === 0}
-              className="flex items-center gap-1.5 px-4 sm:px-6 py-2.5 rounded-[4px] font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#0ea5e9] dark:text-[#8ecdff] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-4 sm:px-6 py-2.5 rounded-[4px] font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#0ea5e9] dark:text-[#8ecdff] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
-              Previous
+              {currentQuestion === 0 ? 'Back to intro' : 'Previous'}
             </button>
 
             <button
