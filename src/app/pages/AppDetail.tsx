@@ -119,81 +119,74 @@ export default function AppDetail() {
       <Header />
       
       <main className="flex-1 pt-16">
-        <div className="max-w-[1280px] mx-auto px-6 py-16">
-          {/* App Header */}
-          <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[24px] p-12 mb-12 border border-[#e2e8f0] dark:border-[#232a36]">
-            <div className="flex gap-12">
-              {/* App Icon */}
-              <div className="w-32 h-32 rounded-[24px] bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center flex-shrink-0">
-                <div className={`w-16 h-16 rounded-full ${appLogos[app.image]?.bg || 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]'} flex items-center justify-center`}>
-                  <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] ${appLogos[app.image]?.color || 'text-white'}`}>
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* App Header — compact: hero + Official Website fit common viewports without scroll */}
+          <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-2xl p-4 sm:p-5 mb-8 sm:mb-10 border border-[#e2e8f0] dark:border-[#232a36]">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
+              <div className="w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center shrink-0">
+                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full ${appLogos[app.image]?.bg || 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]'} flex items-center justify-center`}>
+                  <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] sm:text-[20px] ${appLogos[app.image]?.color || 'text-white'}`}>
                     {appLogos[app.image]?.initial || app.name.charAt(0)}
                   </span>
                 </div>
               </div>
 
-              {/* App Info */}
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      {levelTags.map((level) => (
-                        <span
-                          key={level}
-                          className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase px-3 py-1 rounded-full"
-                        >
-                          {level}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[48px] leading-[56px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-1.2px] mb-3">
-                      {app.name}: Korean
-                    </h1>
-                    
-                    <div className="max-w-[720px] mb-6 space-y-4">
-                      {app.detailDescription.split('\n\n').map((paragraph, i) => (
-                        <p
-                          key={i}
-                          className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2]"
-                        >
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-wrap gap-4">
-                      <a
-                        href={app.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-transparent border-2 border-[#1e293b] dark:border-[#8ecdff] text-[#1e293b] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[16px] px-8 py-3 rounded-[8px] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
+              <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                    {levelTags.map((level) => (
+                      <span
+                        key={level}
+                        className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] sm:text-[11px] tracking-[1px] uppercase px-2.5 py-0.5 rounded-full"
                       >
-                        Official Website
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </div>
+                        {level}
+                      </span>
+                    ))}
                   </div>
 
-                  {/* Overall Rating */}
-                  <div className="bg-[#ffffff] dark:bg-[#0c141f] rounded-[16px] p-6 text-center border border-[#e2e8f0] dark:border-[#232a36]">
-                    <div className="text-[12px] font-['Manrope:Bold',sans-serif] font-bold tracking-[1.2px] uppercase text-[#64748b] dark:text-[#bec7d2] mb-2">
-                      Overall Rating
-                    </div>
-                    <div className="text-[64px] font-['Manrope:ExtraBold',sans-serif] font-extrabold leading-none text-[#0ea5e9] dark:text-[#8ecdff] mb-2">
-                      {overallRating > 0 ? overallRating.toFixed(1) : '-'}
-                    </div>
-                    <div className="flex gap-1 justify-center mb-2">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <Star
-                          key={star}
-                          className={`w-4 h-4 ${star <= Math.round(overallRating) ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]' : 'text-[#cbd5e1] dark:text-[#3f4850]'}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="text-[14px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#bec7d2]">
-                      Based on {appReviews.length} expert and peer evaluations
-                    </div>
+                  <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[clamp(1.375rem,2.5vw,1.75rem)] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.03em] mb-2">
+                    {app.name}: Korean
+                  </h1>
+
+                  <ul className="list-disc pl-4 sm:pl-5 space-y-1 mb-3 max-w-[42rem] marker:text-[#94a3b8]">
+                    {app.detailPoints.map((point, i) => (
+                      <li
+                        key={i}
+                        className="font-['Inter:Regular',sans-serif] font-normal text-[13px] sm:text-[14px] leading-snug text-[#64748b] dark:text-[#bec7d2] pl-0.5"
+                      >
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <a
+                    href={app.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 bg-transparent border-2 border-[#1e293b] dark:border-[#8ecdff] text-[#1e293b] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[13px] sm:text-[14px] px-4 py-2 rounded-lg hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
+                  >
+                    Official Website
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  </a>
+                </div>
+
+                <div className="shrink-0 sm:w-[7.25rem] rounded-xl p-3 sm:p-3.5 text-center bg-[#ffffff] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] sm:ml-2">
+                  <div className="text-[9px] sm:text-[10px] font-['Manrope:Bold',sans-serif] font-bold tracking-[1px] uppercase text-[#64748b] dark:text-[#bec7d2] mb-1">
+                    Overall
+                  </div>
+                  <div className="text-[2rem] sm:text-[2.25rem] font-['Manrope:ExtraBold',sans-serif] font-extrabold leading-none text-[#0ea5e9] dark:text-[#8ecdff] mb-1">
+                    {overallRating > 0 ? overallRating.toFixed(1) : '-'}
+                  </div>
+                  <div className="flex gap-0.5 justify-center mb-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${star <= Math.round(overallRating) ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]' : 'text-[#cbd5e1] dark:text-[#3f4850]'}`}
+                      />
+                    ))}
+                  </div>
+                  <div className="text-[11px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#94a3b8] leading-tight">
+                    {appReviews.length} review{appReviews.length === 1 ? '' : 's'}
                   </div>
                 </div>
               </div>
