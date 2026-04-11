@@ -60,19 +60,6 @@ export function mapFormGoalToReviewGoal(
   }
 }
 
-export function mapFormUsageToReviewUsage(
-  form: string
-): Review['usagePeriod'] {
-  const m: Record<string, Review['usagePeriod']> = {
-    '<6m': '<1m',
-    '<1y': '3-6m',
-    '1-3y': '6m+',
-    '3-5y': '6m+',
-    '5y+': '6m+',
-  };
-  return m[form] ?? '1-3m';
-}
-
 export function saveUserReview(
   input: Omit<Review, 'id' | 'createdAt' | 'helpfulCount'>
 ): Review {
@@ -87,6 +74,37 @@ export function saveUserReview(
   return review;
 }
 
+export type UsagePeriod =
+  | 'lt1w'
+  | '1w-lt1m'
+  | '1m-lt3m'
+  | '3m-lt6m'
+  | '6m-lt1y'
+  | '1y+';
+
+export const usagePeriodLabels: Record<UsagePeriod, string> = {
+  lt1w: 'Less than 1 week',
+  '1w-lt1m': '1 week to less than 1 month',
+  '1m-lt3m': '1 month to less than 3 months',
+  '3m-lt6m': '3 months to less than 6 months',
+  '6m-lt1y': '6 months to less than 1 year',
+  '1y+': '1 year or more',
+};
+
+/** Human-readable label for review cards (supports legacy localStorage values). */
+export function formatUsagePeriod(period: string): string {
+  if (period in usagePeriodLabels) {
+    return usagePeriodLabels[period as UsagePeriod];
+  }
+  const legacy: Record<string, string> = {
+    '<1m': usagePeriodLabels.lt1w,
+    '1-3m': usagePeriodLabels['1m-lt3m'],
+    '3-6m': usagePeriodLabels['3m-lt6m'],
+    '6m+': usagePeriodLabels['1y+'],
+  };
+  return legacy[period] ?? period;
+}
+
 export interface Review {
   id: string;
   appId: string;
@@ -94,7 +112,7 @@ export interface Review {
   learnerType: LearnerType;
   level: 'beginner' | 'elementary' | 'intermediate' | 'advanced';
   goal: 'topik' | 'daily' | 'business' | 'culture';
-  usagePeriod: '<1m' | '1-3m' | '3-6m' | '6m+';
+  usagePeriod: UsagePeriod;
   rating: number;
   content: string;
   contentKo: string;
@@ -111,7 +129,7 @@ export const mockReviews: Review[] = [
     learnerType: '나',
     level: 'beginner',
     goal: 'daily',
-    usagePeriod: '1-3m',
+    usagePeriod: '1m-lt3m',
     rating: 4,
     content: 'Excellent for foundation, lacking in complex syntax.',
     contentKo: '기초를 다지기에는 우수하나, 복잡한 문법 설명이 부족합니다.',
@@ -125,7 +143,7 @@ export const mockReviews: Review[] = [
     learnerType: '마',
     level: 'elementary',
     goal: 'culture',
-    usagePeriod: '3-6m',
+    usagePeriod: '3m-lt6m',
     rating: 5,
     content: 'Great platform, though wish there were more collaborative breakout rooms for Type 마 learners.',
     contentKo: '마 유형 학습자를 위한 협업 토론 공간이 더 있었으면 좋겠지만, 훌륭한 플랫폼입니다.',
@@ -139,7 +157,7 @@ export const mockReviews: Review[] = [
     learnerType: '다',
     level: 'intermediate',
     goal: 'topik',
-    usagePeriod: '6m+',
+    usagePeriod: '1y+',
     rating: 4,
     content: 'As an academic student, I find the gamification keeps me consistent.',
     contentKo: '학문적인 학생으로서, 게임화 요소가 일관성을 유지하는 데 도움이 됩니다.',
@@ -153,7 +171,7 @@ export const mockReviews: Review[] = [
     learnerType: '나',
     level: 'advanced',
     goal: 'business',
-    usagePeriod: '6m+',
+    usagePeriod: '1y+',
     rating: 5,
     content: 'The methodology is exactly what Type 라 learners need for high fluency.',
     contentKo: '라 유형 학습자가 높은 유창성을 위해 필요한 정확한 방법론입니다.',
@@ -167,7 +185,7 @@ export const mockReviews: Review[] = [
     learnerType: '가',
     level: 'beginner',
     goal: 'culture',
-    usagePeriod: '1-3m',
+    usagePeriod: '1m-lt3m',
     rating: 4,
     content: 'Curriculum engagement is currently lacking highest rated "Type 나 (Visual Learners)" due to the visual design of material, which is highly integrated with resource.',
     contentKo: '시각 자료의 디자인이 리소스와 높은 통합성을 보여, "나 유형(시각 학습자)"에게 가장 높은 평가를 받지만 커리큘럼 참여도는 부족합니다.',
@@ -181,7 +199,7 @@ export const mockReviews: Review[] = [
     learnerType: '라',
     level: 'intermediate',
     goal: 'topik',
-    usagePeriod: '3-6m',
+    usagePeriod: '3m-lt6m',
     rating: 3,
     content: 'Good structured approach but could use more audio-focused exercises for Type 라 learners.',
     contentKo: '구조화된 접근 방식은 좋지만 라 유형 학습자를 위한 청각 중심 연습이 더 필요합니다.',

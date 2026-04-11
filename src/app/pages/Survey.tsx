@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { surveyQuestions, calculateLearnerType } from '../data/learnerTypes';
-import imgBackground from "figma:asset/417b513e5d0e5132d22aeba5b28ed14494c3d0a1.png";
 
 export default function Survey() {
   const navigate = useNavigate();
@@ -46,11 +45,6 @@ export default function Survey() {
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col relative">
       <Header />
-      
-      {/* Background decoration */}
-      <div className="fixed bottom-0 right-0 w-[min(420px,70vw)] h-[min(420px,50vh)] blur-[24px] opacity-10 pointer-events-none">
-        <img src={imgBackground} alt="" className="w-full h-full object-cover rounded-full" />
-      </div>
 
       <main className="flex-1 pt-16 relative">
         <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-8">

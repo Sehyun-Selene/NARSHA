@@ -8,7 +8,8 @@ import { learnerTypes, LearnerType } from '../data/learnerTypes';
 import {
   saveUserReview,
   mapFormGoalToReviewGoal,
-  mapFormUsageToReviewUsage,
+  usagePeriodLabels,
+  type UsagePeriod,
 } from '../data/reviews';
 
 type ReviewFieldKey = 'nickname' | 'rating' | 'content';
@@ -22,7 +23,7 @@ export default function ReviewWrite() {
   const [nickname, setNickname] = useState('');
   const [level, setLevel] = useState<'beginner' | 'elementary' | 'intermediate' | 'advanced'>('beginner');
   const [goal, setGoal] = useState<'topik' | 'daily' | 'business' | 'culture'>('daily');
-  const [usagePeriod, setUsagePeriod] = useState<'<6m' | '<1y' | '1-3y' | '3-5y' | '5y+'>('<6m');
+  const [usagePeriod, setUsagePeriod] = useState<UsagePeriod>('lt1w');
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -108,7 +109,7 @@ export default function ReviewWrite() {
       learnerType,
       level,
       goal: mapFormGoalToReviewGoal(goal),
-      usagePeriod: mapFormUsageToReviewUsage(usagePeriod),
+      usagePeriod,
       rating,
       content: content.trim(),
       contentKo: '',
@@ -269,14 +270,14 @@ export default function ReviewWrite() {
                   </label>
                   <select
                     value={usagePeriod}
-                    onChange={(e) => setUsagePeriod(e.target.value as any)}
+                    onChange={(e) => setUsagePeriod(e.target.value as UsagePeriod)}
                     className="w-full bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff]"
                   >
-                    <option value="<6m">{'<'}6m (Trial)</option>
-                    <option value="<1y">{'<'}1y</option>
-                    <option value="1-3y">1-3 years</option>
-                    <option value="3-5y">3-5 years</option>
-                    <option value="5y+">5+ years</option>
+                    {(Object.keys(usagePeriodLabels) as UsagePeriod[]).map((key) => (
+                      <option key={key} value={key}>
+                        {usagePeriodLabels[key]}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Star, ThumbsUp } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { getAllReviews } from '../data/reviews';
+import { formatUsagePeriod, getAllReviews } from '../data/reviews';
 import { apps } from '../data/apps';
 
 const learnerTypeLabels: Record<string, string> = {
@@ -75,11 +75,6 @@ export default function Reviews() {
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
-      
-      {/* Background decoration */}
-      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] blur-[32px] opacity-10 pointer-events-none">
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]" />
-      </div>
 
       <main className="flex-1 pt-16">
         <div className="max-w-[1280px] mx-auto px-6 pt-32 pb-24">
@@ -228,7 +223,7 @@ export default function Reviews() {
                           Level: {review.level.charAt(0).toUpperCase() + review.level.slice(1)}
                         </span>
                         <span className="bg-[#f1f5f9] dark:bg-[#1e293b] text-[#64748b] dark:text-[#94a3b8] font-['Inter:Medium',sans-serif] font-medium text-[12px] px-3 py-1 rounded-full">
-                          {review.usagePeriod}
+                          {formatUsagePeriod(review.usagePeriod)}
                         </span>
                       </div>
 

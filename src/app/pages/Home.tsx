@@ -105,11 +105,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
-      
-      {/* Background decoration */}
-      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] blur-[32px] opacity-10 pointer-events-none">
-        <div className="w-full h-full rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]" />
-      </div>
 
       <main className="flex-1 pt-16">
         {/* Hero Section */}
