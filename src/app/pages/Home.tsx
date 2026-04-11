@@ -63,6 +63,9 @@ export default function Home() {
 
     const matchesSearch = app.name.toLowerCase().includes(normalizedQuery) ||
       app.description.toLowerCase().includes(normalizedQuery) ||
+      app.detailDescription.toLowerCase().includes(normalizedQuery) ||
+      app.descriptionKo.toLowerCase().includes(normalizedQuery) ||
+      app.detailDescriptionKo.toLowerCase().includes(normalizedQuery) ||
       app.purposes.some(p => p.toLowerCase().includes(normalizedQuery)) ||
       app.nameKo.toLowerCase().includes(normalizedQuery) ||
       // Treat "app" keywords as platform-type search.

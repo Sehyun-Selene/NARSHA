@@ -151,9 +151,16 @@ export default function AppDetail() {
                       {app.name}: Korean
                     </h1>
                     
-                    <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2] max-w-[600px] mb-6">
-                      {app.description}
-                    </p>
+                    <div className="max-w-[720px] mb-6 space-y-4">
+                      {app.detailDescription.split('\n\n').map((paragraph, i) => (
+                        <p
+                          key={i}
+                          className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2]"
+                        >
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
 
                     <div className="flex flex-wrap gap-4">
                       <a
