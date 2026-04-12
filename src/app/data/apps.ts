@@ -14,6 +14,8 @@ export interface App {
   detailPoints: string[];
   detailPointsKo: string[];
   image: string;
+  /** Public URL under `/public` (e.g. `/app-logos/duolingo.png`). */
+  logoSrc?: string;
 }
 
 const LEVEL_ORDER = ['beginner', 'elementary', 'intermediate', 'advanced'] as const;
@@ -56,7 +58,8 @@ export const apps: App[] = [
       '탭·듣기·타이핑·가벼운 말하기와 연속 학습일로 매일 리듬을 잡습니다.',
       '반복 노출로 초급~초중급까지 단어와 기본 패턴을 익히기 좋습니다.',
     ],
-    image: 'duolingo'
+    image: 'duolingo',
+    logoSrc: '/app-logos/duolingo.png',
   },
   {
     id: 'ttmik',
@@ -79,7 +82,8 @@ export const apps: App[] = [
       '에피소드 순서에 맞춘 PDF·워크북으로 복습·쓰기를 이어 갈 수 있습니다.',
       '기초부터 일상 청해·말하기 패턴을 단계적으로 익히기에 맞습니다.',
     ],
-    image: 'ttmik'
+    image: 'ttmik',
+    logoSrc: '/app-logos/ttmik.png',
   },
   {
     id: 'anki',
@@ -102,7 +106,8 @@ export const apps: App[] = [
       '간격 반복으로 “다시 볼 시점”을 자동으로 잡아 줍니다.',
       '매일 복습 큐로 어휘·패턴을 꾸준히 쌓기 좋습니다.',
     ],
-    image: 'anki'
+    image: 'anki',
+    logoSrc: '/app-logos/anki.png',
   },
   {
     id: 'lingodeer',
@@ -125,7 +130,8 @@ export const apps: App[] = [
       '듣기·선택·한글 타이핑이 레벨마다 섞여 있습니다.',
       '문법 노트와 경로가 분명해 초급~중급까지 따라가기 쉽습니다.',
     ],
-    image: 'lingodeer'
+    image: 'lingodeer',
+    logoSrc: '/app-logos/lingodeer.png',
   },
   {
     id: 'teuida',
@@ -148,7 +154,8 @@ export const apps: App[] = [
       '말한 직후 발음 피드백을 받습니다.',
       '일상 청해·즉답 말하기에 초점을 둡니다.',
     ],
-    image: 'teuida'
+    image: 'teuida',
+    logoSrc: '/app-logos/teuida.png',
   },
   {
     id: 'king-sejong',
@@ -171,7 +178,8 @@ export const apps: App[] = [
       '외국인 대상 한국어 교육 기준에 맞춘 커리큘럼입니다.',
       '기초에서 중급 방향으로 목표가 분명한 구조입니다.',
     ],
-    image: 'sejong'
+    image: 'sejong',
+    logoSrc: '/app-logos/sejong.png',
   },
   {
     id: 'memrise',
@@ -194,7 +202,8 @@ export const apps: App[] = [
       '여행·일상·넓은 단어 주제 코스가 있습니다.',
       '실제 속도의 발음·억양과 단어 인지를 함께 익힙니다.',
     ],
-    image: 'memrise'
+    image: 'memrise',
+    logoSrc: '/app-logos/memrise.png',
   },
   {
     id: 'drops',
@@ -217,6 +226,7 @@ export const apps: App[] = [
       '스와이프·매칭으로 빠르게 시각 어휘를 익힙니다.',
       '짧은 매일 학습으로 인지 위주 단어를 쌓기 좋습니다.',
     ],
-    image: 'drops'
+    image: 'drops',
+    logoSrc: '/app-logos/drops.png',
   }
 ];

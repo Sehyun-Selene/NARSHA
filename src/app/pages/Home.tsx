@@ -3,19 +3,9 @@ import { Link } from 'react-router';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { AppLogoMark } from '../components/AppLogoMark';
 import { apps, getAppLevelDisplayTags } from '../data/apps';
 import { getOverallRating, getReviewCount } from '../data/reviews';
-
-const appLogos: Record<string, { bg: string, initial: string, color: string }> = {
-  duolingo: { bg: 'bg-gradient-to-br from-[#58cc02] to-[#89e219]', initial: 'D', color: 'text-white' },
-  ttmik: { bg: 'bg-gradient-to-br from-[#ff6b6b] to-[#ff8787]', initial: 'T', color: 'text-white' },
-  anki: { bg: 'bg-gradient-to-br from-[#0093d0] to-[#00b4e6]', initial: 'A', color: 'text-white' },
-  lingodeer: { bg: 'bg-gradient-to-br from-[#ff6f3d] to-[#ff8f61]', initial: 'L', color: 'text-white' },
-  teuida: { bg: 'bg-gradient-to-br from-[#4a90e2] to-[#6ba5e7]', initial: 'T', color: 'text-white' },
-  sejong: { bg: 'bg-gradient-to-br from-[#1e3a8a] to-[#3b5998]', initial: 'K', color: 'text-white' },
-  memrise: { bg: 'bg-gradient-to-br from-[#ffd950] to-[#ffe57a]', initial: 'M', color: 'text-gray-800' },
-  drops: { bg: 'bg-gradient-to-br from-[#7c4dff] to-[#9d6dff]', initial: 'D', color: 'text-white' }
-};
 
 const learnerTypeColors: Record<string, { bg: string, text: string }> = {
   '가': { bg: 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]', text: 'text-[#00344f]' },
@@ -395,13 +385,9 @@ export default function Home() {
                     ))}
                   </div>
 
-                  {/* App Image */}
-                  <div className="aspect-square bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-8">
-                    <div className={`w-10 h-10 rounded-full ${appLogos[app.image]?.bg} flex items-center justify-center`}>
-                      <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] ${appLogos[app.image]?.color}`}>
-                        {appLogos[app.image]?.initial}
-                      </span>
-                    </div>
+                  {/* App logo */}
+                  <div className="aspect-square bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
+                    <AppLogoMark app={app} variant="grid" />
                   </div>
 
                   {/* App Info */}

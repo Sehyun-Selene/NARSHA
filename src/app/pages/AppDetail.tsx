@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router';
 import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { AppLogoMark } from '../components/AppLogoMark';
 import { apps, getAppLevelDisplayTags } from '../data/apps';
 import {
   getAllReviews,
@@ -20,17 +21,6 @@ import {
   Radar,
   ResponsiveContainer 
 } from 'recharts';
-
-const appLogos: Record<string, { bg: string, initial: string, color: string }> = {
-  duolingo: { bg: 'bg-gradient-to-br from-[#58cc02] to-[#89e219]', initial: 'D', color: 'text-white' },
-  ttmik: { bg: 'bg-gradient-to-br from-[#ff6b6b] to-[#ff8787]', initial: 'T', color: 'text-white' },
-  anki: { bg: 'bg-gradient-to-br from-[#0093d0] to-[#00b4e6]', initial: 'A', color: 'text-white' },
-  lingodeer: { bg: 'bg-gradient-to-br from-[#ff6f3d] to-[#ff8f61]', initial: 'L', color: 'text-white' },
-  teuida: { bg: 'bg-gradient-to-br from-[#4a90e2] to-[#6ba5e7]', initial: 'T', color: 'text-white' },
-  sejong: { bg: 'bg-gradient-to-br from-[#1e3a8a] to-[#3b5998]', initial: 'K', color: 'text-white' },
-  memrise: { bg: 'bg-gradient-to-br from-[#ffd950] to-[#ffe57a]', initial: 'M', color: 'text-gray-800' },
-  drops: { bg: 'bg-gradient-to-br from-[#7c4dff] to-[#9d6dff]', initial: 'D', color: 'text-white' }
-};
 
 export default function AppDetail() {
   const { id } = useParams();
@@ -123,11 +113,9 @@ export default function AppDetail() {
           {/* App Header — compact: hero + Official Website fit common viewports without scroll */}
           <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-2xl p-4 sm:p-5 mb-8 sm:mb-10 border border-[#e2e8f0] dark:border-[#232a36]">
             <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
-              <div className="w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center shrink-0">
-                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full ${appLogos[app.image]?.bg || 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]'} flex items-center justify-center`}>
-                  <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] sm:text-[20px] ${appLogos[app.image]?.color || 'text-white'}`}>
-                    {appLogos[app.image]?.initial || app.name.charAt(0)}
-                  </span>
+              <div className="w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center shrink-0 p-1.5">
+                <div className="h-10 w-10 sm:h-11 sm:w-11 min-h-0 min-w-0">
+                  <AppLogoMark app={app} variant="hero" />
                 </div>
               </div>
 
