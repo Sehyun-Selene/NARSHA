@@ -3,8 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router';
 import { Star, Upload, Check } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { apps } from '../data/apps';
-import { learnerTypes, LearnerType } from '../data/learnerTypes';
+import { fetchAppById, type App } from '../data/apps';
+import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import {
   saveUserReview,
   mapFormGoalToReviewGoal,
@@ -15,10 +15,10 @@ import {
 type ReviewFieldKey = 'nickname' | 'rating' | 'content';
 
 export default function ReviewWrite() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const app = apps.find(a => a.id === id);
-  
+
+  const [app, setApp] = useState<App | null>(null);
   const [learnerType, setLearnerType] = useState<LearnerType | null>(null);
   const [nickname, setNickname] = useState('');
   const [level, setLevel] = useState<'beginner' | 'elementary' | 'intermediate' | 'advanced'>('beginner');
@@ -27,6 +27,7 @@ export default function ReviewWrite() {
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ReviewFieldKey, string>>>({});
   const [scrollToField, setScrollToField] = useState<ReviewFieldKey | null>(null);
 
@@ -37,10 +38,9 @@ export default function ReviewWrite() {
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    const savedType = localStorage.getItem('narsha-learner-type') as LearnerType;
+    const savedType = localStorage.getItem('narsha-learner-type') as LearnerType | null;
     if (!savedType) {
-      // Save the app ID so we can return after survey
-      localStorage.setItem('narsha-return-app-id', id || '');
+      localStorage.setItem('narsha-return-app-id', id ?? '');
       navigate('/survey');
       return;
     }
@@ -48,17 +48,19 @@ export default function ReviewWrite() {
   }, [navigate, id]);
 
   useEffect(() => {
-    if (!scrollToField) return;
+    if (!id) return;
+    fetchAppById(id).then(setApp).catch(console.error);
+  }, [id]);
 
+  useEffect(() => {
+    if (!scrollToField) return;
     const blockRefs: Record<ReviewFieldKey, React.RefObject<HTMLDivElement | null>> = {
       nickname: nicknameBlockRef,
       rating: ratingBlockRef,
       content: contentBlockRef,
     };
-
     const el = blockRefs[scrollToField].current;
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
     if (scrollToField === 'nickname') {
       nicknameInputRef.current?.focus();
     } else if (scrollToField === 'content') {
@@ -67,7 +69,6 @@ export default function ReviewWrite() {
       const firstStar = ratingBlockRef.current?.querySelector('button');
       (firstStar as HTMLButtonElement | undefined)?.focus();
     }
-
     setScrollToField(null);
   }, [scrollToField]);
 
@@ -77,49 +78,45 @@ export default function ReviewWrite() {
 
   const typeInfo = learnerTypes[learnerType];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const errors: Partial<Record<ReviewFieldKey, string>> = {};
-    if (!nickname.trim()) {
-      errors.nickname = 'Please enter a nickname.';
-    }
-    if (rating < 1) {
-      errors.rating = 'Please select a star rating.';
-    }
-    if (!content.trim()) {
-      errors.content = 'Please enter your review.';
-    }
+    if (!nickname.trim()) errors.nickname = 'Please enter a nickname.';
+    if (rating < 1) errors.rating = 'Please select a star rating.';
+    if (!content.trim()) errors.content = 'Please enter your review.';
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       const order: ReviewFieldKey[] = ['nickname', 'rating', 'content'];
       const firstInvalid = order.find((key) => errors[key]);
-      if (firstInvalid) {
-        setScrollToField(firstInvalid);
-      }
+      if (firstInvalid) setScrollToField(firstInvalid);
       return;
     }
 
     setFieldErrors({});
+    setSubmitting(true);
 
-    saveUserReview({
-      appId: app.id,
-      nickname: nickname.trim(),
-      learnerType,
-      level,
-      goal: mapFormGoalToReviewGoal(goal),
-      usagePeriod,
-      rating,
-      content: content.trim(),
-      contentKo: '',
-    });
-
-    setSubmitted(true);
-
-    setTimeout(() => {
-      navigate(`/apps/${app.id}`);
-    }, 2000);
+    try {
+      await saveUserReview({
+        appId: app.id,
+        nickname: nickname.trim(),
+        learnerType,
+        level,
+        goal: mapFormGoalToReviewGoal(goal),
+        usagePeriod,
+        rating,
+        content: content.trim(),
+        contentKo: '',
+      });
+      setSubmitted(true);
+      setTimeout(() => navigate(`/apps/${app.id}`), 2000);
+    } catch (err) {
+      console.error(err);
+      setFieldErrors({ content: 'Failed to submit review. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -143,21 +140,21 @@ export default function ReviewWrite() {
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
-      
+
       <main className="flex-1 pt-16">
         <div className="max-w-[800px] mx-auto px-6 py-16">
           <div className="mb-12">
-            <Link 
+            <Link
               to={`/apps/${app.id}`}
               className="inline-flex items-center gap-2 font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] mb-4 transition-colors"
             >
               ← Back to {app.name}
             </Link>
-            
+
             <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[48px] leading-[56px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-1.2px] mb-4">
               Share Your Journey
             </h1>
-            
+
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2]">
               Help others navigate their Korean learning path with an editorial perspective.
             </p>
@@ -182,7 +179,6 @@ export default function ReviewWrite() {
                       {learnerType}
                     </span>
                   </div>
-                  
                   <div>
                     <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-1">
                       Detected Learner Type
@@ -192,12 +188,11 @@ export default function ReviewWrite() {
                     </h3>
                   </div>
                 </div>
-                
+
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#64748b] dark:text-[#bec7d2] mb-6">
                   Your learning patterns suggest a high affinity for cinematic content and wisdom-based curriculum. This badge will appear next to your review.
                 </p>
 
-                {/* Nickname Input */}
                 <div ref={nicknameBlockRef}>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
                     Nickname <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
@@ -209,11 +204,7 @@ export default function ReviewWrite() {
                     onChange={(e) => {
                       setNickname(e.target.value);
                       if (fieldErrors.nickname) {
-                        setFieldErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.nickname;
-                          return next;
-                        });
+                        setFieldErrors((prev) => { const n = { ...prev }; delete n.nickname; return n; });
                       }
                     }}
                     placeholder="Enter your display name"
@@ -225,11 +216,11 @@ export default function ReviewWrite() {
                         : 'border-[#e2e8f0] dark:border-[#232a36]'
                     }`}
                   />
-                  {fieldErrors.nickname ? (
+                  {fieldErrors.nickname && (
                     <p id="review-nickname-error" className="mt-2 text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
                       {fieldErrors.nickname}
                     </p>
-                  ) : null}
+                  )}
                 </div>
               </div>
             </div>
@@ -246,14 +237,13 @@ export default function ReviewWrite() {
               </div>
 
               <div className="space-y-6">
-                {/* Learning Level */}
                 <div>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
                     Learning Level
                   </label>
                   <select
                     value={level}
-                    onChange={(e) => setLevel(e.target.value as any)}
+                    onChange={(e) => setLevel(e.target.value as typeof level)}
                     className="w-full bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff]"
                   >
                     <option value="beginner">Beginner (TOPIK I)</option>
@@ -263,7 +253,6 @@ export default function ReviewWrite() {
                   </select>
                 </div>
 
-                {/* Usage Period */}
                 <div>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
                     Usage Period
@@ -274,14 +263,11 @@ export default function ReviewWrite() {
                     className="w-full bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff]"
                   >
                     {(Object.keys(usagePeriodLabels) as UsagePeriod[]).map((key) => (
-                      <option key={key} value={key}>
-                        {usagePeriodLabels[key]}
-                      </option>
+                      <option key={key} value={key}>{usagePeriodLabels[key]}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Learning Purpose */}
                 <div>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
                     Learning Purpose
@@ -291,12 +277,12 @@ export default function ReviewWrite() {
                       { value: 'entertainment', label: 'Entertainment' },
                       { value: 'business', label: 'Business Proficiency' },
                       { value: 'academic', label: 'Academic Research' },
-                      { value: 'topik', label: 'TOPIK Preparation' }
-                    ].map(option => (
+                      { value: 'topik', label: 'TOPIK Preparation' },
+                    ].map((option) => (
                       <button
                         key={option.value}
                         type="button"
-                        onClick={() => setGoal(option.value as any)}
+                        onClick={() => setGoal(option.value as typeof goal)}
                         className={`px-6 py-3 rounded-[8px] font-['Manrope:Medium',sans-serif] font-medium text-[14px] transition-colors ${
                           goal === option.value
                             ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
@@ -323,7 +309,6 @@ export default function ReviewWrite() {
               </div>
 
               <div className="space-y-6">
-                {/* Rating */}
                 <div ref={ratingBlockRef} className="mb-6">
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3 text-center">
                     Overall Rating <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
@@ -333,36 +318,35 @@ export default function ReviewWrite() {
                       fieldErrors.rating ? 'ring-2 ring-[#ef4444]/50 dark:ring-[#f87171]/50' : ''
                     }`}
                   >
-                    {[1, 2, 3, 4, 5].map(star => (
+                    {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         type="button"
                         onClick={() => {
                           setRating(star);
                           if (fieldErrors.rating) {
-                            setFieldErrors((prev) => {
-                              const next = { ...prev };
-                              delete next.rating;
-                              return next;
-                            });
+                            setFieldErrors((prev) => { const n = { ...prev }; delete n.rating; return n; });
                           }
                         }}
                         className="transition-transform hover:scale-110 p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ea5e9] dark:focus-visible:ring-[#8ecdff]"
                       >
                         <Star
-                          className={`pointer-events-none w-12 h-12 ${star <= rating ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]' : 'text-[#cbd5e1] dark:text-[#3f4850]'}`}
+                          className={`pointer-events-none w-12 h-12 ${
+                            star <= rating
+                              ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]'
+                              : 'text-[#cbd5e1] dark:text-[#3f4850]'
+                          }`}
                         />
                       </button>
                     ))}
                   </div>
-                  {fieldErrors.rating ? (
+                  {fieldErrors.rating && (
                     <p className="mt-2 text-center text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
                       {fieldErrors.rating}
                     </p>
-                  ) : null}
+                  )}
                 </div>
 
-                {/* Review Content */}
                 <div ref={contentBlockRef}>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
                     Your Review <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
@@ -373,11 +357,7 @@ export default function ReviewWrite() {
                     onChange={(e) => {
                       setContent(e.target.value);
                       if (fieldErrors.content) {
-                        setFieldErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.content;
-                          return next;
-                        });
+                        setFieldErrors((prev) => { const n = { ...prev }; delete n.content; return n; });
                       }
                     }}
                     placeholder="Describe the curriculum's depth, cultural nuances, and pedagogical effectiveness..."
@@ -390,14 +370,13 @@ export default function ReviewWrite() {
                         : 'border-[#e2e8f0] dark:border-[#232a36]'
                     }`}
                   />
-                  {fieldErrors.content ? (
+                  {fieldErrors.content && (
                     <p id="review-content-error" className="mt-2 text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
                       {fieldErrors.content}
                     </p>
-                  ) : null}
+                  )}
                 </div>
 
-                {/* Upload Photo */}
                 <div className="border-2 border-dashed border-[#cbd5e1] dark:border-[#3f4850] rounded-[12px] p-12 text-center hover:border-[#0ea5e9] dark:hover:border-[#8ecdff] transition-colors cursor-pointer">
                   <Upload className="w-12 h-12 text-[#94a3b8] dark:text-[#64748b] mx-auto mb-4" />
                   <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3] mb-2">
@@ -410,30 +389,28 @@ export default function ReviewWrite() {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <div className="pt-6">
-              {Object.keys(fieldErrors).length > 0 ? (
-                <div
-                  className="mb-4 rounded-[8px] border border-[#fecaca] dark:border-[#7f1d1d]/60 bg-[#fef2f2] dark:bg-[#1c1214] px-4 py-3"
-                  role="alert"
-                >
+              {Object.keys(fieldErrors).length > 0 && (
+                <div className="mb-4 rounded-[8px] border border-[#fecaca] dark:border-[#7f1d1d]/60 bg-[#fef2f2] dark:bg-[#1c1214] px-4 py-3" role="alert">
                   <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#b91c1c] dark:text-[#f87171] mb-2">
                     Please complete the following.
                   </p>
                   <ul className="list-disc list-inside space-y-1 font-['Inter:Regular',sans-serif] text-[14px] text-[#dc2626] dark:text-[#fca5a5]">
-                    {fieldErrors.nickname ? <li>{fieldErrors.nickname}</li> : null}
-                    {fieldErrors.rating ? <li>{fieldErrors.rating}</li> : null}
-                    {fieldErrors.content ? <li>{fieldErrors.content}</li> : null}
+                    {fieldErrors.nickname && <li>{fieldErrors.nickname}</li>}
+                    {fieldErrors.rating && <li>{fieldErrors.rating}</li>}
+                    {fieldErrors.content && <li>{fieldErrors.content}</li>}
                   </ul>
                 </div>
-              ) : null}
+              )}
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] px-8 py-5 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                disabled={submitting}
+                className="w-full bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] px-8 py-5 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] disabled:opacity-60"
               >
-                Submit Review
+                {submitting ? 'Submitting…' : 'Submit Review'}
               </button>
-              
+
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] text-[#64748b] dark:text-[#bec7d2] text-center mt-4">
                 By submitting, you agree to our Editorial Guidelines and content moderation policies.
               </p>

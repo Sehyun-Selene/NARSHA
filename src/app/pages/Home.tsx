@@ -4,8 +4,8 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
-import { apps, getAppLevelDisplayTags } from '../data/apps';
-import { getOverallRating, getReviewCount } from '../data/reviews';
+import { fetchApps, getAppLevelDisplayTags, type App } from '../data/apps';
+import { getAllReviews, type Review } from '../data/reviews';
 
 const learnerTypeColors: Record<string, { bg: string, text: string }> = {
   '가': { bg: 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]', text: 'text-[#00344f]' },
@@ -16,7 +16,16 @@ const learnerTypeColors: Record<string, { bg: string, text: string }> = {
   '바': { bg: 'bg-gradient-to-br from-[#34d399] to-[#10b981]', text: 'text-[#064e3b]' }
 };
 
+function computeRating(reviews: Review[], appId: string): number {
+  const appReviews = reviews.filter(r => r.appId === appId);
+  if (appReviews.length === 0) return 0;
+  return appReviews.reduce((sum, r) => sum + r.rating, 0) / appReviews.length;
+}
+
 export default function Home() {
+  const [apps, setApps] = useState<App[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState<string | null>(null);
   const [purposeFilter, setPurposeFilter] = useState<string | null>(null);
@@ -29,7 +38,16 @@ export default function Home() {
   const purposeMenuRef = useRef<HTMLDivElement>(null);
   const learnerTypeMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close menus when clicking outside
+  useEffect(() => {
+    Promise.all([fetchApps(), getAllReviews()])
+      .then(([appsData, reviewsData]) => {
+        setApps(appsData);
+        setReviews(reviewsData);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (levelMenuRef.current && !levelMenuRef.current.contains(event.target as Node)) {
@@ -42,7 +60,6 @@ export default function Home() {
         setShowLearnerTypeMenu(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -51,20 +68,19 @@ export default function Home() {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const appKeywordQuery = ['app', 'apps', 'application', 'mobile app'].includes(normalizedQuery);
 
-    const matchesSearch = app.name.toLowerCase().includes(normalizedQuery) ||
+    const matchesSearch = !normalizedQuery ||
+      app.name.toLowerCase().includes(normalizedQuery) ||
       app.description.toLowerCase().includes(normalizedQuery) ||
-      app.detailPoints.some((p) => p.toLowerCase().includes(normalizedQuery)) ||
       app.descriptionKo.toLowerCase().includes(normalizedQuery) ||
-      app.detailPointsKo.some((p) => p.toLowerCase().includes(normalizedQuery)) ||
+      app.aliases.some(a => a.toLowerCase().includes(normalizedQuery)) ||
       app.purposes.some(p => p.toLowerCase().includes(normalizedQuery)) ||
-      app.nameKo.toLowerCase().includes(normalizedQuery) ||
-      // Treat "app" keywords as platform-type search.
+      (app.detailPoints ?? []).some((p) => p.toLowerCase().includes(normalizedQuery)) ||
+      (app.detailPointsKo ?? []).some((p) => p.toLowerCase().includes(normalizedQuery)) ||
       (appKeywordQuery && Boolean(app.url));
-    
-    const matchesLevel = !levelFilter || app.levels?.includes(levelFilter as any);
-    const matchesPurpose = !purposeFilter || app.purposes?.includes(purposeFilter as any);
-    
-    // Learning Type filter based on sensory + style combination
+
+    const matchesLevel = !levelFilter || app.levels.includes(levelFilter);
+    const matchesPurpose = !purposeFilter || app.purposes.includes(purposeFilter);
+
     let matchesLearnerType = true;
     if (learnerTypeFilter) {
       const typeMap: Record<string, { sensory: string[], style: string }> = {
@@ -75,15 +91,13 @@ export default function Home() {
         '마': { sensory: ['visual', 'auditory', 'mixed'], style: 'exploratory' },
         '바': { sensory: ['visual', 'auditory', 'mixed'], style: 'structured' }
       };
-      
       const selectedType = typeMap[learnerTypeFilter];
       if (selectedType) {
-        const hasSensoryMatch = app.sensory.some(s => selectedType.sensory.includes(s));
-        const hasStyleMatch = app.style === selectedType.style;
-        matchesLearnerType = hasSensoryMatch && hasStyleMatch;
+        matchesLearnerType =
+          selectedType.sensory.includes(app.sensory) && app.style === selectedType.style;
       }
     }
-    
+
     return matchesSearch && matchesLevel && matchesPurpose && matchesLearnerType;
   });
 
@@ -106,7 +120,7 @@ export default function Home() {
             <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[clamp(2.625rem,5vw+1.125rem,5.375rem)] leading-[1.12] tracking-[-0.042em] text-center bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible px-1">
               Find your path to fluency.
             </h1>
-            
+
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2] text-center max-w-[672px]">
               Discover, compare, and master Korean with our architecturally curated<br />
               database of the world's best language resources.
@@ -118,7 +132,7 @@ export default function Home() {
             <div className="relative">
               <button
                 className={`px-6 py-3 rounded-full flex items-center gap-2 font-['Manrope:Medium',sans-serif] font-medium text-[14px] transition-colors ${
-                  levelFilter 
+                  levelFilter
                     ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
                     : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
                 }`}
@@ -132,62 +146,22 @@ export default function Home() {
                 Level {levelFilter && `(${levelFilter})`}
               </button>
 
-              {/* Level Menu Dropdown */}
               {showLevelMenu && (
                 <div className="absolute top-full mt-2 left-0 bg-[#ffffff] dark:bg-[#151c27] rounded-[12px] shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] z-50 min-w-[200px]" ref={levelMenuRef}>
                   <div className="p-3">
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        levelFilter === 'beginner' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setLevelFilter('beginner');
-                        setShowLevelMenu(false);
-                      }}
-                    >
-                      Beginner
-                    </button>
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        levelFilter === 'elementary' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setLevelFilter('elementary');
-                        setShowLevelMenu(false);
-                      }}
-                    >
-                      Elementary
-                    </button>
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        levelFilter === 'intermediate' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setLevelFilter('intermediate');
-                        setShowLevelMenu(false);
-                      }}
-                    >
-                      Intermediate
-                    </button>
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        levelFilter === 'advanced' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setLevelFilter('advanced');
-                        setShowLevelMenu(false);
-                      }}
-                    >
-                      Advanced
-                    </button>
+                    {['beginner', 'elementary', 'intermediate', 'advanced'].map((level) => (
+                      <button
+                        key={level}
+                        className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 last:mb-0 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
+                          levelFilter === level
+                            ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
+                            : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
+                        }`}
+                        onClick={() => { setLevelFilter(level); setShowLevelMenu(false); }}
+                      >
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -196,7 +170,7 @@ export default function Home() {
             <div className="relative">
               <button
                 className={`px-6 py-3 rounded-full flex items-center gap-2 font-['Manrope:Medium',sans-serif] font-medium text-[14px] transition-colors ${
-                  purposeFilter 
+                  purposeFilter
                     ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
                     : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
                 }`}
@@ -210,62 +184,27 @@ export default function Home() {
                 Purpose {purposeFilter && `(${purposeFilter})`}
               </button>
 
-              {/* Purpose Menu Dropdown */}
               {showPurposeMenu && (
                 <div className="absolute top-full mt-2 left-0 bg-[#ffffff] dark:bg-[#151c27] rounded-[12px] shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] z-50 min-w-[200px]" ref={purposeMenuRef}>
                   <div className="p-3">
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        purposeFilter === 'entertainment' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setPurposeFilter('entertainment');
-                        setShowPurposeMenu(false);
-                      }}
-                    >
-                      Entertainment
-                    </button>
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        purposeFilter === 'business' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setPurposeFilter('business');
-                        setShowPurposeMenu(false);
-                      }}
-                    >
-                      Business Proficiency
-                    </button>
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        purposeFilter === 'academic' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setPurposeFilter('academic');
-                        setShowPurposeMenu(false);
-                      }}
-                    >
-                      Academic Research
-                    </button>
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-[8px] transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
-                        purposeFilter === 'topik' 
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]' 
-                          : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
-                      }`}
-                      onClick={() => {
-                        setPurposeFilter('topik');
-                        setShowPurposeMenu(false);
-                      }}
-                    >
-                      TOPIK Preparation
-                    </button>
+                    {[
+                      { value: 'entertainment', label: 'Entertainment' },
+                      { value: 'businessProficiency', label: 'Business Proficiency' },
+                      { value: 'academic', label: 'Academic Research' },
+                      { value: 'topikPreparation', label: 'TOPIK Preparation' },
+                    ].map(({ value, label }) => (
+                      <button
+                        key={value}
+                        className={`w-full text-left px-4 py-2 rounded-[8px] mb-1 last:mb-0 transition-colors font-['Manrope:Medium',sans-serif] font-medium text-[14px] ${
+                          purposeFilter === value
+                            ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
+                            : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
+                        }`}
+                        onClick={() => { setPurposeFilter(value); setShowPurposeMenu(false); }}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -274,7 +213,7 @@ export default function Home() {
             <div className="relative">
               <button
                 className={`px-6 py-3 rounded-full flex items-center gap-2 font-['Manrope:Medium',sans-serif] font-medium text-[14px] transition-colors ${
-                  learnerTypeFilter 
+                  learnerTypeFilter
                     ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
                     : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
                 }`}
@@ -288,11 +227,10 @@ export default function Home() {
                 Learning Type {learnerTypeFilter && `(${learnerTypeFilter})`}
               </button>
 
-              {/* Learning Type Menu Dropdown */}
               {showLearnerTypeMenu && (
                 <div className="absolute top-full mt-2 left-0 bg-[#ffffff] dark:bg-[#151c27] rounded-[12px] shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] z-50 min-w-[280px]" ref={learnerTypeMenuRef}>
                   <div className="p-3">
-                    {['가', '나', '다', '라', '마', '바'].map((type) => {
+                    {(['가', '나', '다', '라', '마', '바'] as const).map((type) => {
                       const colors = learnerTypeColors[type];
                       const labels: Record<string, string> = {
                         '가': 'Visual Exploratory',
@@ -305,15 +243,12 @@ export default function Home() {
                       return (
                         <button
                           key={type}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-[8px] mb-1 transition-colors ${
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-[8px] mb-1 last:mb-0 transition-colors ${
                             learnerTypeFilter === type
                               ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
                               : 'text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36]'
                           }`}
-                          onClick={() => {
-                            setLearnerTypeFilter(type);
-                            setShowLearnerTypeMenu(false);
-                          }}
+                          onClick={() => { setLearnerTypeFilter(type); setShowLearnerTypeMenu(false); }}
                         >
                           <div className={`w-7 h-7 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
                             <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] ${colors.text}`}>
@@ -362,70 +297,75 @@ export default function Home() {
 
         {/* App Grid */}
         <div className="max-w-[1280px] mx-auto px-6 pb-24">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredApps.map(app => {
-              const rating = getOverallRating(app.id);
-              const reviewCount = getReviewCount(app.id);
-              
-              return (
-                <Link
-                  key={app.id}
-                  to={`/apps/${app.id}`}
-                  className="group relative bg-[#ffffff] dark:bg-[#151c27] rounded-[16px] overflow-hidden shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] hover:shadow-[0px_8px_32px_rgba(0,0,0,0.12)] dark:hover:border-[#8ecdff] transition-all"
-                >
-                  {/* Level tags — one per row, right-aligned (same source as app detail) */}
-                  <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1 max-w-[75%]">
-                    {getAppLevelDisplayTags(app).map((label) => (
-                      <span
-                        key={label}
-                        className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-24">
+              <div className="w-8 h-8 border-4 border-[#0ea5e9] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredApps.map(app => {
+                const rating = computeRating(reviews, app.id);
+                const reviewCount = reviews.filter(r => r.appId === app.id).length;
 
-                  {/* App logo */}
-                  <div className="aspect-square bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
-                    <AppLogoMark app={app} variant="grid" />
-                  </div>
+                return (
+                  <Link
+                    key={app.id}
+                    to={`/apps/${app.id}`}
+                    className="group relative bg-[#ffffff] dark:bg-[#151c27] rounded-[16px] overflow-hidden shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] hover:shadow-[0px_8px_32px_rgba(0,0,0,0.12)] dark:hover:border-[#8ecdff] transition-all"
+                  >
+                    <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1 max-w-[75%]">
+                      {getAppLevelDisplayTags(app).map((label) => (
+                        <span
+                          key={label}
+                          className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full"
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
 
-                  {/* App Info */}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px]">
-                        {app.name}
-                      </h3>
-                      {rating > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-[#fbbf24] dark:text-[#fbbf24]">★</span>
-                          <span className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#8ecdff]">
-                            {rating.toFixed(1)}
+                    <div className="aspect-square bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
+                      <AppLogoMark app={app} variant="grid" />
+                    </div>
+
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px]">
+                          {app.name}
+                        </h3>
+                        {rating > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[#fbbf24] dark:text-[#fbbf24]">★</span>
+                            <span className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#8ecdff]">
+                              {rating.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#64748b] dark:text-[#bec7d2] mb-4 line-clamp-2">
+                        {app.description}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        <span className="bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">
+                          {app.sensory.charAt(0).toUpperCase() + app.sensory.slice(1)}
+                        </span>
+                        <span className="bg-[#ddd6fe] dark:bg-[#2e1f4a] text-[#8b5cf6] dark:text-[#c4b5fd] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">
+                          {app.style === 'exploratory' ? 'Exploratory' : 'Structured'}
+                        </span>
+                        {reviewCount > 0 && (
+                          <span className="bg-[#f1f5f9] dark:bg-[#1e293b] text-[#64748b] dark:text-[#94a3b8] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">
+                            {reviewCount} review{reviewCount !== 1 ? 's' : ''}
                           </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                    
-                    <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#64748b] dark:text-[#bec7d2] mb-4 line-clamp-2">
-                      {app.description}
-                    </p>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      <span className="bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">
-                        {app.sensory.includes('mixed') || app.sensory.length > 1 
-                          ? 'Mixed' 
-                          : app.sensory[0].charAt(0).toUpperCase() + app.sensory[0].slice(1)}
-                      </span>
-                      <span className="bg-[#ddd6fe] dark:bg-[#2e1f4a] text-[#8b5cf6] dark:text-[#c4b5fd] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">
-                        {app.style === 'exploratory' ? 'Exploratory' : 'Structured'}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
 

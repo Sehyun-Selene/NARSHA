@@ -4,113 +4,160 @@ import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare } 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
-import { apps, getAppLevelDisplayTags } from '../data/apps';
+import { fetchAppById, getAppLevelDisplayTags, enrichAppWithStaticContent, type App } from '../data/apps';
 import {
-  getAllReviews,
-  getOverallRating,
+  getReviewsForApp,
   getAverageRatingByType,
   getRepliesForReview,
   addReviewReply,
+  type Review,
+  type ReviewReply,
 } from '../data/reviews';
-import { learnerTypes, LearnerType } from '../data/learnerTypes';
-import { 
-  RadarChart, 
-  PolarGrid, 
-  PolarAngleAxis, 
-  PolarRadiusAxis, 
+import { learnerTypes, type LearnerType } from '../data/learnerTypes';
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
   Radar,
-  ResponsiveContainer 
+  ResponsiveContainer
 } from 'recharts';
 
+const LEARNER_TYPES: LearnerType[] = ['가', '나', '다', '라', '마', '바'];
+
 export default function AppDetail() {
-  const { id } = useParams();
-  const app = apps.find(a => a.id === id);
+  const { id } = useParams<{ id: string }>();
+  const [app, setApp] = useState<App | null>(null);
+  const [appReviews, setAppReviews] = useState<Review[]>([]);
+  const [typeRatings, setTypeRatings] = useState<Record<LearnerType, number>>({
+    가: 0, 나: 0, 다: 0, 라: 0, 마: 0, 바: 0,
+  });
+  const [repliesMap, setRepliesMap] = useState<Record<string, ReviewReply[]>>({});
+  const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'all' | LearnerType>('all');
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const [helpfulReviews, setHelpfulReviews] = useState<Record<string, { count: number, userMarked: boolean }>>({});
+  const [helpfulReviews, setHelpfulReviews] = useState<Record<string, { count: number; userMarked: boolean }>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
-  const [, setRepliesVersion] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Load helpful data from localStorage
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+
+    const load = async () => {
+      const [fetchedApp, reviews] = await Promise.all([
+        fetchAppById(id),
+        getReviewsForApp(id),
+      ]);
+
+      setApp(fetchedApp ? enrichAppWithStaticContent(fetchedApp) : null);
+      setAppReviews(reviews);
+
+      const ratingValues = await Promise.all(
+        LEARNER_TYPES.map((t) => getAverageRatingByType(id, t))
+      );
+      const ratings = Object.fromEntries(
+        LEARNER_TYPES.map((t, i) => [t, ratingValues[i]])
+      ) as Record<LearnerType, number>;
+      setTypeRatings(ratings);
+
+      const replyEntries = await Promise.all(
+        reviews.map(async (r) => {
+          const rep = await getRepliesForReview(r.id);
+          return [r.id, rep] as [string, ReviewReply[]];
+        })
+      );
+      setRepliesMap(Object.fromEntries(replyEntries));
+    };
+
+    load().catch(console.error).finally(() => setLoading(false));
+  }, [id]);
+
   useEffect(() => {
     const saved = localStorage.getItem('review-helpful');
-    if (saved) {
-      setHelpfulReviews(JSON.parse(saved));
-    }
+    if (saved) setHelpfulReviews(JSON.parse(saved));
   }, []);
 
-  // Save helpful data to localStorage
-  const saveHelpfulData = (data: Record<string, { count: number, userMarked: boolean }>) => {
+  const saveHelpfulData = (data: Record<string, { count: number; userMarked: boolean }>) => {
     localStorage.setItem('review-helpful', JSON.stringify(data));
     setHelpfulReviews(data);
   };
 
-  // Toggle helpful status
   const toggleHelpful = (reviewId: string) => {
-    const current = helpfulReviews[reviewId] || { count: 0, userMarked: false };
-    const newData = {
+    const current = helpfulReviews[reviewId] ?? { count: 0, userMarked: false };
+    saveHelpfulData({
       ...helpfulReviews,
       [reviewId]: {
         count: current.userMarked ? current.count - 1 : current.count + 1,
-        userMarked: !current.userMarked
-      }
-    };
-    saveHelpfulData(newData);
+        userMarked: !current.userMarked,
+      },
+    });
   };
 
-  const submitReply = (reviewId: string) => {
+  const submitReply = async (reviewId: string) => {
     const text = replyText.trim();
     if (!text) return;
-    addReviewReply(reviewId, text);
+    const reply = await addReviewReply(reviewId, text);
+    setRepliesMap((prev) => ({
+      ...prev,
+      [reviewId]: [...(prev[reviewId] ?? []), reply],
+    }));
     setReplyText('');
     setReplyingTo(null);
-    setRepliesVersion((v) => v + 1);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#0ea5e9] border-t-transparent rounded-full animate-spin" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!app) {
-    return <div>App not found</div>;
+    return (
+      <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-[#64748b] dark:text-[#bec7d2]">App not found</p>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   const levelTags = getAppLevelDisplayTags(app);
+  const overallRating =
+    appReviews.length > 0
+      ? appReviews.reduce((sum, r) => sum + r.rating, 0) / appReviews.length
+      : 0;
 
-  const overallRating = getOverallRating(app.id);
-  const appReviews = getAllReviews().filter(r => r.appId === app.id);
-  const filteredReviews = selectedFilter === 'all' 
-    ? appReviews 
-    : appReviews.filter(r => r.learnerType === selectedFilter);
+  const filteredReviews =
+    selectedFilter === 'all'
+      ? appReviews
+      : appReviews.filter((r) => r.learnerType === selectedFilter);
 
-  // Calculate type ratings
-  const typeRatings: Record<LearnerType, number> = {
-    가: getAverageRatingByType(app.id, '가'),
-    나: getAverageRatingByType(app.id, '나'),
-    다: getAverageRatingByType(app.id, '다'),
-    라: getAverageRatingByType(app.id, '라'),
-    마: getAverageRatingByType(app.id, '마'),
-    바: getAverageRatingByType(app.id, '바')
-  };
-
-  // Prepare radar chart data
-  const radarData = [
-    { type: 'Type 가\nVisual Exploratory', rating: typeRatings.가, id: 'type-a' },
-    { type: 'Type 나\nVisual Structured', rating: typeRatings.나, id: 'type-b' },
-    { type: 'Type 다\nAuditory Exploratory', rating: typeRatings.다, id: 'type-c' },
-    { type: 'Type 라\nAuditory Structured', rating: typeRatings.라, id: 'type-d' },
-    { type: 'Type 마\nMixed Exploratory', rating: typeRatings.마, id: 'type-e' },
-    { type: 'Type 바\nMixed Structured', rating: typeRatings.바, id: 'type-f' }
-  ];
+  const radarData = LEARNER_TYPES.map((t) => ({
+    type: `Type ${t}\n${learnerTypes[t].name}`,
+    rating: typeRatings[t],
+    id: `type-${t}`,
+  }));
 
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
       <Header />
-      
+
       <main className="flex-1 pt-16">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          {/* App Header — compact: hero + Official Website fit common viewports without scroll */}
+          {/* App Header */}
           <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-2xl p-4 sm:p-5 mb-8 sm:mb-10 border border-[#e2e8f0] dark:border-[#232a36]">
             <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
               <div className="w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] rounded-2xl bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center shrink-0 p-1.5">
@@ -136,26 +183,34 @@ export default function AppDetail() {
                     {app.name}: Korean
                   </h1>
 
-                  <ul className="list-disc pl-4 sm:pl-5 space-y-1 mb-3 max-w-[42rem] marker:text-[#94a3b8]">
-                    {app.detailPoints.map((point, i) => (
-                      <li
-                        key={i}
-                        className="font-['Inter:Regular',sans-serif] font-normal text-[13px] sm:text-[14px] leading-snug text-[#64748b] dark:text-[#bec7d2] pl-0.5"
-                      >
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
+                  {app.detailPoints && app.detailPoints.length > 0 ? (
+                    <ul className="list-disc pl-4 sm:pl-5 space-y-1 mb-3 max-w-[42rem] marker:text-[#94a3b8]">
+                      {app.detailPoints.map((point: string, i: number) => (
+                        <li
+                          key={i}
+                          className="font-['Inter:Regular',sans-serif] font-normal text-[13px] sm:text-[14px] leading-snug text-[#64748b] dark:text-[#bec7d2] pl-0.5"
+                        >
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="font-['Inter:Regular',sans-serif] font-normal text-[13px] sm:text-[14px] leading-snug text-[#64748b] dark:text-[#bec7d2] mb-3 max-w-[42rem]">
+                      {app.description}
+                    </p>
+                  )}
 
-                  <a
-                    href={app.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-transparent border-2 border-[#1e293b] dark:border-[#8ecdff] text-[#1e293b] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[13px] sm:text-[14px] px-4 py-2 rounded-lg hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
-                  >
-                    Official Website
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  </a>
+                  {app.url && (
+                    <a
+                      href={app.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-transparent border-2 border-[#1e293b] dark:border-[#8ecdff] text-[#1e293b] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[13px] sm:text-[14px] px-4 py-2 rounded-lg hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
+                    >
+                      Official Website
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                  )}
                 </div>
 
                 <div className="shrink-0 sm:w-[7.25rem] rounded-xl p-3 sm:p-3.5 text-center bg-[#ffffff] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] sm:ml-2">
@@ -169,7 +224,11 @@ export default function AppDetail() {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
-                        className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${star <= Math.round(overallRating) ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]' : 'text-[#cbd5e1] dark:text-[#3f4850]'}`}
+                        className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
+                          star <= Math.round(overallRating)
+                            ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]'
+                            : 'text-[#cbd5e1] dark:text-[#3f4850]'
+                        }`}
                       />
                     ))}
                   </div>
@@ -203,10 +262,10 @@ export default function AppDetail() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {(['가', '나', '다', '라', '마', '바'] as LearnerType[]).map(type => {
+              {LEARNER_TYPES.map((type) => {
                 const typeInfo = learnerTypes[type];
                 const rating = typeRatings[type];
-                
+
                 return (
                   <div
                     key={type}
@@ -233,22 +292,18 @@ export default function AppDetail() {
           {/* Reviews Section */}
           <div className="mb-12">
             <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[32px] leading-[40px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px] mb-2">
-                  Filter Reviews
-                </h2>
-              </div>
-
+              <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[32px] leading-[40px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px]">
+                Filter Reviews
+              </h2>
               <Link
                 to={`/apps/${app.id}/review/new`}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] dark:text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] px-8 py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] px-8 py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
               >
                 Write Review
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
 
-            {/* Filter Buttons */}
             <div className="flex flex-wrap gap-3 mb-8">
               <button
                 onClick={() => setSelectedFilter('all')}
@@ -260,7 +315,7 @@ export default function AppDetail() {
               >
                 All Types
               </button>
-              {(['가', '나', '다', '라', '마', '바'] as LearnerType[]).map(type => {
+              {LEARNER_TYPES.map((type) => {
                 const typeInfo = learnerTypes[type];
                 return (
                   <button
@@ -272,18 +327,19 @@ export default function AppDetail() {
                         : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#bec7d2] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
                     }`}
                   >
-                    Type {type}: {typeInfo.sensory.charAt(0).toUpperCase() + typeInfo.sensory.slice(1)} {typeInfo.style.charAt(0).toUpperCase() + typeInfo.style.slice(1)}
+                    Type {type}:{' '}
+                    {typeInfo.sensory.charAt(0).toUpperCase() + typeInfo.sensory.slice(1)}{' '}
+                    {typeInfo.style.charAt(0).toUpperCase() + typeInfo.style.slice(1)}
                   </button>
                 );
               })}
             </div>
 
-            {/* Reviews List */}
             <div className="space-y-6">
-              {filteredReviews.map(review => {
+              {filteredReviews.map((review) => {
                 const typeInfo = learnerTypes[review.learnerType];
-                const helpfulData = helpfulReviews[review.id] || { count: 0, userMarked: false };
-                const replies = getRepliesForReview(review.id);
+                const helpfulData = helpfulReviews[review.id] ?? { count: 0, userMarked: false };
+                const replies = repliesMap[review.id] ?? [];
 
                 return (
                   <div
@@ -291,7 +347,6 @@ export default function AppDetail() {
                     className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[16px] p-8 border border-[#e2e8f0] dark:border-[#232a36]"
                   >
                     <div className="flex items-start gap-6">
-                      {/* User Avatar */}
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center flex-shrink-0">
                         <span className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#00344f]">
                           {review.nickname.charAt(0)}
@@ -299,7 +354,6 @@ export default function AppDetail() {
                       </div>
 
                       <div className="flex-1">
-                        {/* Header */}
                         <div className="flex items-center justify-between mb-3">
                           <div>
                             <div className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">
@@ -310,23 +364,25 @@ export default function AppDetail() {
                               {new Date(review.createdAt).toLocaleDateString()}
                             </div>
                           </div>
-
                           <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map(star => (
+                            {[1, 2, 3, 4, 5].map((star) => (
                               <Star
                                 key={star}
-                                className={`w-5 h-5 ${star <= review.rating ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]' : 'text-[#cbd5e1] dark:text-[#3f4850]'}`}
+                                className={`w-5 h-5 ${
+                                  star <= review.rating
+                                    ? 'fill-[#0ea5e9] text-[#0ea5e9] dark:fill-[#8ecdff] dark:text-[#8ecdff]'
+                                    : 'text-[#cbd5e1] dark:text-[#3f4850]'
+                                }`}
                               />
                             ))}
                           </div>
                         </div>
 
-                        {/* Content */}
                         <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] mb-4">
                           {review.content}
                         </p>
 
-                        {replies.length > 0 ? (
+                        {replies.length > 0 && (
                           <div className="mb-4 space-y-3">
                             <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] uppercase tracking-wide text-[#64748b] dark:text-[#94a3b8]">
                               Replies ({replies.length})
@@ -351,38 +407,40 @@ export default function AppDetail() {
                               </div>
                             ))}
                           </div>
-                        ) : null}
+                        )}
 
-                        {/* Meta */}
                         <div className="flex items-center gap-6 text-[14px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#bec7d2]">
                           <button
                             onClick={() => toggleHelpful(review.id)}
-                            className={`flex items-center gap-1 ${helpfulData.userMarked ? 'text-[#0ea5e9] dark:text-[#8ecdff]' : 'text-[#64748b] dark:text-[#bec7d2] hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] transition-colors'}`}
+                            className={`flex items-center gap-1 transition-colors ${
+                              helpfulData.userMarked
+                                ? 'text-[#0ea5e9] dark:text-[#8ecdff]'
+                                : 'hover:text-[#0ea5e9] dark:hover:text-[#8ecdff]'
+                            }`}
                           >
                             <ThumbsUp className="w-5 h-5" />
                             <span>Helpful ({helpfulData.count})</span>
                           </button>
                           <button
                             onClick={() => setReplyingTo(review.id)}
-                            className="flex items-center gap-1 text-[#64748b] dark:text-[#bec7d2] hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] transition-colors"
+                            className="flex items-center gap-1 hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] transition-colors"
                           >
                             <MessageSquare className="w-5 h-5" />
                             <span>Reply</span>
                           </button>
                         </div>
 
-                        {/* Reply Form */}
                         {replyingTo === review.id && (
                           <div className="mt-4">
                             <textarea
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
-                              className="w-full p-2 border border-[#e2e8f0] dark:border-[#232a36] rounded-[4px] mb-2"
+                              className="w-full p-2 border border-[#e2e8f0] dark:border-[#232a36] rounded-[4px] mb-2 bg-white dark:bg-[#0c141f] text-[#1e293b] dark:text-[#dce3f3]"
                               placeholder="Write your reply here..."
                             />
                             <button
                               onClick={() => submitReply(review.id)}
-                              className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] px-10 py-2.5 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                              className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] px-10 py-2.5 rounded-[8px] hover:opacity-90 transition-opacity"
                             >
                               Submit Reply
                             </button>
@@ -408,17 +466,15 @@ export default function AppDetail() {
 
       <Footer />
 
-      {/* Analysis Modal */}
       {showAnalysisModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/60 backdrop-blur-sm p-6"
           onClick={() => setShowAnalysisModal(false)}
         >
-          <div 
+          <div
             className="bg-[#ffffff] dark:bg-[#151c27] rounded-[24px] max-w-[800px] w-full max-h-[90vh] border border-[#e2e8f0] dark:border-[#232a36] shadow-[0px_20px_60px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="p-8 pb-6 flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#0ea5e9] dark:text-[#8ecdff]">
@@ -438,34 +494,21 @@ export default function AppDetail() {
               </h2>
             </div>
 
-            {/* Scrollable Content */}
             <div className="overflow-y-auto px-8 pb-8 flex-1">
-              {/* Radar Chart */}
-              <div className="mb-6 bg-gradient-radial from-[#c0c7d2]/10 to-transparent rounded-[12px] p-6">
+              <div className="mb-6 rounded-[12px] p-6">
                 <ResponsiveContainer width="100%" height={400}>
-                  <RadarChart data={radarData} key="radar-chart-main">
-                    <PolarGrid 
-                      stroke="#c0c7d2" 
-                      strokeWidth={2}
-                      gridType="polygon"
-                    />
-                    <PolarAngleAxis 
-                      dataKey="type" 
-                      tick={{ 
-                        fill: 'var(--text-color, #1e293b)', 
+                  <RadarChart data={radarData}>
+                    <PolarGrid stroke="#c0c7d2" strokeWidth={2} gridType="polygon" />
+                    <PolarAngleAxis
+                      dataKey="type"
+                      tick={{
+                        fill: '#1e293b',
                         fontSize: 11,
                         fontFamily: "'Manrope', sans-serif",
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
                       }}
-                      style={{
-                        '--text-color': 'light-dark(#1e293b, #dce3f3)'
-                      } as React.CSSProperties}
                     />
-                    <PolarRadiusAxis 
-                      angle={90} 
-                      domain={[0, 5]} 
-                      tick={false}
-                    />
+                    <PolarRadiusAxis angle={90} domain={[0, 5]} tick={false} />
                     <Radar
                       name="Rating"
                       dataKey="rating"
@@ -479,13 +522,12 @@ export default function AppDetail() {
                 </ResponsiveContainer>
               </div>
 
-              {/* Type Details Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-                {(['가', '나', '다', '라', '마', '바'] as LearnerType[]).map(type => {
+                {LEARNER_TYPES.map((type) => {
                   const typeInfo = learnerTypes[type];
                   const rating = typeRatings[type];
-                  const reviewCount = appReviews.filter(r => r.learnerType === type).length;
-                  
+                  const reviewCount = appReviews.filter((r) => r.learnerType === type).length;
+
                   return (
                     <div
                       key={type}
@@ -497,10 +539,8 @@ export default function AppDetail() {
                             {type}
                           </span>
                         </div>
-                        <div>
-                          <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3]">
-                            {rating > 0 ? rating.toFixed(1) : '-'}
-                          </div>
+                        <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3]">
+                          {rating > 0 ? rating.toFixed(1) : '-'}
                         </div>
                       </div>
                       <div className="text-[11px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#bec7d2] mb-1">
@@ -514,11 +554,10 @@ export default function AppDetail() {
                 })}
               </div>
 
-              {/* Close Button */}
               <div className="flex justify-center">
                 <button
                   onClick={() => setShowAnalysisModal(false)}
-                  className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] px-10 py-2.5 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                  className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] px-10 py-2.5 rounded-[8px] hover:opacity-90 transition-opacity"
                 >
                   Close
                 </button>

@@ -1,78 +1,5 @@
+import { supabase, type ReviewRow, type ReviewReplyRow } from '../../lib/supabase';
 import { LearnerType } from './learnerTypes';
-
-const USER_REVIEWS_STORAGE_KEY = 'narsha-user-reviews';
-
-type StoredReview = Omit<Review, 'createdAt'> & { createdAt: string };
-
-function loadUserReviewsFromStorage(): Review[] {
-  if (typeof localStorage === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(USER_REVIEWS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as StoredReview[];
-    return parsed.map((r) => ({
-      ...r,
-      createdAt: new Date(r.createdAt),
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function persistUserReviews(reviews: Review[]) {
-  if (typeof localStorage === 'undefined') return;
-  const serializable: StoredReview[] = reviews.map((r) => ({
-    ...r,
-    createdAt:
-      r.createdAt instanceof Date
-        ? r.createdAt.toISOString()
-        : String(r.createdAt),
-  }));
-  localStorage.setItem(USER_REVIEWS_STORAGE_KEY, JSON.stringify(serializable));
-}
-
-/** Mock data + reviews saved from the Write Review form (localStorage). */
-export function getAllReviews(): Review[] {
-  const user = loadUserReviewsFromStorage();
-  return [...user, ...mockReviews].sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-}
-
-export function mapFormGoalToReviewGoal(
-  form: string
-): Review['goal'] {
-  switch (form) {
-    case 'topik':
-      return 'topik';
-    case 'business':
-      return 'business';
-    case 'entertainment':
-      return 'culture';
-    case 'academic':
-      return 'daily';
-    case 'culture':
-      return 'culture';
-    case 'daily':
-    default:
-      return 'daily';
-  }
-}
-
-export function saveUserReview(
-  input: Omit<Review, 'id' | 'createdAt' | 'helpfulCount'>
-): Review {
-  const review: Review = {
-    ...input,
-    id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    createdAt: new Date(),
-    helpfulCount: 0,
-  };
-  const existing = loadUserReviewsFromStorage();
-  persistUserReviews([review, ...existing]);
-  return review;
-}
 
 export type UsagePeriod =
   | 'lt1w'
@@ -91,7 +18,6 @@ export const usagePeriodLabels: Record<UsagePeriod, string> = {
   '1y+': '1 year or more',
 };
 
-/** Human-readable label for review cards (supports legacy localStorage values). */
 export function formatUsagePeriod(period: string): string {
   if (period in usagePeriodLabels) {
     return usagePeriodLabels[period as UsagePeriod];
@@ -119,119 +45,9 @@ export interface Review {
   imageUrls?: string[];
   createdAt: Date;
   helpfulCount: number;
+  chosenStrengths?: string[];
+  chosenLimits?: string[];
 }
-
-export const mockReviews: Review[] = [
-  {
-    id: 'rev1',
-    appId: 'duolingo',
-    nickname: 'Min-jun Kim',
-    learnerType: '나',
-    level: 'beginner',
-    goal: 'daily',
-    usagePeriod: '1m-lt3m',
-    rating: 4,
-    content: 'Excellent for foundation, lacking in complex syntax.',
-    contentKo: '기초를 다지기에는 우수하나, 복잡한 문법 설명이 부족합니다.',
-    createdAt: new Date('2023-10-12'),
-    helpfulCount: 142
-  },
-  {
-    id: 'rev2',
-    appId: 'duolingo',
-    nickname: 'Sarah Jenkins',
-    learnerType: '마',
-    level: 'elementary',
-    goal: 'culture',
-    usagePeriod: '3m-lt6m',
-    rating: 5,
-    content: 'Great platform, though wish there were more collaborative breakout rooms for Type 마 learners.',
-    contentKo: '마 유형 학습자를 위한 협업 토론 공간이 더 있었으면 좋겠지만, 훌륭한 플랫폼입니다.',
-    createdAt: new Date('2024-01-03'),
-    helpfulCount: 89
-  },
-  {
-    id: 'rev3',
-    appId: 'ttmik',
-    nickname: 'Gin-su Paro',
-    learnerType: '다',
-    level: 'intermediate',
-    goal: 'topik',
-    usagePeriod: '1y+',
-    rating: 4,
-    content: 'As an academic student, I find the gamification keeps me consistent.',
-    contentKo: '학문적인 학생으로서, 게임화 요소가 일관성을 유지하는 데 도움이 됩니다.',
-    createdAt: new Date('2023-12-15'),
-    helpfulCount: 234
-  },
-  {
-    id: 'rev4',
-    appId: 'anki',
-    nickname: 'Hiroshi Sato',
-    learnerType: '나',
-    level: 'advanced',
-    goal: 'business',
-    usagePeriod: '1y+',
-    rating: 5,
-    content: 'The methodology is exactly what Type 라 learners need for high fluency.',
-    contentKo: '라 유형 학습자가 높은 유창성을 위해 필요한 정확한 방법론입니다.',
-    createdAt: new Date('2023-11-28'),
-    helpfulCount: 178
-  },
-  {
-    id: 'rev5',
-    appId: 'lingodeer',
-    nickname: 'Elena Rodriguez',
-    learnerType: '가',
-    level: 'beginner',
-    goal: 'culture',
-    usagePeriod: '1m-lt3m',
-    rating: 4,
-    content: 'Curriculum engagement is currently lacking highest rated "Type 나 (Visual Learners)" due to the visual design of material, which is highly integrated with resource.',
-    contentKo: '시각 자료의 디자인이 리소스와 높은 통합성을 보여, "나 유형(시각 학습자)"에게 가장 높은 평가를 받지만 커리큘럼 참여도는 부족합니다.',
-    createdAt: new Date('2024-02-20'),
-    helpfulCount: 67
-  },
-  {
-    id: 'rev6',
-    appId: 'duolingo',
-    nickname: 'Ji-hoon Park',
-    learnerType: '라',
-    level: 'intermediate',
-    goal: 'topik',
-    usagePeriod: '3m-lt6m',
-    rating: 3,
-    content: 'Good structured approach but could use more audio-focused exercises for Type 라 learners.',
-    contentKo: '구조화된 접근 방식은 좋지만 라 유형 학습자를 위한 청각 중심 연습이 더 필요합니다.',
-    createdAt: new Date('2024-03-10'),
-    helpfulCount: 56
-  }
-];
-
-// Calculate average rating by learner type for an app
-export function getAverageRatingByType(appId: string, learnerType: LearnerType): number {
-  const reviews = getAllReviews().filter(r => r.appId === appId && r.learnerType === learnerType);
-  if (reviews.length === 0) return 0;
-  
-  const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-  return sum / reviews.length;
-}
-
-// Get overall average rating for an app
-export function getOverallRating(appId: string): number {
-  const reviews = getAllReviews().filter(r => r.appId === appId);
-  if (reviews.length === 0) return 0;
-  
-  const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-  return sum / reviews.length;
-}
-
-// Get review count
-export function getReviewCount(appId: string): number {
-  return getAllReviews().filter(r => r.appId === appId).length;
-}
-
-// --- Review replies (localStorage, keyed by review id) ---
 
 export interface ReviewReply {
   id: string;
@@ -240,54 +56,163 @@ export interface ReviewReply {
   createdAt: Date;
 }
 
-const REVIEW_REPLIES_STORAGE_KEY = 'narsha-review-replies';
+function rowToReview(row: ReviewRow): Review {
+  return {
+    id: row.id,
+    appId: row.app_id,
+    nickname: row.nickname,
+    learnerType: row.learner_type as LearnerType,
+    level: row.level as Review['level'],
+    goal: row.goal as Review['goal'],
+    usagePeriod: row.usage_period as UsagePeriod,
+    rating: row.rating,
+    content: row.content ?? '',
+    contentKo: row.content_ko ?? '',
+    imageUrls: row.image_urls.length > 0 ? row.image_urls : undefined,
+    createdAt: new Date(row.created_at),
+    helpfulCount: row.helpful_count,
+    chosenStrengths: row.chosen_strengths,
+    chosenLimits: row.chosen_limits,
+  };
+}
 
-type StoredReply = Omit<ReviewReply, 'createdAt'> & { createdAt: string };
+// ── Fetch ────────────────────────────────────────────────────────────────────
 
-function loadRepliesFromStorage(): ReviewReply[] {
-  if (typeof localStorage === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(REVIEW_REPLIES_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as StoredReply[];
-    return parsed.map((r) => ({
-      ...r,
-      createdAt: new Date(r.createdAt),
-    }));
-  } catch {
-    return [];
+export async function getAllReviews(): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ReviewRow[]).map(rowToReview);
+}
+
+export async function getReviewsForApp(appId: string): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('app_id', appId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ReviewRow[]).map(rowToReview);
+}
+
+export async function getAverageRatingByType(
+  appId: string,
+  learnerType: LearnerType
+): Promise<number> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('app_id', appId)
+    .eq('learner_type', learnerType);
+
+  if (error) throw error;
+  if (!data || data.length === 0) return 0;
+  const sum = data.reduce((acc: number, r: { rating: number }) => acc + r.rating, 0);
+  return sum / data.length;
+}
+
+export async function getOverallRating(appId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('app_id', appId);
+
+  if (error) throw error;
+  if (!data || data.length === 0) return 0;
+  const sum = data.reduce((acc: number, r: { rating: number }) => acc + r.rating, 0);
+  return sum / data.length;
+}
+
+export async function getReviewCount(appId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('reviews')
+    .select('id', { count: 'exact', head: true })
+    .eq('app_id', appId);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+// ── Write ────────────────────────────────────────────────────────────────────
+
+export function mapFormGoalToReviewGoal(form: string): Review['goal'] {
+  switch (form) {
+    case 'topik': return 'topik';
+    case 'business': return 'business';
+    case 'entertainment':
+    case 'culture': return 'culture';
+    case 'academic':
+    case 'daily':
+    default: return 'daily';
   }
 }
 
-function persistReplies(replies: ReviewReply[]) {
-  if (typeof localStorage === 'undefined') return;
-  const serializable: StoredReply[] = replies.map((r) => ({
-    ...r,
-    createdAt:
-      r.createdAt instanceof Date
-        ? r.createdAt.toISOString()
-        : String(r.createdAt),
-  }));
-  localStorage.setItem(REVIEW_REPLIES_STORAGE_KEY, JSON.stringify(serializable));
-}
-
-export function getRepliesForReview(reviewId: string): ReviewReply[] {
-  return loadRepliesFromStorage()
-    .filter((r) => r.reviewId === reviewId)
-    .sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
-}
-
-export function addReviewReply(reviewId: string, body: string): ReviewReply {
-  const trimmed = body.trim();
-  const reply: ReviewReply = {
-    id: `reply-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    reviewId,
-    body: trimmed,
-    createdAt: new Date(),
+export async function saveUserReview(
+  input: Omit<Review, 'id' | 'createdAt' | 'helpfulCount'>
+): Promise<Review> {
+  const payload = {
+    app_id: input.appId,
+    nickname: input.nickname,
+    learner_type: input.learnerType,
+    level: input.level,
+    goal: input.goal,
+    usage_period: input.usagePeriod,
+    rating: input.rating,
+    content: input.content || null,
+    content_ko: input.contentKo || null,
+    image_urls: input.imageUrls ?? [],
+    chosen_strengths: input.chosenStrengths ?? [],
+    chosen_limits: input.chosenLimits ?? [],
   };
-  persistReplies([...loadRepliesFromStorage(), reply]);
-  return reply;
+
+  const { data, error } = await supabase
+    .from('reviews')
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToReview(data as ReviewRow);
+}
+
+// ── Replies ──────────────────────────────────────────────────────────────────
+
+export async function getRepliesForReview(reviewId: string): Promise<ReviewReply[]> {
+  const { data, error } = await supabase
+    .from('review_replies')
+    .select('*')
+    .eq('review_id', reviewId)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return (data as ReviewReplyRow[]).map((r) => ({
+    id: r.id,
+    reviewId: r.review_id,
+    body: r.body,
+    createdAt: new Date(r.created_at),
+  }));
+}
+
+export async function addReviewReply(
+  reviewId: string,
+  body: string
+): Promise<ReviewReply> {
+  const { data, error } = await supabase
+    .from('review_replies')
+    .insert({ review_id: reviewId, body: body.trim() })
+    .select()
+    .single();
+
+  if (error) throw error;
+  const r = data as ReviewReplyRow;
+  return {
+    id: r.id,
+    reviewId: r.review_id,
+    body: r.body,
+    createdAt: new Date(r.created_at),
+  };
 }
