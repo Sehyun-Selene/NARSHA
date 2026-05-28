@@ -66,17 +66,22 @@ export default function Home() {
 
   const filteredApps = apps.filter(app => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
-    const appKeywordQuery = ['app', 'apps', 'application', 'mobile app'].includes(normalizedQuery);
 
     const matchesSearch = !normalizedQuery ||
       app.name.toLowerCase().includes(normalizedQuery) ||
-      app.description.toLowerCase().includes(normalizedQuery) ||
-      app.descriptionKo.toLowerCase().includes(normalizedQuery) ||
       app.aliases.some(a => a.toLowerCase().includes(normalizedQuery)) ||
+      app.learningField.some(f => f.toLowerCase().includes(normalizedQuery)) ||
+      app.levels.some(l => l.toLowerCase().includes(normalizedQuery)) ||
       app.purposes.some(p => p.toLowerCase().includes(normalizedQuery)) ||
-      (app.detailPoints ?? []).some((p) => p.toLowerCase().includes(normalizedQuery)) ||
-      (app.detailPointsKo ?? []).some((p) => p.toLowerCase().includes(normalizedQuery)) ||
-      (appKeywordQuery && Boolean(app.url));
+      app.pricing.some(p => p.toLowerCase().includes(normalizedQuery)) ||
+      app.platform.some(p => p.toLowerCase().includes(normalizedQuery)) ||
+      app.teachingLanguage.some(l => l.toLowerCase().includes(normalizedQuery)) ||
+      app.realtimeFeedback.some(f => f.toLowerCase().includes(normalizedQuery)) ||
+      app.differentiators.some(d => d.toLowerCase().includes(normalizedQuery)) ||
+      app.limitations.some(l => l.toLowerCase().includes(normalizedQuery)) ||
+      app.sensory.toLowerCase().includes(normalizedQuery) ||
+      app.style.toLowerCase().includes(normalizedQuery) ||
+      (app.learnerTypeCode?.toLowerCase().includes(normalizedQuery) ?? false);
 
     const matchesLevel = !levelFilter || app.levels.includes(levelFilter);
     const matchesPurpose = !purposeFilter || app.purposes.includes(purposeFilter);
