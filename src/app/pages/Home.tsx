@@ -188,6 +188,20 @@ const AUTHORITY_CHIPS = [
   { value: 'authority.research_backed',     label: 'Research-backed'     },
 ];
 
+// Groups D–M in order — used for AND-between-groups filtering
+const ADV_TAG_GROUPS = [
+  FEEDBACK_CHIPS,
+  MECHANISM_CHIPS,
+  FORMAT_CHIPS,
+  INSTRUCTOR_CHIPS,
+  STRENGTH_AREA_CHIPS,
+  FIT_CHIPS,
+  UX_CHIPS,
+  SOCIAL_CHIPS,
+  PACE_CHIPS,
+  AUTHORITY_CHIPS,
+];
+
 // ── Label lookups ─────────────────────────────────────────────────────────────
 
 const LEVEL_LABELS: Record<string, string> = Object.fromEntries(LEVEL_CHIPS.map(c => [c.value, c.label]));
@@ -308,11 +322,14 @@ export default function Home() {
 
     if (teachingLangFilter && !app.teachingLanguage.includes(teachingLangFilter)) return false;
 
-    // Groups D–M: OR across all selected tags (feedback OR differentiator)
-    if (advancedTagFilters.length > 0 &&
-        !advancedTagFilters.some(t =>
-          app.realtimeFeedback.includes(t) || app.differentiators.includes(t)
-        )) return false;
+    // Groups D–M: AND between groups, OR within group
+    for (const group of ADV_TAG_GROUPS) {
+      const groupValues = group.map(c => c.value);
+      const selected = advancedTagFilters.filter(t => groupValues.includes(t));
+      if (selected.length > 0 &&
+          !selected.some(t => app.realtimeFeedback.includes(t) || app.differentiators.includes(t))
+      ) return false;
+    }
 
     return true;
   });
