@@ -7,6 +7,24 @@ import { AppLogoMark } from '../components/AppLogoMark';
 import { fetchApps, getAppLevelDisplayTags, type App } from '../data/apps';
 import { getAllReviews, type Review } from '../data/reviews';
 
+// Matches a DB tag against a query using exact word matching.
+// Tags like "format.flashcard" are split into ["format","flashcard"],
+// and camelCase like "topikPreparation" into ["topik","preparation"].
+function matchesTag(tag: string, query: string): boolean {
+  const lower = tag.toLowerCase();
+  if (lower === query) return true;
+  const parts = tag.split(/[._-]/);
+  for (const part of parts) {
+    if (part.toLowerCase() === query) return true;
+    const words = part
+      .replace(/([a-z0-9])([A-Z])/g, '$1|$2')
+      .split('|')
+      .map(w => w.toLowerCase());
+    if (words.some(w => w === query)) return true;
+  }
+  return false;
+}
+
 const learnerTypeColors: Record<string, { bg: string, text: string }> = {
   '가': { bg: 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]', text: 'text-[#00344f]' },
   '나': { bg: 'bg-gradient-to-br from-[#60a5fa] to-[#3b82f6]', text: 'text-[#1e3a8a]' },
@@ -70,18 +88,18 @@ export default function Home() {
     const matchesSearch = !normalizedQuery ||
       app.name.toLowerCase().includes(normalizedQuery) ||
       app.aliases.some(a => a.toLowerCase().includes(normalizedQuery)) ||
-      app.learningField.some(f => f.toLowerCase().includes(normalizedQuery)) ||
-      app.levels.some(l => l.toLowerCase().includes(normalizedQuery)) ||
-      app.purposes.some(p => p.toLowerCase().includes(normalizedQuery)) ||
-      app.pricing.some(p => p.toLowerCase().includes(normalizedQuery)) ||
-      app.platform.some(p => p.toLowerCase().includes(normalizedQuery)) ||
-      app.teachingLanguage.some(l => l.toLowerCase().includes(normalizedQuery)) ||
-      app.realtimeFeedback.some(f => f.toLowerCase().includes(normalizedQuery)) ||
-      app.differentiators.some(d => d.toLowerCase().includes(normalizedQuery)) ||
-      app.limitations.some(l => l.toLowerCase().includes(normalizedQuery)) ||
-      app.sensory.toLowerCase().includes(normalizedQuery) ||
-      app.style.toLowerCase().includes(normalizedQuery) ||
-      (app.learnerTypeCode?.toLowerCase().includes(normalizedQuery) ?? false);
+      app.learningField.some(f => matchesTag(f, normalizedQuery)) ||
+      app.levels.some(l => matchesTag(l, normalizedQuery)) ||
+      app.purposes.some(p => matchesTag(p, normalizedQuery)) ||
+      app.pricing.some(p => matchesTag(p, normalizedQuery)) ||
+      app.platform.some(p => matchesTag(p, normalizedQuery)) ||
+      app.teachingLanguage.some(l => matchesTag(l, normalizedQuery)) ||
+      app.realtimeFeedback.some(f => matchesTag(f, normalizedQuery)) ||
+      app.differentiators.some(d => matchesTag(d, normalizedQuery)) ||
+      app.limitations.some(l => matchesTag(l, normalizedQuery)) ||
+      matchesTag(app.sensory, normalizedQuery) ||
+      matchesTag(app.style, normalizedQuery) ||
+      (app.learnerTypeCode ? matchesTag(app.learnerTypeCode, normalizedQuery) : false);
 
     const matchesLevel = !levelFilter || app.levels.includes(levelFilter);
     const matchesPurpose = !purposeFilter || app.purposes.includes(purposeFilter);
