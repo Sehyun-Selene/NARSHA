@@ -105,12 +105,6 @@ function AccuracyCard({
   onAction: () => void;
 }) {
   const [loading, setLoading] = useState<string | null>(null);
-  const [currentTags, setCurrentTags] = useState<string[]>([]);
-
-  useEffect(() => {
-    // We need current tags to remove one — fetch lazily when needed
-    setCurrentTags([]); // will be refreshed via onAction after removal
-  }, []);
 
   const handle = async (action: 'kept' | 'removed') => {
     setLoading(action);
@@ -184,10 +178,68 @@ function AccuracyCard({
   );
 }
 
+const ADMIN_AUTH_KEY = 'narsha-admin-authed';
+const EXPECTED_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined;
+
+function PasswordGate({ onAuthed }: { onAuthed: () => void }) {
+  const [input, setInput] = useState('');
+  const [error, setError] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input === EXPECTED_PASSWORD) {
+      localStorage.setItem(ADMIN_AUTH_KEY, '1');
+      onAuthed();
+    } else {
+      setError(true);
+      setInput('');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex items-center justify-center px-4">
+      <div className="w-full max-w-[360px]">
+        <p className="text-center text-[11px] font-bold tracking-[0.1em] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-3">
+          운영자 전용
+        </p>
+        <h1 className="text-center font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px] mb-8">
+          NARSHA 대시보드
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="password"
+              value={input}
+              onChange={e => { setInput(e.target.value); setError(false); }}
+              placeholder="비밀번호를 입력하세요"
+              autoFocus
+              className={`w-full bg-[#f8fafc] dark:bg-[#151c27] border rounded-[10px] px-4 py-3 text-[15px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] ${error ? 'border-[#ef4444] ring-1 ring-[#ef4444]/40' : 'border-[#e2e8f0] dark:border-[#232a36]'}`}
+            />
+            {error && (
+              <p className="mt-1.5 text-[13px] text-[#ef4444]">비밀번호가 틀렸어요.</p>
+            )}
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[15px] py-3 rounded-[10px] hover:opacity-90 transition-opacity"
+          >
+            입장하기
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
+  const [authed, setAuthed] = useState(false);
   const [boostItems, setBoostItems] = useState<BoostSuggestion[]>([]);
   const [accuracyItems, setAccuracyItems] = useState<AccuracyCheck[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (localStorage.getItem(ADMIN_AUTH_KEY)) setAuthed(true);
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -205,7 +257,14 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { if (authed) load(); }, [authed]);
+
+  const logout = () => {
+    localStorage.removeItem(ADMIN_AUTH_KEY);
+    setAuthed(false);
+  };
+
+  if (!authed) return <PasswordGate onAuthed={() => setAuthed(true)} />;
 
   const totalAlerts = boostItems.length + accuracyItems.length;
 
@@ -215,9 +274,17 @@ export default function AdminDashboard() {
       <main className="flex-1 pt-16">
         <div className="max-w-[800px] mx-auto px-6 py-12">
           <div className="mb-10">
-            <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-2">
-              운영자 전용
-            </p>
+            <div className="flex items-start justify-between mb-1">
+              <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#0ea5e9] dark:text-[#8ecdff]">
+                운영자 전용
+              </p>
+              <button
+                onClick={logout}
+                className="text-[12px] text-[#94a3b8] dark:text-[#3f4850] hover:text-[#64748b] dark:hover:text-[#8a94a6] transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
             <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[36px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px]">
               태그 검토 대시보드
             </h1>

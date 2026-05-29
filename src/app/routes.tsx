@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
       { path: 'survey/questions', Component: Survey },
       { path: 'survey/result', Component: SurveyResult },
       { path: 'survey', Component: SurveyIntro },
-      { path: 'admin', Component: AdminDashboard },
+      { path: import.meta.env.VITE_ADMIN_PATH || 'admin', Component: AdminDashboard },
       { path: '*', Component: NotFound }
     ]
   }
