@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
-import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare } from 'lucide-react';
+import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare, BookMarked, Users } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
@@ -14,6 +14,7 @@ import {
   type ReviewReply,
 } from '../data/reviews';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
+import { STRENGTH_LABELS } from '../lib/tagLabels';
 import {
   RadarChart,
   PolarGrid,
@@ -24,36 +25,6 @@ import {
 } from 'recharts';
 
 const LEARNER_TYPES: LearnerType[] = ['가', '나', '다', '라', '마', '바'];
-
-const STRENGTH_LABELS: Record<string, string> = {
-  'strength.grammar_explanation':  'Grammar Explanation',
-  'strength.pronunciation':        'Pronunciation Practice',
-  'strength.vocabulary_volume':    'Vocabulary Building',
-  'strength.cultural_context':     'Korean Culture',
-  'strength.real_life_phrases':    'Real-life Phrases',
-  'strength.slang_trendy':         'Slang & Trends',
-  'strength.formal_language':      'Honorifics & Formal',
-  'strength.kpop_kdrama_context':  'K-Pop / K-Drama',
-  'strength.exam_focused':         'TOPIK Prep',
-  'format.flashcard':              'Flashcards',
-  'format.video_lecture':          'Video Lectures',
-  'format.native_speaker_clips':   'Native Speaker Clips',
-  'format.live_action_drama':      'Live-action Drama',
-  'format.whiteboard_explanation': 'Whiteboard Lessons',
-  'format.downloadable_pdf':       'Downloadable PDF',
-  'format.subtitles_dual':         'Dual Subtitles',
-  'fit.needs_structure':           'Needs Structure',
-  'fit.casual_learner':            'Casual Learning',
-  'fit.kpop_fan':                  'K-Pop / K-Culture Fans',
-  'fit.career_focused':            'Career / Exam Focus',
-  'fit.shy_speaker':               'Shy Speakers',
-  'ux.offline_available':          'Offline Access',
-  'ux.gamification':               'Gamification',
-  'ux.short_videos':               'Short Videos (5–15 min)',
-  'ux.multilingual_interface':     'Multilingual UI',
-  'social.live_class_option':      'Live Classes',
-  'social.community_forum':        'Learning Community',
-};
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -71,6 +42,12 @@ export default function AppDetail() {
   const [helpfulReviews, setHelpfulReviews] = useState<Record<string, { count: number; userMarked: boolean }>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [filterByType, setFilterByType] = useState(false);
+  const [userLearnerType, setUserLearnerType] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUserLearnerType(localStorage.getItem('narsha-learner-type'));
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -177,16 +154,30 @@ export default function AppDetail() {
       ? appReviews
       : appReviews.filter((r) => r.learnerType === selectedFilter);
 
-  // Top 3 chosen strengths across all reviews
+  // Reviews for learner-eval section (optionally filtered to user's type)
+  const reviewsForEval = filterByType && userLearnerType
+    ? appReviews.filter(r => r.learnerType === userLearnerType)
+    : appReviews;
+  const reviewsWithStrengths = reviewsForEval.filter(r => (r.chosenStrengths ?? []).length > 0);
+  const reviewsWithLimits   = reviewsForEval.filter(r => (r.chosenLimits   ?? []).length > 0);
+
   const strengthCounts: Record<string, number> = {};
-  for (const r of appReviews) {
+  for (const r of reviewsForEval) {
     for (const tag of r.chosenStrengths ?? []) {
       strengthCounts[tag] = (strengthCounts[tag] ?? 0) + 1;
     }
   }
-  const topStrengths = Object.entries(strengthCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
+  const topStrengths = Object.entries(strengthCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+  const limitCounts: Record<string, number> = {};
+  for (const r of reviewsForEval) {
+    for (const tag of r.chosenLimits ?? []) {
+      limitCounts[tag] = (limitCounts[tag] ?? 0) + 1;
+    }
+  }
+  const topLimits = Object.entries(limitCounts).sort((a, b) => b[1] - a[1]).slice(0, 2);
+
+  const curatorTags = new Set(app?.differentiators ?? []);
 
   const radarData = LEARNER_TYPES.map((t) => ({
     type: `Type ${t}\n${learnerTypes[t].name}`,
@@ -332,30 +323,116 @@ export default function AppDetail() {
             </div>
           </div>
 
-          {/* Top Strengths (user-voted) */}
-          {topStrengths.length > 0 && (
-            <div className="mb-10">
-              <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px] mb-4">
-                Top Strengths by Users
-              </h2>
-              <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[16px] p-5 border border-[#e2e8f0] dark:border-[#232a36] space-y-3">
-                {topStrengths.map(([tag, count], idx) => (
-                  <div key={tag} className="flex items-center gap-3">
-                    <span className="text-[20px] w-7 shrink-0">{MEDALS[idx]}</span>
-                    <span className="flex-1 font-['Manrope:Bold',sans-serif] font-bold text-[15px] text-[#1e293b] dark:text-[#dce3f3]">
-                      {STRENGTH_LABELS[tag] ?? tag}
+          {/* ── Area A: Curated by NARSHA ──────────────────────────────────── */}
+          {app.differentiators.length > 0 && (
+            <div className="mb-6">
+              <div className="bg-[#f0f9ff] dark:bg-[#0c1f2e] border-l-4 border-[#0ea5e9] dark:border-[#1b99dc] rounded-r-[16px] p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <BookMarked className="w-4 h-4 text-[#0ea5e9] dark:text-[#8ecdff]" />
+                  <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-[#0ea5e9] dark:text-[#8ecdff]">
+                    Curated by NARSHA
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {app.differentiators.map(tag => (
+                    <span
+                      key={tag}
+                      className="flex items-center gap-1 bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0c4a6e] dark:text-[#8ecdff] text-[12px] font-medium px-2.5 py-1 rounded-full"
+                    >
+                      ✓ {STRENGTH_LABELS[tag] ?? tag}
                     </span>
-                    <span className="text-[13px] text-[#64748b] dark:text-[#8a94a6]">
-                      {count} {count === 1 ? 'reviewer' : 'reviewers'}
-                    </span>
-                  </div>
-                ))}
-                <p className="text-[11px] text-[#94a3b8] dark:text-[#3f4850] pt-1">
-                  Based on tags selected by {appReviews.filter(r => (r.chosenStrengths ?? []).length > 0).length} reviewer{appReviews.filter(r => (r.chosenStrengths ?? []).length > 0).length !== 1 ? 's' : ''}
-                </p>
+                  ))}
+                </div>
               </div>
             </div>
           )}
+
+          {/* ── Area B: Learner Reviews ─────────────────────────────────────── */}
+          <div className="mb-10">
+            <div className="bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[16px] p-5">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#64748b] dark:text-[#8a94a6]" />
+                  <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-[#64748b] dark:text-[#8a94a6]">
+                    Learner Reviews
+                  </span>
+                </div>
+                {userLearnerType && (
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={filterByType}
+                      onChange={e => setFilterByType(e.target.checked)}
+                      className="w-3.5 h-3.5 accent-[#0ea5e9]"
+                    />
+                    <span className="text-[12px] text-[#64748b] dark:text-[#8a94a6]">
+                      Type {userLearnerType} only
+                    </span>
+                  </label>
+                )}
+              </div>
+
+              {/* Content */}
+              {reviewsForEval.length < 3 ? (
+                <p className="text-[14px] text-[#94a3b8] dark:text-[#3f4850] py-4 text-center">
+                  아직 충분한 학습자 평가가 없어요.{' '}
+                  <Link to={`/apps/${app.id}/review/new`} className="text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">
+                    첫 리뷰를 남겨주세요!
+                  </Link>
+                </p>
+              ) : (
+                <>
+                  {/* Strengths */}
+                  {topStrengths.length > 0 && (
+                    <div className="space-y-2.5 mb-4">
+                      {topStrengths.map(([tag, count], idx) => (
+                        <div key={tag} className="flex items-center gap-3">
+                          <span className="text-[18px] w-6 shrink-0">{MEDALS[idx]}</span>
+                          <span className="flex-1 font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3]">
+                            {STRENGTH_LABELS[tag] ?? tag}
+                          </span>
+                          {curatorTags.has(tag) ? (
+                            <span className="text-[11px] text-[#0ea5e9] dark:text-[#8ecdff] font-medium">✓ 운영자 동의</span>
+                          ) : (
+                            <span className="text-[11px] text-[#f59e0b] font-medium">★ 새 발견</span>
+                          )}
+                          <span className="text-[12px] text-[#64748b] dark:text-[#8a94a6] min-w-[3.5rem] text-right">
+                            {count}명
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Limits */}
+                  {topLimits.length > 0 && (
+                    <div className="border-t border-[#e2e8f0] dark:border-[#232a36] pt-3 mt-3 space-y-2">
+                      {topLimits.map(([tag, count]) => (
+                        <div key={tag} className="flex items-center gap-3">
+                          <span className="text-[16px] w-6 shrink-0">⚠️</span>
+                          <span className="flex-1 text-[14px] text-[#64748b] dark:text-[#8a94a6]">
+                            {STRENGTH_LABELS[tag] ?? tag}
+                          </span>
+                          <span className="text-[12px] text-[#94a3b8] dark:text-[#3f4850] min-w-[3.5rem] text-right">
+                            {count}명
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <p className="text-[11px] text-[#94a3b8] dark:text-[#3f4850] mt-3 pt-3 border-t border-[#e2e8f0] dark:border-[#232a36]">
+                    {filterByType && userLearnerType
+                      ? `Type ${userLearnerType} 리뷰어 ${reviewsWithStrengths.length}명 기준`
+                      : `전체 리뷰어 ${reviewsWithStrengths.length}명 기준`}
+                    {reviewsWithLimits.length > 0 && ` · 약점 응답 ${reviewsWithLimits.length}명`}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
 
           {/* Reviews Section */}
           <div className="mb-12">

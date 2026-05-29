@@ -7,6 +7,7 @@ import SurveyIntro from './pages/SurveyIntro';
 import SurveyResult from './pages/SurveyResult';
 import ReviewWrite from './pages/ReviewWrite';
 import Reviews from './pages/Reviews';
+import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
 
 // Router configuration for NARSHA platform
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
       { path: 'survey/questions', Component: Survey },
       { path: 'survey/result', Component: SurveyResult },
       { path: 'survey', Component: SurveyIntro },
+      { path: 'admin', Component: AdminDashboard },
       { path: '*', Component: NotFound }
     ]
   }
