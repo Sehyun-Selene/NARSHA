@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
-import { Star, Upload, Check } from 'lucide-react';
+import { Star, Upload, Check, ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { fetchAppById, type App } from '../data/apps';
@@ -11,6 +12,74 @@ import {
   usagePeriodLabels,
   type UsagePeriod,
 } from '../data/reviews';
+
+// ── Tag data ──────────────────────────────────────────────────────────────────
+
+const STRENGTH_GROUPS = [
+  {
+    label: 'Great for learning',
+    tags: [
+      { value: 'strength.grammar_explanation', label: 'Grammar Explanation' },
+      { value: 'strength.pronunciation',        label: 'Pronunciation Practice' },
+      { value: 'strength.vocabulary_volume',    label: 'Vocabulary Building' },
+      { value: 'strength.cultural_context',     label: 'Korean Culture' },
+      { value: 'strength.real_life_phrases',    label: 'Real-life Phrases' },
+      { value: 'strength.slang_trendy',         label: 'Slang & Trends' },
+      { value: 'strength.formal_language',      label: 'Honorifics & Formal' },
+      { value: 'strength.kpop_kdrama_context',  label: 'K-Pop / K-Drama' },
+      { value: 'strength.exam_focused',         label: 'TOPIK Prep' },
+    ],
+  },
+  {
+    label: 'Content format',
+    tags: [
+      { value: 'format.flashcard',              label: 'Flashcards' },
+      { value: 'format.video_lecture',          label: 'Video Lectures' },
+      { value: 'format.native_speaker_clips',   label: 'Native Speaker Clips' },
+      { value: 'format.live_action_drama',      label: 'Live-action Drama' },
+      { value: 'format.whiteboard_explanation', label: 'Whiteboard Lessons' },
+      { value: 'format.downloadable_pdf',       label: 'Downloadable PDF' },
+      { value: 'format.subtitles_dual',         label: 'Dual Subtitles' },
+    ],
+  },
+  {
+    label: 'Great for',
+    tags: [
+      { value: 'fit.needs_structure', label: 'Needs Structure' },
+      { value: 'fit.casual_learner',  label: 'Casual Learning' },
+      { value: 'fit.kpop_fan',        label: 'K-Pop / K-Culture Fans' },
+      { value: 'fit.career_focused',  label: 'Career / Exam Focus' },
+      { value: 'fit.shy_speaker',     label: 'Shy Speakers' },
+    ],
+  },
+  {
+    label: 'Nice to have',
+    tags: [
+      { value: 'ux.offline_available',          label: 'Offline Access' },
+      { value: 'ux.gamification',               label: 'Gamification' },
+      { value: 'ux.short_videos',               label: 'Short Videos (5–15 min)' },
+      { value: 'ux.multilingual_interface',     label: 'Multilingual UI' },
+      { value: 'social.live_class_option',      label: 'Live Classes' },
+      { value: 'social.community_forum',        label: 'Learning Community' },
+    ],
+  },
+];
+
+const LIMIT_TAGS = [
+  { value: 'limit.weak_in_speaking',              label: 'Weak in Speaking' },
+  { value: 'limit.weak_in_writing',               label: 'Weak in Writing' },
+  { value: 'limit.weak_in_advanced',              label: 'Lacks Advanced Content' },
+  { value: 'limit.weak_in_grammar',               label: 'Lacks Grammar Explanation' },
+  { value: 'limit.weak_in_reading',               label: 'Weak in Reading' },
+  { value: 'limit.no_human_feedback',             label: 'No Human Feedback' },
+  { value: 'limit.voice_recognition_unreliable',  label: 'Unreliable Voice Recognition' },
+  { value: 'limit.requires_supplementary',        label: 'Best with Supplements' },
+  { value: 'limit.no_certification',              label: 'No Certificate' },
+];
+
+const CHIP_OFF = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cursor-pointer font-medium bg-[#f1f5f9] dark:bg-[#232a36] text-[#64748b] dark:text-[#8a94a6] border-[#e2e8f0] dark:border-[#2e3541] hover:bg-[#e2e8f0] dark:hover:bg-[#2e3541]';
+const CHIP_ON  = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cursor-pointer font-medium bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] border-transparent';
+const CHIP_LIMIT_ON = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cursor-pointer font-medium bg-[#f59e0b] text-white border-transparent';
 
 type ReviewFieldKey = 'nickname' | 'rating' | 'content';
 
@@ -26,6 +95,9 @@ export default function ReviewWrite() {
   const [usagePeriod, setUsagePeriod] = useState<UsagePeriod>('lt1w');
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
+  const [chosenStrengths, setChosenStrengths] = useState<string[]>([]);
+  const [chosenLimits, setChosenLimits] = useState<string[]>([]);
+  const [openGroups, setOpenGroups] = useState<Set<number>>(new Set([0]));
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ReviewFieldKey, string>>>({});
@@ -78,6 +150,37 @@ export default function ReviewWrite() {
 
   const typeInfo = learnerTypes[learnerType];
 
+  const toggleStrength = (tag: string) => {
+    if (chosenStrengths.includes(tag)) {
+      setChosenStrengths(p => p.filter(t => t !== tag));
+    } else {
+      if (chosenStrengths.length >= 3) {
+        toast.info('Up to 3 strengths can be selected.');
+        return;
+      }
+      setChosenStrengths(p => [...p, tag]);
+    }
+  };
+
+  const toggleLimit = (tag: string) => {
+    if (chosenLimits.includes(tag)) {
+      setChosenLimits(p => p.filter(t => t !== tag));
+    } else {
+      if (chosenLimits.length >= 2) {
+        toast.info('Up to 2 limitations can be selected.');
+        return;
+      }
+      setChosenLimits(p => [...p, tag]);
+    }
+  };
+
+  const toggleGroup = (idx: number) =>
+    setOpenGroups(prev => {
+      const next = new Set(prev);
+      next.has(idx) ? next.delete(idx) : next.add(idx);
+      return next;
+    });
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -108,6 +211,8 @@ export default function ReviewWrite() {
         rating,
         content: content.trim(),
         contentKo: '',
+        chosenStrengths,
+        chosenLimits,
       });
       setSubmitted(true);
       setTimeout(() => navigate(`/apps/${app.id}`), 2000);
@@ -345,6 +450,73 @@ export default function ReviewWrite() {
                       {fieldErrors.rating}
                     </p>
                   )}
+                </div>
+
+                {/* Strength tags */}
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3]">
+                      What are this service's strengths?{' '}
+                      <span className="font-normal text-[#64748b] dark:text-[#bec7d2]">
+                        (up to 3{chosenStrengths.length > 0 ? ` · ${chosenStrengths.length} selected` : ''}, optional)
+                      </span>
+                    </p>
+                  </div>
+                  {STRENGTH_GROUPS.map((group, idx) => (
+                    <div key={group.label} className="border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(idx)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-left bg-[#f8fafc] dark:bg-[#1e293b] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36] transition-colors"
+                      >
+                        <span className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3]">
+                          {group.label}
+                          {group.tags.filter(t => chosenStrengths.includes(t.value)).length > 0 && (
+                            <span className="ml-2 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                              {group.tags.filter(t => chosenStrengths.includes(t.value)).length}
+                            </span>
+                          )}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-[#64748b] dark:text-[#8a94a6] transition-transform ${openGroups.has(idx) ? 'rotate-180' : ''}`} />
+                      </button>
+                      {openGroups.has(idx) && (
+                        <div className="px-4 py-3 flex flex-wrap gap-1.5">
+                          {group.tags.map(tag => (
+                            <button
+                              key={tag.value}
+                              type="button"
+                              onClick={() => toggleStrength(tag.value)}
+                              className={chosenStrengths.includes(tag.value) ? CHIP_ON : CHIP_OFF}
+                            >
+                              {tag.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Limit tags */}
+                <div>
+                  <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
+                    What could be improved?{' '}
+                    <span className="font-normal text-[#64748b] dark:text-[#bec7d2]">
+                      (up to 2{chosenLimits.length > 0 ? ` · ${chosenLimits.length} selected` : ''}, optional)
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {LIMIT_TAGS.map(tag => (
+                      <button
+                        key={tag.value}
+                        type="button"
+                        onClick={() => toggleLimit(tag.value)}
+                        className={chosenLimits.includes(tag.value) ? CHIP_LIMIT_ON : CHIP_OFF}
+                      >
+                        {tag.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div ref={contentBlockRef}>

@@ -63,3 +63,15 @@ export interface ReviewReplyRow {
   body: string;
   created_at: string;
 }
+
+export interface SuggestedServiceRow {
+  id: string;
+  service_name: string;
+  service_url: string | null;
+  recommended_strengths: string[];
+  custom_reason: string | null;
+  reporter_email: string | null;
+  status: string;
+  notes: string | null;
+  created_at: string;
+}

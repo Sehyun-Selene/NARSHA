@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal, SearchX } from 'lucide-react';
+import SuggestServiceModal from '../components/SuggestServiceModal';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
@@ -268,10 +269,16 @@ export default function Home() {
   const [advancedTagFilters, setAdvancedTagFilters] = useState<string[]>([]);   // D–M
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
+  const [hasTakenSurvey, setHasTakenSurvey] = useState(false);
 
   // Placeholder rotation
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [placeholderVisible, setPlaceholderVisible] = useState(true);
+
+  useEffect(() => {
+    setHasTakenSurvey(!!localStorage.getItem('narsha-learner-type'));
+  }, []);
 
   useEffect(() => {
     Promise.all([fetchApps(), getAllReviews()])
@@ -352,13 +359,15 @@ export default function Home() {
     setPlatformFilters([]);
     setTeachingLangFilter(null);
     setAdvancedTagFilters([]);
+    if (!hasTakenSurvey) setLearnerTypeFilter(null);
   };
 
   const advancedFilterCount =
     (priceFilter ? 1 : 0) +
     platformFilters.length +
     (teachingLangFilter ? 1 : 0) +
-    advancedTagFilters.length;
+    advancedTagFilters.length +
+    (!hasTakenSurvey && learnerTypeFilter ? 1 : 0);
 
   const toggleAdvTag = (tag: string) =>
     setAdvancedTagFilters(prev =>
@@ -441,14 +450,16 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">Type</span>
-                <div className="flex flex-wrap gap-1">
-                  {LEARNER_TYPE_CHIPS.map(chip => (
-                    <button key={chip.value} onClick={() => setLearnerTypeFilter(p => p === chip.value ? null : chip.value)} className={learnerTypeFilter === chip.value ? CHIP_ON : CHIP_OFF}>{chip.label}</button>
-                  ))}
+              {hasTakenSurvey && (
+                <div className="flex items-center gap-2">
+                  <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">Type</span>
+                  <div className="flex flex-wrap gap-1">
+                    {LEARNER_TYPE_CHIPS.map(chip => (
+                      <button key={chip.value} onClick={() => setLearnerTypeFilter(p => p === chip.value ? null : chip.value)} className={learnerTypeFilter === chip.value ? CHIP_ON : CHIP_OFF}>{chip.label}</button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="flex items-center gap-2">
                 <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">Strengths</span>
                 <div className="flex flex-wrap gap-1">
@@ -497,6 +508,20 @@ export default function Home() {
             <div className="flex justify-center items-center py-24">
               <div className="w-8 h-8 border-4 border-[#0ea5e9] border-t-transparent rounded-full animate-spin" />
             </div>
+          ) : filteredApps.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+              <SearchX className="w-12 h-12 text-[#94a3b8] dark:text-[#3f4850]" />
+              <div>
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">No results found</p>
+                <p className="text-[14px] text-[#64748b] dark:text-[#bec7d2]">Can't find the service you're looking for on NARSHA?</p>
+              </div>
+              <button
+                onClick={() => setShowSuggestModal(true)}
+                className="mt-2 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90 transition-opacity"
+              >
+                Suggest a Service →
+              </button>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredApps.map(app => {
@@ -541,6 +566,8 @@ export default function Home() {
 
       <Footer />
 
+      <SuggestServiceModal open={showSuggestModal} onClose={() => setShowSuggestModal(false)} />
+
       {/* ── Advanced Filters Drawer ────────────────────────────────────────────── */}
       {showAdvancedFilters && (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -557,6 +584,21 @@ export default function Home() {
 
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+              {/* Learner Type (shown only before survey is taken) */}
+              {!hasTakenSurvey && (
+                <section>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850]">Learner Type</p>
+                    <a href="/survey" className="text-[10px] text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">Take the test →</a>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {LEARNER_TYPE_CHIPS.map(c => (
+                      <button key={c.value} onClick={() => setLearnerTypeFilter(p => p === c.value ? null : c.value)} className={learnerTypeFilter === c.value ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                    ))}
+                  </div>
+                </section>
+              )}
 
               {/* A: Price */}
               <section>
