@@ -25,6 +25,38 @@ import {
 
 const LEARNER_TYPES: LearnerType[] = ['가', '나', '다', '라', '마', '바'];
 
+const STRENGTH_LABELS: Record<string, string> = {
+  'strength.grammar_explanation':  'Grammar Explanation',
+  'strength.pronunciation':        'Pronunciation Practice',
+  'strength.vocabulary_volume':    'Vocabulary Building',
+  'strength.cultural_context':     'Korean Culture',
+  'strength.real_life_phrases':    'Real-life Phrases',
+  'strength.slang_trendy':         'Slang & Trends',
+  'strength.formal_language':      'Honorifics & Formal',
+  'strength.kpop_kdrama_context':  'K-Pop / K-Drama',
+  'strength.exam_focused':         'TOPIK Prep',
+  'format.flashcard':              'Flashcards',
+  'format.video_lecture':          'Video Lectures',
+  'format.native_speaker_clips':   'Native Speaker Clips',
+  'format.live_action_drama':      'Live-action Drama',
+  'format.whiteboard_explanation': 'Whiteboard Lessons',
+  'format.downloadable_pdf':       'Downloadable PDF',
+  'format.subtitles_dual':         'Dual Subtitles',
+  'fit.needs_structure':           'Needs Structure',
+  'fit.casual_learner':            'Casual Learning',
+  'fit.kpop_fan':                  'K-Pop / K-Culture Fans',
+  'fit.career_focused':            'Career / Exam Focus',
+  'fit.shy_speaker':               'Shy Speakers',
+  'ux.offline_available':          'Offline Access',
+  'ux.gamification':               'Gamification',
+  'ux.short_videos':               'Short Videos (5–15 min)',
+  'ux.multilingual_interface':     'Multilingual UI',
+  'social.live_class_option':      'Live Classes',
+  'social.community_forum':        'Learning Community',
+};
+
+const MEDALS = ['🥇', '🥈', '🥉'];
+
 export default function AppDetail() {
   const { id } = useParams<{ id: string }>();
   const [app, setApp] = useState<App | null>(null);
@@ -144,6 +176,17 @@ export default function AppDetail() {
     selectedFilter === 'all'
       ? appReviews
       : appReviews.filter((r) => r.learnerType === selectedFilter);
+
+  // Top 3 chosen strengths across all reviews
+  const strengthCounts: Record<string, number> = {};
+  for (const r of appReviews) {
+    for (const tag of r.chosenStrengths ?? []) {
+      strengthCounts[tag] = (strengthCounts[tag] ?? 0) + 1;
+    }
+  }
+  const topStrengths = Object.entries(strengthCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
 
   const radarData = LEARNER_TYPES.map((t) => ({
     type: `Type ${t}\n${learnerTypes[t].name}`,
@@ -288,6 +331,31 @@ export default function AppDetail() {
               })}
             </div>
           </div>
+
+          {/* Top Strengths (user-voted) */}
+          {topStrengths.length > 0 && (
+            <div className="mb-10">
+              <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px] mb-4">
+                Top Strengths by Users
+              </h2>
+              <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[16px] p-5 border border-[#e2e8f0] dark:border-[#232a36] space-y-3">
+                {topStrengths.map(([tag, count], idx) => (
+                  <div key={tag} className="flex items-center gap-3">
+                    <span className="text-[20px] w-7 shrink-0">{MEDALS[idx]}</span>
+                    <span className="flex-1 font-['Manrope:Bold',sans-serif] font-bold text-[15px] text-[#1e293b] dark:text-[#dce3f3]">
+                      {STRENGTH_LABELS[tag] ?? tag}
+                    </span>
+                    <span className="text-[13px] text-[#64748b] dark:text-[#8a94a6]">
+                      {count} {count === 1 ? 'reviewer' : 'reviewers'}
+                    </span>
+                  </div>
+                ))}
+                <p className="text-[11px] text-[#94a3b8] dark:text-[#3f4850] pt-1">
+                  Based on tags selected by {appReviews.filter(r => (r.chosenStrengths ?? []).length > 0).length} reviewer{appReviews.filter(r => (r.chosenStrengths ?? []).length > 0).length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Reviews Section */}
           <div className="mb-12">
