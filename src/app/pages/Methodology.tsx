@@ -1,0 +1,209 @@
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { useLang } from '../lib/useLang';
+
+const TYPES = [
+  { code: '가', sensory: 'Visual',   style: 'Exploratory', sensoryKo: '시각', styleKo: '탐색형' },
+  { code: '나', sensory: 'Visual',   style: 'Structured',  sensoryKo: '시각', styleKo: '구조형' },
+  { code: '다', sensory: 'Auditory', style: 'Exploratory', sensoryKo: '청각', styleKo: '탐색형' },
+  { code: '라', sensory: 'Auditory', style: 'Structured',  sensoryKo: '청각', styleKo: '구조형' },
+  { code: '마', sensory: 'Mixed',    style: 'Exploratory', sensoryKo: '혼합', styleKo: '탐색형' },
+  { code: '바', sensory: 'Mixed',    style: 'Structured',  sensoryKo: '혼합', styleKo: '구조형' },
+];
+
+const CATEGORIES = {
+  en: [
+    'Learning Mechanism — How does the learner learn?',
+    'Content Format — In what form is content delivered?',
+    'Instructor / Operator Traits — Who teaches?',
+    'Strength Areas — What abilities does it build?',
+    'Learner Type Fit — What kind of learner is it best for?',
+    'Accessibility & UX — How easy is it to use?',
+    'Social Features — How does it connect learners?',
+    'Limitations — What are the known weaknesses? (reference only)',
+    'Learning Pace — How often and how long per session?',
+    'Content Authority — What expertise backs it?',
+    'Pricing — What is the cost structure?',
+  ],
+  ko: [
+    '학습 매커니즘 — 어떻게 학습하는가',
+    '콘텐츠 형식 — 어떤 형태로 제공되는가',
+    '강사·운영자 특성 — 누가 가르치는가',
+    '강점 영역 — 어떤 능력을 키울 수 있는가',
+    '학습자 유형 적합도 — 어떤 학습자에게 잘 맞는가',
+    '접근성·UX — 어떻게 쓰기 편한가',
+    '사회적 요소 — 다른 학습자와 어떻게 연결되는가',
+    '한계점 — 어떤 약점이 있는가 (참고용)',
+    '학습 페이스 — 얼마나 자주, 얼마나 길게 학습하는가',
+    '콘텐츠 신뢰성 — 어떤 권위에 기반하는가',
+    '가격 — 비용 구조',
+  ],
+};
+
+function LangToggle({ lang, setLang }: { lang: 'en' | 'ko'; setLang: (l: 'en' | 'ko') => void }) {
+  return (
+    <div className="flex gap-1 bg-[#f1f5f9] dark:bg-[#232a36] rounded-full p-0.5">
+      {(['en', 'ko'] as const).map(l => (
+        <button key={l} onClick={() => setLang(l)}
+          className={`text-[12px] font-bold px-3 py-1 rounded-full transition-all ${lang === l ? 'bg-white dark:bg-[#151c27] text-[#1e293b] dark:text-[#dce3f3] shadow-sm' : 'text-[#64748b] dark:text-[#8a94a6]'}`}>
+          {l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function Methodology() {
+  const [lang, setLang] = useLang();
+  const isEn = lang === 'en';
+
+  return (
+    <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
+      <Header />
+      <main className="flex-1 pt-16">
+        <div className="max-w-[800px] mx-auto px-6 py-16">
+
+          <div className="flex justify-end mb-10">
+            <LangToggle lang={lang} setLang={setLang} />
+          </div>
+
+          {/* ── Section 1: Learning Type Assessment ── */}
+          <section className="mb-20">
+            <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[clamp(1.75rem,3vw,2.25rem)] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.04em] mb-4">
+              {isEn ? 'Learner Type Assessment' : '학습 유형 검사'}
+            </h1>
+            <p className="font-['Inter:Regular',sans-serif] text-[16px] leading-[1.75] text-[#64748b] dark:text-[#bec7d2] mb-10">
+              {isEn
+                ? "NARSHA's Learner Type Assessment is a simplified tool adapted from academic research for the Korean-learning context. It identifies six learner types along two axes: sensory preference and learning style approach."
+                : '나르샤의 학습 유형 검사는 학술 연구에 기반해 한국어 학습 맥락에 맞춰 단순화한 도구입니다. 학습자의 감각 선호와 학습 접근 방식 두 축으로 6가지 유형을 도출합니다.'}
+            </p>
+
+            {/* Axes */}
+            <div className="grid sm:grid-cols-2 gap-5 mb-10">
+              <div className="bg-[#f0f9ff] dark:bg-[#0c1f2e] border-l-4 border-[#0ea5e9] rounded-r-[12px] p-5">
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#0ea5e9] dark:text-[#8ecdff] mb-2">
+                  {isEn ? 'Sensory Axis' : '감각 축 (Sensory)'}
+                </p>
+                <ul className="space-y-1.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] leading-snug">
+                  <li><strong>Visual {isEn ? '' : '(시각)'}</strong> — {isEn ? 'Learns best through text, charts, and video' : '글, 차트, 영상으로 학습할 때 효율적'}</li>
+                  <li><strong>Auditory {isEn ? '' : '(청각)'}</strong> — {isEn ? 'Learns best through conversation, lectures, and audio' : '대화, 강의, 음원으로 학습할 때 효율적'}</li>
+                  <li><strong>Mixed {isEn ? '' : '(혼합)'}</strong> — {isEn ? 'Combines visual and auditory resources' : '시각/청각 자원을 함께 활용'}</li>
+                </ul>
+              </div>
+              <div className="bg-[#fdf4ff] dark:bg-[#1a0f2e] border-l-4 border-[#a855f7] rounded-r-[12px] p-5">
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#a855f7] mb-2">
+                  {isEn ? 'Style Axis' : '스타일 축 (Style)'}
+                </p>
+                <ul className="space-y-1.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] leading-snug">
+                  <li><strong>Exploratory {isEn ? '' : '(탐색형)'}</strong> — {isEn ? 'Learns by freely exploring' : '자유롭게 탐색하며 학습'}</li>
+                  <li><strong>Structured {isEn ? '' : '(구조형)'}</strong> — {isEn ? 'Prefers step-by-step curricula' : '단계적 커리큘럼을 선호'}</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 6 types 2×3 grid */}
+            <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-4">
+              {isEn ? '6 Learner Types' : '6가지 학습 유형'}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
+              {TYPES.map(t => (
+                <div key={t.code} className="bg-[#f8fafc] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center shrink-0">
+                    <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] text-[#00344f]">{t.code}</span>
+                  </div>
+                  <div>
+                    <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3]">
+                      {isEn ? `${t.sensory} · ${t.style}` : `${t.sensoryKo} · ${t.styleKo}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Citations */}
+            <div className="bg-[#f8fafc] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] p-6">
+              <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-4">
+                {isEn ? 'Academic References' : '참고 문헌'}
+              </p>
+              <div className="space-y-4 font-['Inter:Regular',sans-serif] text-[13px] leading-[1.7] text-[#64748b] dark:text-[#bec7d2]">
+                <p>
+                  Cohen, A. D., Oxford, R. L., &amp; Chi, J. C. (2002). <em>Learning Style Survey: Assessing Your Own Learning Styles.</em> In <em>Maximizing Study Abroad.</em> CARLA (Center for Advanced Research on Language Acquisition), University of Minnesota.
+                </p>
+                <p>
+                  Oxford, R. L. (1995). Style Analysis Survey (SAS). In J. Reid (Ed.), <em>Learning styles in the ESL/EFL classroom</em> (pp. 208–215). Boston: Heinle &amp; Heinle / Thomson International.
+                </p>
+                <p>
+                  Ehrman, M. E., &amp; Leaver, B. L. (2001). <em>E&amp;L Questionnaire.</em>
+                </p>
+                <p className="text-[12px] text-[#94a3b8] dark:text-[#3f4850] mt-2">
+                  {isEn
+                    ? 'The original assessments cover 11 dimensions and 12 aspects. NARSHA simplifies to two axes (sensory + style) most relevant to the Korean-learning context.'
+                    : '원본 검사는 11개 차원·12개 측면을 다루지만, 나르샤는 한국어 학습 맥락에서 가장 유의미한 두 축(감각 + 스타일)으로 단순화했습니다.'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <hr className="border-[#e2e8f0] dark:border-[#232a36] mb-20" />
+
+          {/* ── Section 2: Tag System ── */}
+          <section className="mb-12">
+            <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[clamp(1.75rem,3vw,2.25rem)] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.04em] mb-4">
+              {isEn ? 'Service Tag System' : '서비스 차별점 태그'}
+            </h2>
+            <p className="font-['Inter:Regular',sans-serif] text-[16px] leading-[1.75] text-[#64748b] dark:text-[#bec7d2] mb-8">
+              {isEn
+                ? 'NARSHA classifies Korean learning services across 11 categories and approximately 60 tags. Each service is assigned up to 5 core differentiator tags.'
+                : '나르샤는 한국어 학습 서비스를 11개 카테고리, 약 60개 태그로 분류합니다. 각 서비스에 최대 5개의 핵심 차별점 태그가 부여됩니다.'}
+            </p>
+
+            <h3 className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3] mb-4">
+              {isEn ? '11 Tag Categories' : '11개 카테고리'}
+            </h3>
+            <ol className="space-y-2 mb-10">
+              {CATEGORIES[lang].map((cat, i) => (
+                <li key={i} className="flex gap-3 font-['Inter:Regular',sans-serif] text-[15px] leading-snug text-[#1e293b] dark:text-[#dce3f3]">
+                  <span className="shrink-0 w-6 h-6 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span>{cat}</span>
+                </li>
+              ))}
+            </ol>
+
+            {/* Two-source explanation */}
+            <div className="grid sm:grid-cols-2 gap-5 mb-8">
+              <div className="bg-[#f0f9ff] dark:bg-[#0c1f2e] border-l-4 border-[#0ea5e9] rounded-r-[12px] p-5">
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#0ea5e9] dark:text-[#8ecdff] mb-2">
+                  {isEn ? '🏷️ Curated by NARSHA' : '🏷️ 운영자 큐레이션'}
+                </p>
+                <p className="text-[14px] leading-[1.7] text-[#1e293b] dark:text-[#dce3f3]">
+                  {isEn
+                    ? 'Official tags reviewed and assigned by the NARSHA team based on direct evaluation of each service.'
+                    : '나르샤 팀이 직접 검토한 공식 태그. 각 서비스를 직접 평가해 부여합니다.'}
+                </p>
+              </div>
+              <div className="bg-[#f8fafc] dark:bg-[#151c27] border-l-4 border-[#64748b] dark:border-[#8a94a6] rounded-r-[12px] p-5">
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
+                  {isEn ? '👥 Learner Reviews' : '👥 학습자 평가'}
+                </p>
+                <p className="text-[14px] leading-[1.7] text-[#1e293b] dark:text-[#dce3f3]">
+                  {isEn
+                    ? 'Strengths and limitations selected by actual users when writing reviews. Updated continuously as more reviews come in.'
+                    : '실제 사용자가 리뷰 작성 시 선택한 강점·약점. 리뷰가 쌓이면서 지속적으로 보강됩니다.'}
+                </p>
+              </div>
+            </div>
+
+            <p className="font-['Inter:Regular',sans-serif] text-[14px] leading-[1.7] text-[#64748b] dark:text-[#bec7d2]">
+              {isEn
+                ? 'Initial tags for 33 services were assigned based on a survey of 90 Korean learners from 30 countries, combined with publicly available service information.'
+                : '초기 33개 서비스의 태그는 30개국 90명의 한국어 학습자 설문조사와 공개된 서비스 정보를 바탕으로 부여되었습니다.'}
+            </p>
+          </section>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}

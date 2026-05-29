@@ -26,36 +26,26 @@ export default function Footer({ compact = false }: FooterProps) {
             </div>
 
             <div className="flex gap-6 flex-wrap items-center">
+              {[
+                { to: '/about',       label: 'About' },
+                { to: '/methodology', label: 'Methodology' },
+                { to: '/privacy',     label: 'Privacy' },
+                { to: '/terms',       label: 'Terms' },
+              ].map(link => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#8ecdff] leading-[20px] transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
               <button
                 onClick={() => setShowModal(true)}
                 className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#0ea5e9] dark:text-[#8ecdff] hover:opacity-75 leading-[20px] transition-opacity"
               >
                 Suggest a Service
               </button>
-              <Link
-                to="/about"
-                className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#8ecdff] leading-[20px] transition-colors"
-              >
-                About
-              </Link>
-              <Link
-                to="/methodology"
-                className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#8ecdff] leading-[20px] transition-colors"
-              >
-                Methodology
-              </Link>
-              <Link
-                to="/privacy"
-                className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#8ecdff] leading-[20px] transition-colors"
-              >
-                Privacy
-              </Link>
-              <Link
-                to="/terms"
-                className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#8ecdff] leading-[20px] transition-colors"
-              >
-                Terms
-              </Link>
             </div>
           </div>
         </div>
