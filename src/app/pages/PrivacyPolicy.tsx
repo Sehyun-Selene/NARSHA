@@ -94,7 +94,7 @@ const KO = () => (
     <section>
       <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">8. 개인정보 보호 책임자</h2>
       <p>이름: 김세현 / 유정민</p>
-      <p>이메일: <a href="mailto:su9pta1r@snu.ac.kr" className="text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">su9pta1r@snu.ac.kr</a></p>
+      <p>이메일: <a href="mailto:narsha.koreanedu@gmail.com?subject=NARSHA%20Privacy" className="text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">narsha.koreanedu@gmail.com</a></p>
     </section>
 
     <section>
@@ -175,7 +175,7 @@ const EN = () => (
     <section>
       <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">8. Privacy Officer</h2>
       <p>Name: Sehyun Kim / Jeongmin Yu</p>
-      <p>Email: <a href="mailto:su9pta1r@snu.ac.kr" className="text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">su9pta1r@snu.ac.kr</a></p>
+      <p>Email: <a href="mailto:narsha.koreanedu@gmail.com?subject=NARSHA%20Privacy" className="text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">narsha.koreanedu@gmail.com</a></p>
     </section>
 
     <section>

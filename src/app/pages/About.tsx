@@ -174,7 +174,7 @@ export default function About() {
               {c.ctaSuggest}
             </button>
             <a
-              href="mailto:su9pta1r@snu.ac.kr"
+              href="mailto:narsha.koreanedu@gmail.com?subject=NARSHA%20Contact"
               className="border-2 border-[#1e293b] dark:border-[#8ecdff] text-[#1e293b] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[15px] px-8 py-3 rounded-[8px] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
             >
               {c.ctaContact}
