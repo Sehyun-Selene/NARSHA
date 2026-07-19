@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
+import { LearnerTypeLogo } from '../components/LearnerTypeLogo';
 
 export default function SurveyResult() {
   const navigate = useNavigate();
@@ -37,12 +38,6 @@ export default function SurveyResult() {
         <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
           {/* Success Message */}
           <div className="text-center mb-8 sm:mb-10">
-            <div className="w-[4.5rem] h-[4.5rem] sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center mx-auto mb-4 shadow-[0px_0px_28px_0px_rgba(142,205,255,0.35)]">
-              <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[36px] sm:text-[40px] text-[#00344f]">
-                {learnerType}
-              </span>
-            </div>
-
             <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] sm:text-[36px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px] mb-2">
               Your Learner Type
             </h1>
@@ -55,10 +50,8 @@ export default function SurveyResult() {
           {/* Type Card */}
           <div className="bg-[#f8fafc] dark:bg-[#151c27] rounded-[20px] p-6 sm:p-8 mb-8 border border-[#e2e8f0] dark:border-[#232a36]">
             <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center shrink-0">
-                <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[26px] sm:text-[30px] text-[#00344f]">
-                  {learnerType}
-                </span>
+              <div className="shrink-0">
+                <LearnerTypeLogo type={learnerType} size={64} />
               </div>
               
               <div>
