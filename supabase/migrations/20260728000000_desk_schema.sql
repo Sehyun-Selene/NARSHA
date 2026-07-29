@@ -457,6 +457,30 @@ create policy "media: owner delete"
 -- service_role(Edge Function)만 RLS 를 우회해 접근한다.
 
 -- =============================================================================
+-- 7.5 테이블 권한 (GRANT)
+--   RLS 는 "어떤 행을 볼지" 필터일 뿐이다. PostgREST(anon/authenticated)로
+--   테이블을 노출하려면 테이블 레벨 GRANT 가 먼저 있어야 한다.
+--   (Supabase 기본 권한이 이 마이그레이션의 신규 테이블에 적용되지 않아
+--    'permission denied for table ...'(42501)이 발생하므로 명시적으로 부여한다.)
+--
+--   invite_codes / invite_redeem_attempts 는 GRANT 를 주지 않는다
+--   → service_role(Edge Function)만 접근. (전면 차단 유지)
+-- =============================================================================
+
+grant select on public.profiles to anon, authenticated;
+grant update on public.profiles to authenticated;               -- RLS: update own (권한 컬럼은 트리거로 보호)
+
+grant select on public.desk_posts to anon, authenticated;        -- RLS: 발행본만(anon) / 본인·운영자(authenticated)
+grant insert, update, delete on public.desk_posts to authenticated;
+
+grant select, insert, update, delete on public.desk_post_revisions to authenticated; -- RLS: 본인 글의 리비전만
+
+grant select on public.desk_media to anon, authenticated;        -- RLS: public read
+grant insert, delete on public.desk_media to authenticated;      -- RLS: owner 경로만
+
+-- 뷰는 이미 grant select ... to anon, authenticated (§9)
+
+-- =============================================================================
 -- 8. Storage
 -- =============================================================================
 
