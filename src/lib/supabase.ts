@@ -11,6 +11,13 @@ export type Database = {
       apps: { Row: AppRow };
       reviews: { Row: ReviewRow };
       review_replies: { Row: ReviewReplyRow };
+      profiles: { Row: ProfileRow };
+      desk_posts: { Row: DeskPostRow };
+      desk_post_revisions: { Row: DeskPostRevisionRow };
+      desk_media: { Row: DeskMediaRow };
+    };
+    Views: {
+      desk_feed: { Row: DeskFeedRow };
     };
   };
 };
@@ -74,4 +81,94 @@ export interface SuggestedServiceRow {
   status: string;
   notes: string | null;
   created_at: string;
+}
+
+// ── 「나의 한국어 책상」 테이블 (20260728000000_desk_schema.sql) ────────────────
+
+/** Tiptap 문서 JSON (source of truth). */
+export type DeskDoc = { type?: string; content?: DeskDoc[]; [key: string]: unknown };
+
+export type DeskRole = 'author' | 'admin';
+export type DeskParticipantType = 'co_creator' | 'creator_partner';
+export type DeskPostStatus = 'draft' | 'published' | 'hidden';
+export type DeskLang = 'ko' | 'en' | 'id' | 'tl';
+
+export interface ProfileRow {
+  id: string;
+  handle: string;
+  display_name: string;
+  display_name_en: string | null;
+  country: string | null;         // 'ID' | 'PH' | ...
+  city: string | null;
+  bio: string | null;
+  bio_en: string | null;
+  avatar_url: string | null;
+  channel_url: string | null;     // 크리에이터 파트너 채널
+  role: DeskRole;
+  participant_type: DeskParticipantType;
+  is_active: boolean;
+  storage_used: number;           // bytes
+  handle_changed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeskPostRow {
+  id: string;
+  author_id: string;
+  slug: string;
+  title: string;
+  summary: string | null;
+  cover_url: string | null;
+  content_json: DeskDoc;
+  content_html: string | null;
+  content_text: string | null;
+  tags: string[];
+  lang: DeskLang;
+  status: DeskPostStatus;
+  is_hidden: boolean;
+  hidden_reason: string | null;
+  view_count: number;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeskPostRevisionRow {
+  id: string;
+  post_id: string;
+  title: string | null;
+  content_json: DeskDoc;
+  created_at: string;
+}
+
+export interface DeskMediaRow {
+  id: string;
+  owner_id: string;
+  post_id: string | null;
+  kind: 'image' | 'video' | 'file' | 'avatar';
+  path: string;
+  bytes: number;
+  mime: string | null;
+  created_at: string;
+}
+
+/** public.desk_feed 뷰 — 발행 글 + 저자 공개 정보 조인 (익명 읽기 가능). */
+export interface DeskFeedRow {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string | null;
+  cover_url: string | null;
+  tags: string[];
+  lang: DeskLang;
+  view_count: number;
+  published_at: string | null;
+  handle: string;
+  display_name: string;
+  display_name_en: string | null;
+  country: string | null;
+  city: string | null;
+  avatar_url: string | null;
+  participant_type: DeskParticipantType;
 }
