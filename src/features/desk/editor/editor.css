@@ -179,6 +179,18 @@
   pointer-events: none;
 }
 
+/* gapcursor 를 가로선(기본) → 세로 막대로. 세로획만 깜빡이고 가로획은 없앤다. */
+.desk-editor .ProseMirror-gapcursor::after {
+  top: 0;
+  width: 0;
+  height: 1.2em;
+  border-top: none;
+  border-left: 1.5px solid #1e293b;
+}
+.dark .desk-editor .ProseMirror-gapcursor::after {
+  border-left-color: #dce3f3;
+}
+
 /* 이미지 정렬 (data-align) */
 .desk-prose img[data-align='left'] { display: block; margin: 0.5em auto 0.5em 0; }
 .desk-prose img[data-align='center'] { display: block; margin: 0.5em auto; }
