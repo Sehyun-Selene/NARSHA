@@ -23,6 +23,7 @@ import DeskLogin from './pages/desk/DeskLogin';
 import DeskJoin from './pages/desk/DeskJoin';
 import DeskManage from './pages/desk/DeskManage';
 import DeskSettings from './pages/desk/DeskSettings';
+import DeskAdmin from './pages/desk/DeskAdmin';
 import RequireAuthor from '../features/desk/auth/RequireAuthor';
 
 // 에디터는 코드 분할 — 방문자 번들에 포함되지 않는다 (PRD §9)
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
       { path: 'desk/:handleParam/:slug', Component: DeskPost },
 
       { path: import.meta.env.VITE_ADMIN_PATH || 'admin', Component: AdminDashboard },
+      { path: `${import.meta.env.VITE_ADMIN_PATH || 'admin'}/desk`, Component: DeskAdmin },
       { path: '*', Component: NotFound }
     ]
   }

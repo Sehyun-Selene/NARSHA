@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -278,12 +279,20 @@ export default function AdminDashboard() {
               <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#0ea5e9] dark:text-[#8ecdff]">
                 운영자 전용
               </p>
-              <button
-                onClick={logout}
+              <div className="flex items-center gap-4">
+                <Link
+                  to={`/${import.meta.env.VITE_ADMIN_PATH || 'admin'}/desk`}
+                  className="text-[12px] text-[#1b99dc] hover:underline"
+                >
+                  나의 한국어 책상 운영 →
+                </Link>
+                <button
+                  onClick={logout}
                 className="text-[12px] text-[#94a3b8] dark:text-[#3f4850] hover:text-[#64748b] dark:hover:text-[#8a94a6] transition-colors"
               >
-                로그아웃
-              </button>
+                  로그아웃
+                </button>
+              </div>
             </div>
             <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[36px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px]">
               태그 검토 대시보드

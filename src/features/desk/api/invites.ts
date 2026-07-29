@@ -1,3 +1,4 @@
+import { supabase } from '../../../lib/supabase';
 import type { DeskParticipantType } from '../types';
 
 // Edge Function 베이스 URL. 명시 env 가 없으면 Supabase URL 에서 파생한다.
@@ -77,4 +78,74 @@ export async function redeemInvite(payload: RedeemPayload): Promise<RedeemResult
   } catch {
     return { ok: false, error: 'NETWORK' };
   }
+}
+
+// =============================================================================
+// T9 — 운영자 (admin-invites). 운영자 access_token 을 Bearer 로 전송한다.
+// =============================================================================
+
+async function callAdminFn<T>(body: unknown): Promise<{ ok: boolean; status: number; data: T }> {
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  const res = await fetch(`${FUNCTIONS_BASE}/admin-invites`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: ANON,
+      Authorization: `Bearer ${token ?? ANON}`,
+    },
+    body: JSON.stringify(body),
+  });
+  let data: T;
+  try { data = (await res.json()) as T; } catch { data = {} as T; }
+  return { ok: res.ok, status: res.status, data };
+}
+
+export interface CreatedInvite {
+  code: string;
+  join_url: string;
+  message_ko: string;
+  message_en: string;
+  invite: { id: string; label: string; participant_type: DeskParticipantType; expires_at: string; created_at: string };
+}
+
+export async function adminCreateInvite(input: {
+  label: string;
+  participantType: DeskParticipantType;
+  expiresInDays: number;
+}): Promise<CreatedInvite> {
+  const { ok, data } = await callAdminFn<CreatedInvite & { error?: string }>({
+    action: 'create',
+    label: input.label,
+    participant_type: input.participantType,
+    expires_in_days: input.expiresInDays,
+  });
+  if (!ok) throw new Error((data as { error?: string }).error ?? 'CREATE_FAILED');
+  return data;
+}
+
+export type InviteStatus = 'active' | 'used' | 'expired' | 'revoked';
+
+export interface InviteRow {
+  id: string;
+  label: string | null;
+  participant_type: DeskParticipantType;
+  expires_at: string;
+  used_by: string | null;
+  used_at: string | null;
+  revoked: boolean;
+  created_at: string;
+  status: InviteStatus;
+  profiles: { handle: string; display_name: string } | null;
+}
+
+export async function adminListInvites(): Promise<InviteRow[]> {
+  const { ok, data } = await callAdminFn<{ invites?: InviteRow[]; error?: string }>({ action: 'list' });
+  if (!ok) throw new Error(data.error ?? 'LIST_FAILED');
+  return data.invites ?? [];
+}
+
+export async function adminRevokeInvite(id: string): Promise<void> {
+  const { ok, data } = await callAdminFn<{ error?: string }>({ action: 'revoke', id });
+  if (!ok) throw new Error(data.error ?? 'REVOKE_FAILED');
 }

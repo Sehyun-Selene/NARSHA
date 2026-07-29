@@ -273,3 +273,22 @@ export async function deletePost(id: string): Promise<void> {
   const { error } = await supabase.from('desk_posts').delete().eq('id', id);
   if (error) throw error;
 }
+
+// ── 운영자 글 관리 (admin RLS: read all / moderation 트리거 허용) ──────────────
+export async function adminListAllPosts(): Promise<DeskPost[]> {
+  const { data, error } = await supabase
+    .from('desk_posts')
+    .select('*')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false });
+  if (error) throw error;
+  return (data as DeskPostRow[]) as DeskPost[];
+}
+
+export async function adminSetHidden(id: string, hidden: boolean, reason?: string): Promise<void> {
+  const { error } = await supabase
+    .from('desk_posts')
+    .update({ is_hidden: hidden, hidden_reason: hidden ? (reason ?? null) : null })
+    .eq('id', id);
+  if (error) throw error;
+}
