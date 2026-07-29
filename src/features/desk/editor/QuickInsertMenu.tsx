@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FloatingMenu, type Editor } from '@tiptap/react';
 import { Plus, Image as ImageIcon, Smile, Minus, Quote, ChevronRight } from 'lucide-react';
 import type { Lang } from '../../../app/lib/useLang';
@@ -23,6 +23,17 @@ export default function QuickInsertMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [sub, setSub] = useState<Sub>('none');
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // 메뉴 바깥 클릭 시 닫기
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) { setOpen(false); setSub('none'); }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
 
   const t = lang === 'ko'
     ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구', soon: '준비 중' }
@@ -42,7 +53,7 @@ export default function QuickInsertMenu({
         e.state.selection.$anchor.parent.content.size === 0
       }
     >
-      <div className="relative" onMouseDown={(ev) => ev.preventDefault()}>
+      <div ref={wrapRef} className="relative" onMouseDown={(ev) => ev.preventDefault()}>
         <button
           type="button"
           aria-label={lang === 'ko' ? '빠른 삽입' : 'Quick insert'}
