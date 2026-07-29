@@ -57,6 +57,10 @@ export const router = createBrowserRouter([
       { path: 'terms', Component: TermsOfService },
 
       // 「나의 한국어 책상」
+      // 개발 전용 에디터 미리보기 (프로덕션 빌드에서는 제외). 로그인 없이 에디터 확인용.
+      ...(import.meta.env.DEV
+        ? [{ path: 'desk/_preview', element: <Suspense fallback={null}><DeskWrite /></Suspense> }]
+        : []),
       { path: 'desk', Component: DeskFeed },
       { path: 'desk/login', Component: DeskLogin },
       { path: 'desk/join', Component: DeskJoin },
