@@ -44,6 +44,9 @@ export default function Header() {
             <NavLink to="/reviews" className={navLinkClass}>
               Reviews
             </NavLink>
+            <NavLink to="/desk" className={navLinkClass}>
+              Korean Desks
+            </NavLink>
             <NavLink
               to="/survey"
               end
