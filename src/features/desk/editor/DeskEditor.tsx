@@ -5,7 +5,8 @@ import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
-// TextStyle 은 StarterKit(2.27+)에 이미 포함 → 중복 등록 금지. Color 가 그 위에서 동작한다.
+// StarterKit 2.27 은 textStyle 마크를 등록하지 않는다 → Color/Highlight 가 붙을 수 있도록 명시 추가.
+import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -39,6 +40,7 @@ export function buildExtensions(placeholder: string) {
     }),
     Image.configure({ inline: false, HTMLAttributes: { loading: 'lazy' } }),
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    TextStyle,
     Color,
     Highlight.configure({ multicolor: true }),
     Placeholder.configure({ placeholder }),
