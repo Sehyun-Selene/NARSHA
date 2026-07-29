@@ -118,6 +118,18 @@ export default function DeskWrite() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, []);
 
+  // ── ⌘/Ctrl+S → 즉시 임시저장 (§9 접근성) ───────────────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        void doServerSave();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [doServerSave]);
+
   const onEditorUpdate = useCallback((u: EditorUpdate) => {
     latest.current = { ...latest.current, json: u.json, html: u.html, text: u.text };
     dirtyLocal.current = true;

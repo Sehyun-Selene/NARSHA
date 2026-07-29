@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useLang } from '../lib/useLang';
 
 const LOGO_SRC = '/narsha-logo.png';
 
@@ -23,6 +24,7 @@ const learningTypeButtonClass = ({ isActive }: { isActive: boolean }) =>
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
+  const [lang, setLang] = useLang();
 
   return (
     <header className="fixed top-0 left-0 w-full backdrop-blur-[32px] bg-[rgba(248,250,252,0.8)] dark:bg-[rgba(12,20,31,0.8)] shadow-[0px_32px_64px_0px_rgba(46,53,65,0.08)] z-50">
@@ -45,7 +47,7 @@ export default function Header() {
               Reviews
             </NavLink>
             <NavLink to="/desk" className={navLinkClass}>
-              Korean Desks
+              {lang === 'ko' ? '나의 한국어 책상' : 'Korean Desks'}
             </NavLink>
             <NavLink
               to="/survey"
@@ -56,6 +58,19 @@ export default function Header() {
               Want to know your Learning Type?
             </NavLink>
           </nav>
+          <div className="flex gap-0.5 bg-[#f1f5f9] dark:bg-[#232a36] rounded-full p-0.5 shrink-0">
+            {(['en', 'ko'] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => setLang(l)}
+                aria-label={l === 'ko' ? '한국어' : 'English'}
+                className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all ${lang === l ? 'bg-white dark:bg-[#151c27] text-[#1e293b] dark:text-[#dce3f3] shadow-sm' : 'text-[#64748b] dark:text-[#8a94a6]'}`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={toggleTheme}
