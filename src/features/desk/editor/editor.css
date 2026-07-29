@@ -179,6 +179,26 @@
   pointer-events: none;
 }
 
+/* 이미지 정렬 (data-align) */
+.desk-prose img[data-align='left'] { display: block; margin: 0.5em auto 0.5em 0; }
+.desk-prose img[data-align='center'] { display: block; margin: 0.5em auto; }
+.desk-prose img[data-align='right'] { display: block; margin: 0.5em 0 0.5em auto; }
+.desk-prose img[data-align='full'] { display: block; width: 100%; margin: 0.5em 0; }
+.desk-prose figure[data-align='center'] { text-align: center; }
+.desk-prose figure[data-align='right'] { text-align: right; }
+.desk-prose figure[data-align='full'] img { width: 100%; }
+
+/* 편집 화면 이미지 NodeView */
+.desk-editor .desk-image-nv[data-align='left'] { text-align: left; }
+.desk-editor .desk-image-nv[data-align='center'] { text-align: center; }
+.desk-editor .desk-image-nv[data-align='right'] { text-align: right; }
+.desk-editor .desk-image-nv img { display: inline-block; }
+.desk-editor .desk-image-nv[data-align='full'] img { width: 100%; }
+
+/* 외부 영상 임베드 */
+.desk-prose .desk-embed,
+.desk-editor .desk-embed-nv { margin: 1.4em 0; }
+
 /* 모바일에서 표 가로 스크롤 */
 @media (max-width: 640px) {
   .desk-prose table,
