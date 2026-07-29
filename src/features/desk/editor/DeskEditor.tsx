@@ -81,9 +81,13 @@ export default function DeskEditor({ initialContent, placeholder, onUpdate, onEd
   const editorHolder = useRef<Editor | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // 문단 없는 빈 doc({content:[]})이면 '' 로 넘겨 ProseMirror 가 빈 문단을 만들게 한다.
+  // (그래야 placeholder 와 좌측 + Quick Insert 가 뜬다.)
+  const hasContent = !!initialContent && Array.isArray(initialContent.content) && initialContent.content.length > 0;
+
   const editor = useEditor({
     extensions: buildExtensions(ph),
-    content: initialContent ?? '',
+    content: hasContent ? initialContent : '',
     editorProps: {
       handlePaste: (_view, event) => {
         const files = Array.from(event.clipboardData?.files ?? []);
