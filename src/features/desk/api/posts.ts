@@ -104,3 +104,172 @@ export async function incrementViewOncePerSession(postId: string): Promise<void>
   }
   await supabase.rpc('increment_desk_post_view', { p_post_id: postId });
 }
+
+// =============================================================================
+// T8 — 저장 · 발행 · 관리
+// =============================================================================
+
+import { sanitizeDeskHtml } from '../render/sanitize';
+
+/** 6자 해시 (base36). */
+function hash6(): string {
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => (b % 36).toString(36)).join('');
+}
+
+/** 제목 슬러그화 + 6자 해시. 한글/빈 제목은 post-{해시} 로 폴백. */
+export function generateSlug(title: string): string {
+  const base = title
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  return base ? `${base}-${hash6()}` : `post-${hash6()}`;
+}
+
+async function requireUid(): Promise<string> {
+  const { data } = await supabase.auth.getUser();
+  const uid = data.user?.id;
+  if (!uid) throw new Error('NOT_AUTHENTICATED');
+  return uid;
+}
+
+export interface DraftInput {
+  id?: string;
+  title: string;
+  contentJson: unknown;
+  contentHtml?: string;
+  contentText?: string;
+}
+
+/** 서버 임시저장 upsert. 신규면 draft 로 생성(슬러그 발급), 기존이면 내용만 갱신(상태 유지). */
+export async function saveDraft(input: DraftInput): Promise<{ id: string; slug: string }> {
+  const uid = await requireUid();
+
+  if (!input.id) {
+    const slug = generateSlug(input.title);
+    const { data, error } = await supabase
+      .from('desk_posts')
+      .insert({
+        author_id: uid,
+        slug,
+        title: input.title,
+        content_json: input.contentJson,
+        content_html: input.contentHtml ?? null,
+        content_text: input.contentText ?? null,
+        status: 'draft',
+      })
+      .select('id, slug')
+      .single();
+    if (error) throw error;
+    return { id: data.id, slug: data.slug };
+  }
+
+  const { data, error } = await supabase
+    .from('desk_posts')
+    .update({
+      title: input.title,
+      content_json: input.contentJson,
+      content_html: input.contentHtml ?? null,
+      content_text: input.contentText ?? null,
+    })
+    .eq('id', input.id)
+    .select('id, slug')
+    .single();
+  if (error) throw error;
+  return { id: data.id, slug: data.slug };
+}
+
+/** 리비전 스냅샷 삽입 (트리거가 20개 초과분 정리). */
+export async function addRevision(postId: string, title: string, contentJson: unknown): Promise<void> {
+  const { error } = await supabase
+    .from('desk_post_revisions')
+    .insert({ post_id: postId, title, content_json: contentJson });
+  if (error) throw error;
+}
+
+export interface RevisionMeta {
+  id: string;
+  title: string | null;
+  created_at: string;
+}
+
+export async function listRevisions(postId: string): Promise<RevisionMeta[]> {
+  const { data, error } = await supabase
+    .from('desk_post_revisions')
+    .select('id, title, created_at')
+    .eq('post_id', postId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data as RevisionMeta[]) ?? [];
+}
+
+export async function getRevisionContent(id: string): Promise<{ title: string | null; content_json: unknown }> {
+  const { data, error } = await supabase
+    .from('desk_post_revisions')
+    .select('title, content_json')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export interface PublishInput {
+  id: string;
+  title: string;
+  contentJson: unknown;
+  contentHtml: string;
+  contentText: string;
+  coverUrl: string | null;
+  summary: string;
+  tags: string[];
+  visibility: 'public' | 'private';
+}
+
+/** 발행. content_html 은 DOMPurify 정화 후 저장. 공개 범위 → status 매핑. */
+export async function publishPost(input: PublishInput): Promise<{ slug: string }> {
+  await requireUid();
+  const cleanHtml = sanitizeDeskHtml(input.contentHtml);
+  const { data, error } = await supabase
+    .from('desk_posts')
+    .update({
+      title: input.title,
+      content_json: input.contentJson,
+      content_html: cleanHtml,
+      content_text: input.contentText,
+      cover_url: input.coverUrl,
+      summary: input.summary || null,
+      tags: input.tags,
+      status: input.visibility === 'public' ? 'published' : 'draft',
+    })
+    .eq('id', input.id)
+    .select('slug')
+    .single();
+  if (error) throw error;
+  return { slug: data.slug };
+}
+
+/** 내 글 전체(임시저장+발행). 관리 화면용. */
+export async function listMyPosts(): Promise<DeskPost[]> {
+  const uid = await requireUid();
+  const { data, error } = await supabase
+    .from('desk_posts')
+    .select('*')
+    .eq('author_id', uid)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data as DeskPostRow[]) as DeskPost[];
+}
+
+/** 발행↔임시저장 전환 (저자 본인 비공개 전환 등). */
+export async function setPostStatus(id: string, status: 'draft' | 'published'): Promise<void> {
+  const { error } = await supabase.from('desk_posts').update({ status }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deletePost(id: string): Promise<void> {
+  const { error } = await supabase.from('desk_posts').delete().eq('id', id);
+  if (error) throw error;
+}
