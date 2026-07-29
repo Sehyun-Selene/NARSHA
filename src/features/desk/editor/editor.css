@@ -199,6 +199,108 @@
 .desk-prose .desk-embed,
 .desk-editor .desk-embed-nv { margin: 1.4em 0; }
 
+/* 페이지 배경 변수 (심볼형 구분선 마스킹용) */
+.desk-prose, .desk-editor .ProseMirror { --desk-bg: #ffffff; }
+.dark .desk-prose, .dark .desk-editor .ProseMirror { --desk-bg: #0c141f; }
+
+/* =============================================================================
+   구분선 8종 (data-variant) — 이미지 없이 CSS 로만
+   ============================================================================= */
+.desk-hr {
+  border: 0;
+  margin: 2em auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  height: 1.6em;
+}
+.dark .desk-hr { color: #334155; }
+
+.desk-hr[data-variant='line-short']::before { content: ''; height: 1px; width: 25%; background: currentColor; }
+.desk-hr[data-variant='line-long']::before  { content: ''; height: 1px; width: 80%; background: currentColor; }
+.desk-hr[data-variant='bar-thick']::before   { content: ''; width: 64px; height: 4px; border-radius: 2px; background: currentColor; }
+.desk-hr[data-variant='dots']::before        { content: '●  ●  ●  ●  ●  ●'; font-size: 6px; letter-spacing: 6px; line-height: 1; }
+.desk-hr[data-variant='vertical']::before    { content: ''; width: 2px; height: 28px; background: currentColor; }
+.desk-hr[data-variant='slash']::before       { content: ''; width: 36px; height: 2px; background: currentColor; transform: rotate(-18deg); }
+
+.desk-hr[data-variant='diamond'],
+.desk-hr[data-variant='wave-v'] {
+  background: linear-gradient(currentColor, currentColor) center / 72% 1px no-repeat;
+}
+.desk-hr[data-variant='diamond']::before { content: '◆'; font-size: 11px; background: var(--desk-bg); padding: 0 12px; }
+.desk-hr[data-variant='wave-v']::before  { content: '⌄'; font-size: 17px; line-height: 0.4; background: var(--desk-bg); padding: 0 12px; }
+
+/* =============================================================================
+   인용구 6종 (data-variant)
+   ============================================================================= */
+.desk-prose blockquote.desk-quote,
+.desk-editor .ProseMirror blockquote.desk-quote {
+  position: relative;
+  border-left: 0;
+  padding: 0.9em 1.2em;
+  margin: 1.4em 0;
+  color: #475569;
+}
+.dark .desk-prose blockquote.desk-quote,
+.dark .desk-editor .ProseMirror blockquote.desk-quote { color: #bec7d2; }
+.desk-quote p { margin: 0.3em 0; }
+
+/* 1. 좌측 세로 굵은 선 */
+.desk-quote[data-variant='vertical-line'] { border-left: 4px solid #8ecdff; }
+
+/* 2. 위아래 큰따옴표 */
+.desk-quote[data-variant='quote-marks'] { padding: 1.6em 1.4em; text-align: center; }
+.desk-quote[data-variant='quote-marks']::before {
+  content: '\201C'; position: absolute; top: -0.1em; left: 0.2em;
+  font-size: 2.4em; color: #8ecdff; line-height: 1;
+}
+.desk-quote[data-variant='quote-marks']::after {
+  content: '\201D'; position: absolute; bottom: -0.5em; right: 0.2em;
+  font-size: 2.4em; color: #8ecdff; line-height: 1;
+}
+
+/* 3. 말풍선 */
+.desk-quote[data-variant='speech-bubble'] {
+  border: 1px solid #cbd5e1; border-radius: 14px; padding: 1.1em 1.3em;
+}
+.dark .desk-quote[data-variant='speech-bubble'] { border-color: #334155; }
+.desk-quote[data-variant='speech-bubble']::after {
+  content: ''; position: absolute; bottom: -9px; left: 28px;
+  width: 16px; height: 16px; background: inherit;
+  border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1;
+  transform: rotate(45deg); background: var(--desk-bg);
+}
+.dark .desk-quote[data-variant='speech-bubble']::after { border-color: #334155; }
+
+/* 4. 상단 따옴표 + 하단 굵은 밑줄 */
+.desk-quote[data-variant='line-quote'] { padding: 1.4em 0.4em 0.9em; border-bottom: 3px solid #1e293b; }
+.dark .desk-quote[data-variant='line-quote'] { border-bottom-color: #dce3f3; }
+.desk-quote[data-variant='line-quote']::before {
+  content: '\201C'; position: absolute; top: 0.1em; left: 0; font-size: 2em; color: #94a3b8; line-height: 1;
+}
+
+/* 5. 포스트잇 (우하단 접힘) */
+.desk-quote[data-variant='postit'] {
+  background: #fef9c3; color: #713f12; padding: 1.2em 1.3em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.dark .desk-quote[data-variant='postit'] { background: #4d3f0a; color: #fde68a; }
+.desk-quote[data-variant='postit']::after {
+  content: ''; position: absolute; right: 0; bottom: 0;
+  border-width: 0 0 16px 16px; border-style: solid;
+  border-color: transparent transparent var(--desk-bg) var(--desk-bg);
+}
+
+/* 6. 좌상·우하 모서리 프레임 */
+.desk-quote[data-variant='frame'] { padding: 1.3em 1.4em; }
+.desk-quote[data-variant='frame']::before,
+.desk-quote[data-variant='frame']::after {
+  content: ''; position: absolute; width: 22px; height: 22px; border: 2px solid #8ecdff;
+}
+.desk-quote[data-variant='frame']::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.desk-quote[data-variant='frame']::after  { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
 /* 모바일에서 표 가로 스크롤 */
 @media (max-width: 640px) {
   .desk-prose table,

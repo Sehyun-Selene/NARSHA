@@ -18,7 +18,7 @@ const ALLOWED_TAGS = [
 
 const ALLOWED_ATTR = [
   'href', 'src', 'alt', 'title', 'class', 'style',
-  'target', 'rel', 'loading',
+  'target', 'rel', 'loading', 'role',
   'colspan', 'rowspan',
   // 커스텀 노드 식별
   'data-variant', 'data-align', 'data-type',

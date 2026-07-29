@@ -15,6 +15,9 @@ import { useLang, type Lang } from '../../../app/lib/useLang';
 import Toolbar from './Toolbar';
 import { DeskImage } from './extensions/DeskImage';
 import { DeskEmbed } from './extensions/DeskEmbed';
+import { DeskDivider } from './extensions/DeskDivider';
+import { DeskBlockquote } from './extensions/DeskBlockquote';
+import QuickInsertMenu from './QuickInsertMenu';
 import { uploadImage, mediaErrorMessage } from '../api/media';
 import type { DeskDoc } from '../types';
 import './editor.css';
@@ -34,7 +37,10 @@ interface DeskEditorProps {
 
 export function buildExtensions(placeholder: string) {
   return [
-    StarterKit.configure({ heading: { levels: [2, 3] } }),
+    // blockquote·horizontalRule 는 커스텀(variant)으로 대체하므로 StarterKit 에서 끈다
+    StarterKit.configure({ heading: { levels: [2, 3] }, blockquote: false, horizontalRule: false }),
+    DeskBlockquote,
+    DeskDivider,
     Underline,
     Link.configure({
       openOnClick: false,
@@ -73,6 +79,7 @@ export default function DeskEditor({ initialContent, placeholder, onUpdate, onEd
   const [lang] = useLang();
   const ph = placeholder ?? (lang === 'ko' ? '오늘의 한국어 공부를 기록해 보세요…' : 'Write about your Korean study today…');
   const editorHolder = useRef<Editor | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: buildExtensions(ph),
@@ -119,9 +126,17 @@ export default function DeskEditor({ initialContent, placeholder, onUpdate, onEd
 
   const chars = editor.storage.characterCount?.characters?.() ?? 0;
 
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length) void uploadAndInsert(editor, files, lang);
+    e.target.value = '';
+  };
+
   return (
     <div className="desk-editor">
       <Toolbar editor={editor} lang={lang} />
+      <QuickInsertMenu editor={editor} lang={lang} onImageClick={() => fileRef.current?.click()} />
+      <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handleFiles} />
       <EditorContent editor={editor} />
       <div className="mt-3 text-right text-[12px] text-[#94a3b8]">
         {chars.toLocaleString()} {lang === 'ko' ? '자' : 'chars'}
