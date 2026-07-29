@@ -1,0 +1,175 @@
+import { useState, type ReactNode } from 'react';
+import type { Editor } from '@tiptap/react';
+import {
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
+  AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  List, ListOrdered, Link2, Highlighter, Baseline,
+} from 'lucide-react';
+import type { Lang } from '../../../app/lib/useLang';
+
+// 사업 브랜드 팔레트 (글자색·형광펜 공용)
+const SWATCHES = ['#1e293b', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0ea5e9', '#1b99dc', '#7c3aed', '#db2777', '#64748b', '#8ecdff', '#ffffff'];
+const HIGHLIGHTS = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fbcfe8', '#e9d5ff', '#fed7aa'];
+
+const L = {
+  ko: {
+    style: '양식', body: '본문', h2: '대제목', h3: '소제목', quote: '인용구',
+    bold: '굵게', italic: '기울임', underline: '밑줄', strike: '취소선',
+    color: '글자색', highlight: '형광펜',
+    alignL: '왼쪽 정렬', alignC: '가운데 정렬', alignR: '오른쪽 정렬', alignJ: '양쪽 정렬',
+    ul: '순서 없는 목록', ol: '순서 있는 목록', link: '링크', linkPrompt: '링크 주소를 입력하세요',
+  },
+  en: {
+    style: 'Style', body: 'Body', h2: 'Heading', h3: 'Subheading', quote: 'Quote',
+    bold: 'Bold', italic: 'Italic', underline: 'Underline', strike: 'Strikethrough',
+    color: 'Text color', highlight: 'Highlight',
+    alignL: 'Align left', alignC: 'Align center', alignR: 'Align right', alignJ: 'Justify',
+    ul: 'Bullet list', ol: 'Numbered list', link: 'Link', linkPrompt: 'Enter the link URL',
+  },
+} as const;
+
+export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }) {
+  const t = L[lang];
+  const [showColor, setShowColor] = useState(false);
+  const [showHl, setShowHl] = useState(false);
+
+  const styleValue = editor.isActive('heading', { level: 2 })
+    ? 'h2'
+    : editor.isActive('heading', { level: 3 })
+    ? 'h3'
+    : editor.isActive('blockquote')
+    ? 'quote'
+    : 'body';
+
+  const setStyle = (v: string) => {
+    const chain = editor.chain().focus();
+    if (v === 'h2') chain.setNode('heading', { level: 2 }).run();
+    else if (v === 'h3') chain.setNode('heading', { level: 3 }).run();
+    else if (v === 'quote') chain.toggleBlockquote().run();
+    else chain.setParagraph().run();
+  };
+
+  const setLink = () => {
+    const prev = editor.getAttributes('link').href as string | undefined;
+    const url = window.prompt(t.linkPrompt, prev ?? 'https://');
+    if (url === null) return;
+    if (url === '') {
+      editor.chain().focus().unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
+
+  return (
+    <div className="sticky top-16 z-10 -mx-1 mb-4 border-b border-[#e2e8f0] dark:border-[#232a36] bg-white/90 dark:bg-[#0c141f]/90 backdrop-blur">
+      <div className="flex items-center gap-1 overflow-x-auto px-1 py-2 no-scrollbar">
+        {/* 양식 */}
+        <select
+          aria-label={t.style}
+          value={styleValue}
+          onChange={(e) => setStyle(e.target.value)}
+          className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-2 text-[13px] text-[#1e293b] dark:text-[#dce3f3]"
+        >
+          <option value="body">{t.body}</option>
+          <option value="h2">{t.h2}</option>
+          <option value="h3">{t.h3}</option>
+          <option value="quote">{t.quote}</option>
+        </select>
+
+        <Sep />
+
+        <Btn label={t.bold} active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold className="w-4 h-4" /></Btn>
+        <Btn label={t.italic} active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic className="w-4 h-4" /></Btn>
+        <Btn label={t.underline} active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()}><UnderlineIcon className="w-4 h-4" /></Btn>
+        <Btn label={t.strike} active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough className="w-4 h-4" /></Btn>
+
+        <Sep />
+
+        {/* 글자색 */}
+        <div className="relative">
+          <Btn label={t.color} onClick={() => { setShowColor((v) => !v); setShowHl(false); }}><Baseline className="w-4 h-4" /></Btn>
+          {showColor && (
+            <Palette
+              colors={SWATCHES}
+              onPick={(c) => { editor.chain().focus().setColor(c).run(); setShowColor(false); }}
+              onReset={() => { editor.chain().focus().unsetColor().run(); setShowColor(false); }}
+            />
+          )}
+        </div>
+        {/* 형광펜 */}
+        <div className="relative">
+          <Btn label={t.highlight} active={editor.isActive('highlight')} onClick={() => { setShowHl((v) => !v); setShowColor(false); }}><Highlighter className="w-4 h-4" /></Btn>
+          {showHl && (
+            <Palette
+              colors={HIGHLIGHTS}
+              onPick={(c) => { editor.chain().focus().toggleHighlight({ color: c }).run(); setShowHl(false); }}
+              onReset={() => { editor.chain().focus().unsetHighlight().run(); setShowHl(false); }}
+            />
+          )}
+        </div>
+
+        <Sep />
+
+        <Btn label={t.alignL} active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}><AlignLeft className="w-4 h-4" /></Btn>
+        <Btn label={t.alignC} active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter className="w-4 h-4" /></Btn>
+        <Btn label={t.alignR} active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="w-4 h-4" /></Btn>
+        <Btn label={t.alignJ} active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()}><AlignJustify className="w-4 h-4" /></Btn>
+
+        <Sep />
+
+        <Btn label={t.ul} active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List className="w-4 h-4" /></Btn>
+        <Btn label={t.ol} active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered className="w-4 h-4" /></Btn>
+
+        <Sep />
+
+        <Btn label={t.link} active={editor.isActive('link')} onClick={setLink}><Link2 className="w-4 h-4" /></Btn>
+      </div>
+    </div>
+  );
+}
+
+function Btn({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={[
+        'flex items-center justify-center w-8 h-8 rounded-md shrink-0 transition-colors',
+        active
+          ? 'bg-[#e0f2fe] dark:bg-[#1b5a7a] text-[#0369a1] dark:text-[#8ecdff]'
+          : 'text-[#64748b] dark:text-[#bec7d2] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Sep() {
+  return <span className="w-px h-5 bg-[#e2e8f0] dark:bg-[#232a36] mx-0.5 shrink-0" />;
+}
+
+function Palette({ colors, onPick, onReset }: { colors: readonly string[]; onPick: (c: string) => void; onReset: () => void }) {
+  return (
+    <div className="absolute top-9 left-0 z-20 p-2 rounded-lg border border-[#e2e8f0] dark:border-[#232a36] bg-white dark:bg-[#151c27] shadow-lg">
+      <div className="grid grid-cols-6 gap-1.5 w-[168px]">
+        {colors.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => onPick(c)}
+            className="w-6 h-6 rounded-full border border-[#e2e8f0] dark:border-[#334155]"
+            style={{ background: c }}
+            aria-label={c}
+          />
+        ))}
+      </div>
+      <button type="button" onClick={onReset} className="mt-2 w-full text-[12px] text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#dce3f3]">
+        ✕ reset
+      </button>
+    </div>
+  );
+}

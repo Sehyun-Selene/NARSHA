@@ -1,0 +1,186 @@
+/* =============================================================================
+   「나의 한국어 책상」 에디터·본문 스코프 스타일
+   .desk-editor  → 편집 화면 (Tiptap ProseMirror)
+   .desk-prose   → 발행본 렌더 (DeskContent)
+   Tailwind 전역 리셋과 격리하기 위해 이 안에서 요소 스타일을 직접 정의한다.
+   다크모드는 html.dark 클래스 기준.
+   ============================================================================= */
+
+.desk-prose,
+.desk-editor .ProseMirror {
+  color: #1e293b;
+  font-family: 'Inter', 'Pretendard', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.85;
+  word-break: break-word;
+}
+.dark .desk-prose,
+.dark .desk-editor .ProseMirror {
+  color: #dce3f3;
+}
+
+/* 문단 */
+.desk-prose p,
+.desk-editor .ProseMirror p {
+  margin: 0 0 1.1em;
+}
+
+/* 제목 */
+.desk-prose h2,
+.desk-editor .ProseMirror h2 {
+  font-family: 'Manrope', 'Pretendard', sans-serif;
+  font-weight: 800;
+  font-size: 1.6em;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  margin: 1.6em 0 0.6em;
+}
+.desk-prose h3,
+.desk-editor .ProseMirror h3 {
+  font-family: 'Manrope', 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 1.25em;
+  line-height: 1.35;
+  margin: 1.4em 0 0.5em;
+}
+
+/* 목록 */
+.desk-prose ul,
+.desk-editor .ProseMirror ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin: 0 0 1.1em;
+}
+.desk-prose ol,
+.desk-editor .ProseMirror ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+  margin: 0 0 1.1em;
+}
+.desk-prose li,
+.desk-editor .ProseMirror li {
+  margin: 0.25em 0;
+}
+.desk-prose li > p,
+.desk-editor .ProseMirror li > p {
+  margin: 0;
+}
+
+/* 링크 */
+.desk-prose a,
+.desk-editor .ProseMirror a {
+  color: #1b99dc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dark .desk-prose a,
+.dark .desk-editor .ProseMirror a {
+  color: #8ecdff;
+}
+
+/* 강조 */
+.desk-prose strong,
+.desk-editor .ProseMirror strong { font-weight: 700; }
+.desk-prose em,
+.desk-editor .ProseMirror em { font-style: italic; }
+.desk-prose u,
+.desk-editor .ProseMirror u { text-decoration: underline; }
+.desk-prose s,
+.desk-editor .ProseMirror s { text-decoration: line-through; }
+.desk-prose mark,
+.desk-editor .ProseMirror mark {
+  padding: 0.05em 0.1em;
+  border-radius: 2px;
+}
+
+/* 이미지 */
+.desk-prose img,
+.desk-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 0.5em 0;
+}
+.desk-prose figure,
+.desk-editor .ProseMirror figure { margin: 1.2em 0; }
+.desk-prose figcaption,
+.desk-editor .ProseMirror figcaption {
+  font-size: 0.85em;
+  color: #64748b;
+  text-align: center;
+  margin-top: 0.5em;
+}
+.dark .desk-prose figcaption,
+.dark .desk-editor .ProseMirror figcaption { color: #94a3b8; }
+
+/* 표 */
+.desk-prose table,
+.desk-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.2em 0;
+  overflow: hidden;
+}
+.desk-prose th,
+.desk-prose td,
+.desk-editor .ProseMirror th,
+.desk-editor .ProseMirror td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.dark .desk-prose th,
+.dark .desk-prose td,
+.dark .desk-editor .ProseMirror th,
+.dark .desk-editor .ProseMirror td {
+  border-color: #232a36;
+}
+.desk-prose th,
+.desk-editor .ProseMirror th {
+  background: #f8fafc;
+  font-weight: 700;
+}
+.dark .desk-prose th,
+.dark .desk-editor .ProseMirror th { background: #1e293b; }
+
+/* 기본 blockquote / hr — 커스텀 variant 는 T7 에서 확장 */
+.desk-prose blockquote,
+.desk-editor .ProseMirror blockquote {
+  border-left: 3px solid #8ecdff;
+  padding-left: 1em;
+  margin: 1.2em 0;
+  color: #475569;
+}
+.dark .desk-prose blockquote,
+.dark .desk-editor .ProseMirror blockquote { color: #bec7d2; }
+.desk-prose hr,
+.desk-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 2em 0;
+}
+.dark .desk-prose hr,
+.dark .desk-editor .ProseMirror hr { border-top-color: #232a36; }
+
+/* ── 편집 화면 전용 ────────────────────────────────────────────────────────── */
+.desk-editor .ProseMirror {
+  min-height: 55vh;
+  outline: none;
+  padding: 0.5em 0;
+}
+.desk-editor .ProseMirror:focus { outline: none; }
+
+/* placeholder (extension-placeholder) */
+.desk-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* 모바일에서 표 가로 스크롤 */
+@media (max-width: 640px) {
+  .desk-prose table,
+  .desk-editor .ProseMirror table { display: block; overflow-x: auto; }
+}
