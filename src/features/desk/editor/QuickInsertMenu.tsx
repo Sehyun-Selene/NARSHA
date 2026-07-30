@@ -47,7 +47,7 @@ export default function QuickInsertMenu({
   return (
     <FloatingMenu
       editor={editor}
-      tippyOptions={{ placement: 'left-start', offset: [0, 8], interactive: true }}
+      tippyOptions={{ placement: 'left-start', offset: [0, 40], interactive: true }}
       shouldShow={({ editor: e }) =>
         e.isEditable && e.isActive('paragraph') && e.state.selection.empty &&
         e.state.selection.$anchor.parent.content.size === 0
