@@ -1,6 +1,7 @@
 import { supabase, type DeskPostRow } from '../../../lib/supabase';
 import type { DeskFeedItem, DeskPost, Profile } from '../types';
 import { getProfileByHandle } from './profiles';
+import { CONSENT_VERSION } from '../legal/consentText';
 
 export type FeedSort = 'latest' | 'popular';
 
@@ -226,11 +227,13 @@ export interface PublishInput {
   summary: string;
   tags: string[];
   visibility: 'public' | 'private';
+  /** 발행 시 저작권 재확인 기록용 (법무 검토 §7.3). */
+  copyrightConsent: { lang: 'ko' | 'en'; text: string };
 }
 
 /** 발행. content_html 은 DOMPurify 정화 후 저장. 공개 범위 → status 매핑. */
 export async function publishPost(input: PublishInput): Promise<{ slug: string }> {
-  await requireUid();
+  const uid = await requireUid();
   const cleanHtml = sanitizeDeskHtml(input.contentHtml);
   const { data, error } = await supabase
     .from('desk_posts')
@@ -248,6 +251,19 @@ export async function publishPost(input: PublishInput): Promise<{ slug: string }
     .select('slug')
     .single();
   if (error) throw error;
+
+  // 저작권 재확인 기록 (실패해도 발행 자체는 막지 않되, 콘솔에 남긴다 — 발행 완료 후의
+  // 부가 기록이라 여기서 막으면 저자가 이미 통과한 체크박스 때문에 발행을 못 하게 된다)
+  const { error: consentError } = await supabase.from('desk_consents').insert({
+    user_id: uid,
+    post_id: input.id,
+    consent_type: 'publish_copyright',
+    version: CONSENT_VERSION,
+    lang: input.copyrightConsent.lang,
+    agreed: true,
+    snapshot_text: input.copyrightConsent.text,
+  });
+  if (consentError) console.error('발행 저작권 동의 기록 실패:', consentError);
   return { slug: data.slug };
 }
 

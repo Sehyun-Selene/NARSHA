@@ -58,6 +58,12 @@ export interface RedeemPayload {
   city?: string;
   bio?: string;
   channel_url?: string;
+  // 동의 기록용 (법무 검토 §7.3) — 서버가 desk_consents 에 3건 기록한다.
+  consent_lang: 'ko' | 'en';
+  consent_version: string;
+  consent_terms_privacy_text: string;
+  consent_copyright_license_text: string;
+  consent_media_rights_text: string;
 }
 
 export type RedeemResult =

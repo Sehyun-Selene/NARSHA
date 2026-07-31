@@ -13,6 +13,7 @@ import {
 } from '../../../features/desk/auth/handle';
 import { deskErrorMessage } from '../../../features/desk/auth/deskErrors';
 import { DESK_TITLE } from '../../../features/desk/components/introCopy';
+import { CONSENT_TEXT, CONSENT_VERSION } from '../../../features/desk/legal/consentText';
 import type { DeskParticipantType } from '../../../features/desk/types';
 
 const inputClass =
@@ -83,13 +84,13 @@ const T = {
 const CONSENTS = {
   ko: [
     { key: 'terms', node: true },
-    { key: 'copyright', text: '내가 쓴 글의 저작권은 나에게 있으며, 나르샤 팀이 이 사업의 홍보·백서·영상 제작을 위해 내 글을 사용하는 것에 동의합니다.' },
-    { key: 'media', text: '내가 올리는 사진과 영상은 직접 촬영했거나 사용 허락을 받은 것이며, 다른 사람이 나오는 경우 그 사람의 동의를 받았습니다.' },
+    { key: 'copyright', text: CONSENT_TEXT.copyrightLicense.ko },
+    { key: 'media', text: CONSENT_TEXT.mediaRights.ko },
   ],
   en: [
     { key: 'terms', node: true },
-    { key: 'copyright', text: "I keep the copyright to what I write. I allow the NARSHA team to use my posts for this project's promotion, white paper, and video production." },
-    { key: 'media', text: 'The photos and videos I upload are my own or properly licensed. If other people appear in them, I have their permission.' },
+    { key: 'copyright', text: CONSENT_TEXT.copyrightLicense.en },
+    { key: 'media', text: CONSENT_TEXT.mediaRights.en },
   ],
 } as const;
 
@@ -199,6 +200,12 @@ export default function DeskJoin() {
       city: city.trim() || undefined,
       bio: bio.trim() || undefined,
       channel_url: isPartner ? channelUrl.trim() || undefined : undefined,
+      // 동의 기록용 — 법무 검토 §7.3. 3개 전부 필수 체크이므로 여기 도달했다는 것 자체가 동의 완료를 의미한다.
+      consent_lang: lang,
+      consent_version: CONSENT_VERSION,
+      consent_terms_privacy_text: CONSENT_TEXT.termsPrivacy[lang],
+      consent_copyright_license_text: CONSENT_TEXT.copyrightLicense[lang],
+      consent_media_rights_text: CONSENT_TEXT.mediaRights[lang],
     });
     if (!res.ok) {
       setBusy(false);

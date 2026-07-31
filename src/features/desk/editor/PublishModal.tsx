@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Lang } from '../../../app/lib/useLang';
+import { PUBLISH_COPYRIGHT_TEXT } from '../legal/consentText';
 
 const MAX_TAGS = 5;
 
@@ -21,7 +22,13 @@ export default function PublishModal({
   html: string;
   text: string;
   onClose: () => void;
-  onPublish: (opts: { coverUrl: string | null; summary: string; tags: string[]; visibility: 'public' | 'private' }) => Promise<void>;
+  onPublish: (opts: {
+    coverUrl: string | null;
+    summary: string;
+    tags: string[];
+    visibility: 'public' | 'private';
+    copyrightConsent: { lang: Lang; text: string };
+  }) => Promise<void>;
 }) {
   const images = useMemo(() => extractImages(html), [html]);
   const [cover, setCover] = useState<string | null>(images[0] ?? null);
@@ -35,14 +42,13 @@ export default function PublishModal({
   const t = lang === 'ko' ? {
     title: '발행하기', cover: '대표 이미지', none: '없음', tags: '태그 (최대 5개)', tagPh: '입력 후 Enter',
     summary: '요약', visibility: '공개 범위', pub: '전체 공개', priv: '비공개',
-    copyright: '이 글에 사용한 사진·영상·음원은 직접 촬영했거나 사용 허락을 받았습니다.',
     publish: '발행', publishing: '발행 중…', cancel: '취소',
   } : {
     title: 'Publish', cover: 'Cover image', none: 'None', tags: 'Tags (max 5)', tagPh: 'Type and press Enter',
     summary: 'Summary', visibility: 'Visibility', pub: 'Public', priv: 'Private',
-    copyright: 'The photos, videos, and audio in this post are my own or properly licensed.',
     publish: 'Publish', publishing: 'Publishing…', cancel: 'Cancel',
   };
+  const copyrightText = PUBLISH_COPYRIGHT_TEXT[lang];
 
   const addTag = () => {
     const v = tagInput.trim().replace(/^#/, '');
@@ -54,7 +60,11 @@ export default function PublishModal({
     if (!copyright || busy) return;
     setBusy(true);
     try {
-      await onPublish({ coverUrl: cover, summary: summary.trim(), tags, visibility });
+      // 발행 시 저작권 확인은 게시물 단위로 서버에 기록된다 (법무 검토 §7.3)
+      await onPublish({
+        coverUrl: cover, summary: summary.trim(), tags, visibility,
+        copyrightConsent: { lang, text: copyrightText },
+      });
     } catch {
       setBusy(false);
     }
@@ -123,7 +133,7 @@ export default function PublishModal({
         {/* 저작권 확인 (필수) */}
         <label className="flex items-start gap-2.5 mb-5 cursor-pointer">
           <input type="checkbox" checked={copyright} onChange={(e) => setCopyright(e.target.checked)} className="mt-0.5 w-4 h-4 accent-[#0ea5e9] shrink-0" />
-          <span className="text-[13px] leading-[1.6] text-[#1e293b] dark:text-[#dce3f3]">{t.copyright}</span>
+          <span className="text-[13px] leading-[1.6] text-[#1e293b] dark:text-[#dce3f3]">{copyrightText}</span>
         </label>
 
         <div className="flex gap-2">

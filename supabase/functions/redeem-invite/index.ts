@@ -180,6 +180,42 @@ Deno.serve(async (req) => {
     return json({ error: 'PROFILE_CREATE_FAILED' }, 500, origin);
   }
 
+  // ── 가입 동의 3건 기록 ───────────────────────────────────────────────────
+  // 학습자가 해외 거주라 서면 동의서를 받을 수 없다. 온라인 동의가 유일한
+  // 증빙이므로, 기록 자체가 실패하면 계정 생성을 되돌린다 (법무 검토 §7.3).
+  const consentLang = body.consent_lang === 'en' ? 'en' : 'ko';
+  const consentVersion = String(body.consent_version ?? '').trim();
+  const consentRows = [
+    { type: 'terms_privacy', text: body.consent_terms_privacy_text },
+    { type: 'copyright_license', text: body.consent_copyright_license_text },
+    { type: 'media_rights', text: body.consent_media_rights_text },
+  ];
+
+  if (!consentVersion || consentRows.some((c) => !c.text)) {
+    await admin.from('profiles').delete().eq('id', userId);
+    await admin.auth.admin.deleteUser(userId);
+    await logAttempt(false);
+    return json({ error: 'CONSENT_REQUIRED' }, 400, origin);
+  }
+
+  const { error: consentError } = await admin.from('desk_consents').insert(
+    consentRows.map((c) => ({
+      user_id: userId,
+      consent_type: c.type,
+      version: consentVersion,
+      lang: consentLang,
+      agreed: true,
+      snapshot_text: c.text,
+    })),
+  );
+
+  if (consentError) {
+    await admin.from('profiles').delete().eq('id', userId);
+    await admin.auth.admin.deleteUser(userId);
+    await logAttempt(false);
+    return json({ error: 'CONSENT_RECORD_FAILED' }, 500, origin);
+  }
+
   // 코드 소진 처리 (동시 요청 대비: used_by 가 아직 비어 있을 때만 갱신)
   const { data: consumed } = await admin
     .from('invite_codes')

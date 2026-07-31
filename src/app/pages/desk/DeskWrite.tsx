@@ -145,7 +145,10 @@ export default function DeskWrite() {
     scheduleLocalSave();
   };
 
-  const handlePublish = async (opts: { coverUrl: string | null; summary: string; tags: string[]; visibility: 'public' | 'private' }) => {
+  const handlePublish = async (opts: {
+    coverUrl: string | null; summary: string; tags: string[]; visibility: 'public' | 'private';
+    copyrightConsent: { lang: 'ko' | 'en'; text: string };
+  }) => {
     // 발행 전 서버에 최신 저장 보장
     const { title: tt, json, html, text } = latest.current;
     const saved = await saveDraft({ id: serverId.current ?? undefined, title: tt || (lang === 'ko' ? '(제목 없음)' : '(untitled)'), contentJson: json, contentHtml: html, contentText: text });
@@ -153,6 +156,7 @@ export default function DeskWrite() {
     const { slug } = await publishPost({
       id: saved.id, title: tt, contentJson: json, contentHtml: html, contentText: text,
       coverUrl: opts.coverUrl, summary: opts.summary, tags: opts.tags, visibility: opts.visibility,
+      copyrightConsent: opts.copyrightConsent,
     });
     dirtyLocal.current = false;
     dirtyServer.current = false;

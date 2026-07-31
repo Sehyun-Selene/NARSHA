@@ -16,6 +16,8 @@ const MESSAGES: Record<string, { ko: string; en: string }> = {
   HANDLE_TAKEN:   { ko: '이미 사용 중인 주소입니다.', en: 'This handle is already taken.' },
   SIGNUP_FAILED:  { ko: '가입에 실패했습니다. 잠시 후 다시 시도해 주세요.', en: 'Sign-up failed. Please try again shortly.' },
   PROFILE_CREATE_FAILED: { ko: '프로필 생성에 실패했습니다. 나르샤 팀에 문의해 주세요.', en: 'Failed to create profile. Please contact the NARSHA team.' },
+  CONSENT_REQUIRED: { ko: '약관 동의 정보가 전달되지 않았습니다. 다시 시도해 주세요.', en: 'Consent information was not received. Please try again.' },
+  CONSENT_RECORD_FAILED: { ko: '동의 기록에 실패했습니다. 잠시 후 다시 시도해 주세요.', en: 'Failed to record consent. Please try again shortly.' },
   SERVER_MISCONFIGURED: { ko: '서버 설정 오류입니다. 나르샤 팀에 문의해 주세요.', en: 'Server misconfiguration. Please contact the NARSHA team.' },
   INVALID_LOGIN:  { ko: '이메일 또는 비밀번호가 올바르지 않습니다.', en: 'Incorrect email or password.' },
   NETWORK:        { ko: '네트워크 오류입니다. 연결을 확인하고 다시 시도해 주세요.', en: 'Network error. Please check your connection and try again.' },
