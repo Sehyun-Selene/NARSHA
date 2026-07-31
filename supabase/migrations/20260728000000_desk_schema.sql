@@ -480,6 +480,15 @@ grant insert, delete on public.desk_media to authenticated;      -- RLS: owner �
 
 -- 뷰는 이미 grant select ... to anon, authenticated (§9)
 
+-- service_role(Edge Function) 용 GRANT.
+-- service_role 은 보통 기본적으로 전 테이블 접근 권한을 갖지만, 이 프로젝트에서는
+-- 신규 테이블에 대해 자동 부여되지 않아 Edge Function 에서
+-- 'permission denied for table ...' 가 발생했다. 명시적으로 부여한다.
+grant select, insert, update, delete
+  on public.profiles, public.desk_posts, public.desk_post_revisions, public.desk_media,
+     public.invite_codes, public.invite_redeem_attempts
+  to service_role;
+
 -- =============================================================================
 -- 8. Storage
 -- =============================================================================
