@@ -5,7 +5,15 @@ import type { Lang } from '../../../app/lib/useLang';
 import { DIVIDER_VARIANTS, type DividerVariant } from './extensions/DeskDivider';
 import { QUOTE_VARIANTS, type QuoteVariant } from './extensions/DeskBlockquote';
 
-type Sub = 'none' | 'divider' | 'quote';
+type Sub = 'none' | 'divider' | 'quote' | 'sticker';
+
+// 자체 팔레트 (외부 라이브러리 불필요). 한국어 학습 기록 맥락에서 자주 쓸 법한 것 위주.
+const STICKERS = [
+  '😀', '😂', '🥰', '😅', '😭', '😳', '🥺', '😴',
+  '👍', '👏', '🙌', '🙏', '💪', '✌️', '🤝', '👀',
+  '❤️', '🔥', '✨', '⭐', '🎉', '🎊', '💯', '✅',
+  '📚', '✏️', '📝', '🇰🇷', '🗣️', '☕', '🌱', '🏆',
+];
 
 /**
  * 좌측 + 빠른 삽입 (§6.2). 빈 문단일 때만 표시된다.
@@ -53,13 +61,14 @@ export default function QuickInsertMenu({
   }, [editor]);
 
   const t = lang === 'ko'
-    ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구', soon: '준비 중' }
-    : { photo: 'Photo', sticker: 'Sticker', divider: 'Divider', quote: 'Quote', soon: 'Soon' };
+    ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구' }
+    : { photo: 'Photo', sticker: 'Sticker', divider: 'Divider', quote: 'Quote' };
 
   const close = () => { setOpen(false); setSub('none'); };
 
   const insertDivider = (v: DividerVariant) => { editor.chain().focus().setDeskDivider(v).run(); close(); };
   const insertQuote = (v: QuoteVariant) => { editor.chain().focus().setQuoteVariant(v).run(); close(); };
+  const insertSticker = (emoji: string) => { editor.chain().focus().insertContent(emoji).run(); close(); };
 
   return (
     <FloatingMenu
@@ -83,9 +92,24 @@ export default function QuickInsertMenu({
         {open && (
           <div className="absolute left-9 top-0 z-30 w-44 rounded-xl border border-[#e2e8f0] dark:border-[#232a36] bg-white dark:bg-[#151c27] shadow-lg py-1.5">
             <MenuRow icon={<ImageIcon className="w-4 h-4" />} label={t.photo} onClick={() => { onImageClick(); close(); }} />
-            <MenuRow icon={<Smile className="w-4 h-4" />} label={t.sticker} note={t.soon} disabled />
+            <MenuRow icon={<Smile className="w-4 h-4" />} label={t.sticker} chevron active={sub === 'sticker'} onClick={() => setSub(sub === 'sticker' ? 'none' : 'sticker')} />
             <MenuRow icon={<Minus className="w-4 h-4" />} label={t.divider} chevron active={sub === 'divider'} onClick={() => setSub(sub === 'divider' ? 'none' : 'divider')} />
             <MenuRow icon={<Quote className="w-4 h-4" />} label={t.quote} chevron active={sub === 'quote'} onClick={() => setSub(sub === 'quote' ? 'none' : 'quote')} />
+
+            {sub === 'sticker' && (
+              <div className="mt-1 border-t border-[#f1f5f9] dark:border-[#232a36] pt-2 px-2 grid grid-cols-5 gap-1">
+                {STICKERS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => insertSticker(emoji)}
+                    className="flex items-center justify-center w-7 h-7 rounded-md text-[16px] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {sub === 'divider' && (
               <div className="mt-1 border-t border-[#f1f5f9] dark:border-[#232a36] pt-2 px-2 grid gap-1.5">
