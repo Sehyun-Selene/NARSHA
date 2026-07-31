@@ -24,8 +24,9 @@ import { DeskImage } from './extensions/DeskImage';
 import { DeskEmbed } from './extensions/DeskEmbed';
 import { DeskDivider } from './extensions/DeskDivider';
 import { DeskBlockquote } from './extensions/DeskBlockquote';
+import { DeskFile } from './extensions/DeskFile';
 import QuickInsertMenu from './QuickInsertMenu';
-import { uploadImage, mediaErrorMessage } from '../api/media';
+import { uploadImage, uploadFile, mediaErrorMessage, FILE_ALLOWED_EXT } from '../api/media';
 import type { DeskDoc } from '../types';
 import './editor.css';
 
@@ -56,6 +57,7 @@ export function buildExtensions(placeholder: string) {
     }),
     DeskImage.configure({ inline: false, HTMLAttributes: { loading: 'lazy' } }),
     DeskEmbed,
+    DeskFile,
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     TextStyle,
     Color,
@@ -91,11 +93,28 @@ async function uploadAndInsert(editor: Editor, files: File[], lang: Lang) {
   }
 }
 
+/** 첨부 파일들을 업로드해 다운로드 카드로 삽입. */
+async function uploadAndInsertFiles(editor: Editor, files: File[], lang: Lang) {
+  if (files.length === 0) return;
+  const toastId = toast.loading(lang === 'ko' ? '파일 업로드 중…' : 'Uploading file…');
+  try {
+    for (const file of files) {
+      const { url, name, size, ext } = await uploadFile(file);
+      editor.chain().focus().setDeskFile({ url, name, size, ext }).run();
+    }
+    toast.success(lang === 'ko' ? '업로드 완료' : 'Uploaded', { id: toastId });
+  } catch (e) {
+    const code = (e as { code?: string })?.code ?? 'UPLOAD_FAILED';
+    toast.error(mediaErrorMessage(code, lang), { id: toastId });
+  }
+}
+
 export default function DeskEditor({ initialContent, placeholder, onUpdate, onEditorReady }: DeskEditorProps) {
   const [lang] = useLang();
   const ph = placeholder ?? (lang === 'ko' ? '오늘의 한국어 공부를 기록해 보세요…' : 'Write about your Korean study today…');
   const editorHolder = useRef<Editor | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const attachRef = useRef<HTMLInputElement>(null);
 
   // 문단 없는 빈 doc({content:[]})이면 '' 로 넘겨 ProseMirror 가 빈 문단을 만들게 한다.
   // (그래야 placeholder 와 좌측 + Quick Insert 가 뜬다.)
@@ -152,11 +171,30 @@ export default function DeskEditor({ initialContent, placeholder, onUpdate, onEd
     e.target.value = '';
   };
 
+  const handleAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length) void uploadAndInsertFiles(editor, files, lang);
+    e.target.value = '';
+  };
+
   return (
     <div className="desk-editor">
       <Toolbar editor={editor} lang={lang} />
-      <QuickInsertMenu editor={editor} lang={lang} onImageClick={() => fileRef.current?.click()} />
+      <QuickInsertMenu
+        editor={editor}
+        lang={lang}
+        onImageClick={() => fileRef.current?.click()}
+        onFileClick={() => attachRef.current?.click()}
+      />
       <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handleFiles} />
+      <input
+        ref={attachRef}
+        type="file"
+        accept={FILE_ALLOWED_EXT.map((e) => `.${e}`).join(',')}
+        multiple
+        hidden
+        onChange={handleAttach}
+      />
       <EditorContent editor={editor} />
       <div className="mt-3 text-right text-[12px] text-[#94a3b8]">
         {chars.toLocaleString()} {lang === 'ko' ? '자' : 'chars'}

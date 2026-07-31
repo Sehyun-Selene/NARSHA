@@ -131,6 +131,52 @@
 .desk-editor .ProseMirror.resize-cursor {
   cursor: col-resize;
 }
+
+/* 파일 첨부 다운로드 카드 (§6.6 Phase 2) */
+.desk-file-card {
+  margin: 0 0 1.1em;
+}
+.desk-file-card-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.7em 0.9em;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  text-decoration: none !important;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+.desk-file-card-link:hover {
+  border-color: #8ecdff;
+}
+.dark .desk-file-card-link {
+  border-color: #232a36;
+}
+.dark .desk-file-card-link:hover {
+  border-color: #1b99dc;
+}
+.desk-file-icon {
+  font-size: 1.3em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.desk-file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-width: 0;
+}
+.desk-file-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desk-file-meta {
+  font-size: 0.8em;
+  color: #94a3b8;
+}
 .dark .desk-prose a,
 .dark .desk-editor .ProseMirror a {
   color: #8ecdff;

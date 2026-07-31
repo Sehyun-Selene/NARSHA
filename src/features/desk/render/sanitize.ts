@@ -14,7 +14,7 @@ const ALLOWED_TAGS = [
 
 const ALLOWED_ATTR = [
   'href', 'src', 'alt', 'title', 'class', 'style',
-  'target', 'rel', 'loading', 'role',
+  'target', 'rel', 'loading', 'role', 'download',
   'colspan', 'rowspan',
   'data-variant', 'data-align', 'data-type',
   'data-desk-embed', 'data-provider', 'data-url',

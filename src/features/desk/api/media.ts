@@ -6,6 +6,8 @@ export const QUOTA_WARN_RATIO = 0.8;                  // 80% 경고
 export const IMAGE_MAX_ORIGINAL_BYTES = 10 * 1024 * 1024; // 원본 10MB 초과 거부
 export const IMAGE_MAX_EDGE = 1600;                   // 장변 최대 px
 export const WEBP_QUALITY = 0.82;
+export const FILE_ALLOWED_EXT = ['pdf', 'docx', 'pptx', 'xlsx', 'hwp', 'txt', 'zip', 'png', 'jpg', 'jpeg'];
+export const FILE_MAX_BYTES = 20 * 1024 * 1024; // 파일 첨부 20MB 상한 (PRD §6.6)
 const BUCKET = 'desk-media';
 
 export class MediaError extends Error {
@@ -108,6 +110,54 @@ export async function uploadImage(file: File): Promise<UploadedImage> {
   return { url: pub.publicUrl, path, bytes: blob.size };
 }
 
+export interface UploadedFile {
+  url: string;
+  path: string;
+  bytes: number;
+  name: string;
+  ext: string;
+}
+
+/**
+ * 파일 첨부: 확장자 화이트리스트 검증 → 20MB 상한 → 쿼터 검증 → Storage 업로드 →
+ * desk_media 행 삽입(kind='file', 트리거가 storage_used 갱신).
+ * 경로: desk/{user.id}/files/{uuid}.{ext} (원본 파일명은 desk_media/노드 속성에만 보존)
+ */
+export async function uploadFile(file: File): Promise<UploadedFile> {
+  const ext = (file.name.split('.').pop() ?? '').toLowerCase();
+  if (!ext || !FILE_ALLOWED_EXT.includes(ext)) throw new MediaError('FILE_TYPE_NOT_ALLOWED');
+  if (file.size > FILE_MAX_BYTES) throw new MediaError('FILE_TOO_LARGE');
+
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) throw new MediaError('NOT_AUTHENTICATED');
+
+  const { used, limit } = await getQuota();
+  if (used + file.size > limit) throw new MediaError('QUOTA_EXCEEDED');
+
+  const path = `desk/${uid}/files/${crypto.randomUUID()}.${ext}`;
+  const { error: upErr } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+  if (upErr) throw new MediaError('UPLOAD_FAILED');
+
+  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+
+  const { error: rowErr } = await supabase.from('desk_media').insert({
+    owner_id: uid,
+    kind: 'file',
+    path,
+    bytes: file.size,
+    mime: file.type || 'application/octet-stream',
+  });
+  if (rowErr) {
+    await supabase.storage.from(BUCKET).remove([path]);
+    throw new MediaError('UPLOAD_FAILED');
+  }
+
+  return { url: pub.publicUrl, path, bytes: file.size, name: file.name, ext };
+}
+
 /** 에러 코드 → 한/영 메시지. */
 export function mediaErrorMessage(code: string, lang: 'ko' | 'en'): string {
   const m: Record<string, { ko: string; en: string }> = {
@@ -117,6 +167,8 @@ export function mediaErrorMessage(code: string, lang: 'ko' | 'en'): string {
     NOT_AUTHENTICATED: { ko: '로그인이 필요해요.', en: 'Login required.' },
     IMAGE_DECODE_FAILED: { ko: '이미지를 읽을 수 없어요.', en: 'Could not read the image.' },
     UPLOAD_FAILED: { ko: '업로드에 실패했어요. 잠시 후 다시 시도해 주세요.', en: 'Upload failed. Please try again shortly.' },
+    FILE_TYPE_NOT_ALLOWED: { ko: 'pdf·docx·pptx·xlsx·hwp·txt·zip·png·jpg 파일만 올릴 수 있어요.', en: 'Only pdf, docx, pptx, xlsx, hwp, txt, zip, png, jpg files are allowed.' },
+    FILE_TOO_LARGE: { ko: '파일은 20MB 이하만 가능해요.', en: 'File must be 20MB or less.' },
   };
   return m[code]?.[lang] ?? (lang === 'ko' ? '업로드 중 문제가 발생했어요.' : 'Something went wrong during upload.');
 }

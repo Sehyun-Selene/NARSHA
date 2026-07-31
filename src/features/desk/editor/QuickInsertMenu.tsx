@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FloatingMenu, type Editor } from '@tiptap/react';
-import { Plus, Image as ImageIcon, Smile, Minus, Quote, ChevronRight, Table as TableIcon } from 'lucide-react';
+import { Plus, Image as ImageIcon, Smile, Minus, Quote, ChevronRight, Table as TableIcon, Paperclip } from 'lucide-react';
 import type { Lang } from '../../../app/lib/useLang';
 import { DIVIDER_VARIANTS, type DividerVariant } from './extensions/DeskDivider';
 import { QUOTE_VARIANTS, type QuoteVariant } from './extensions/DeskBlockquote';
@@ -24,10 +24,12 @@ export default function QuickInsertMenu({
   editor,
   lang,
   onImageClick,
+  onFileClick,
 }: {
   editor: Editor;
   lang: Lang;
   onImageClick: () => void;
+  onFileClick: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [sub, setSub] = useState<Sub>('none');
@@ -44,8 +46,8 @@ export default function QuickInsertMenu({
   }, [open]);
 
   const t = lang === 'ko'
-    ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구', table: '표' }
-    : { photo: 'Photo', sticker: 'Sticker', divider: 'Divider', quote: 'Quote', table: 'Table' };
+    ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구', table: '표', file: '파일' }
+    : { photo: 'Photo', sticker: 'Sticker', divider: 'Divider', quote: 'Quote', table: 'Table', file: 'File' };
 
   const close = () => { setOpen(false); setSub('none'); };
 
@@ -76,6 +78,7 @@ export default function QuickInsertMenu({
         {open && (
           <div className="absolute left-9 top-0 z-30 w-44 rounded-xl border border-[#e2e8f0] dark:border-[#232a36] bg-white dark:bg-[#151c27] shadow-lg py-1.5">
             <MenuRow icon={<ImageIcon className="w-4 h-4" />} label={t.photo} onClick={() => { onImageClick(); close(); }} />
+            <MenuRow icon={<Paperclip className="w-4 h-4" />} label={t.file} onClick={() => { onFileClick(); close(); }} />
             <MenuRow icon={<Smile className="w-4 h-4" />} label={t.sticker} chevron active={sub === 'sticker'} onClick={() => setSub(sub === 'sticker' ? 'none' : 'sticker')} />
             <MenuRow icon={<Minus className="w-4 h-4" />} label={t.divider} chevron active={sub === 'divider'} onClick={() => setSub(sub === 'divider' ? 'none' : 'divider')} />
             <MenuRow icon={<Quote className="w-4 h-4" />} label={t.quote} chevron active={sub === 'quote'} onClick={() => setSub(sub === 'quote' ? 'none' : 'quote')} />
