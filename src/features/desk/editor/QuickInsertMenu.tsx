@@ -35,6 +35,23 @@ export default function QuickInsertMenu({
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
+  // 슬래시 명령 (§6.2 Phase 2) — 빈 문단에 "/" 만 입력되면 지우고 동일한 메뉴를 연다.
+  // 텍스트 커서 위치에 붙는 별도 팝업을 새로 만들지 않고, 이미 있는 + 메뉴(FloatingMenu 가
+  // 같은 빈 문단 위에 뜨는 위치)를 재사용한다.
+  useEffect(() => {
+    const onUpdate = () => {
+      const { state } = editor;
+      const { $from, empty } = state.selection;
+      if (!empty || $from.parent.type.name !== 'paragraph') return;
+      if ($from.parent.textContent !== '/') return;
+      const from = $from.pos - 1;
+      editor.chain().deleteRange({ from, to: $from.pos }).run();
+      setOpen(true);
+    };
+    editor.on('update', onUpdate);
+    return () => { editor.off('update', onUpdate); };
+  }, [editor]);
+
   const t = lang === 'ko'
     ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구', soon: '준비 중' }
     : { photo: 'Photo', sticker: 'Sticker', divider: 'Divider', quote: 'Quote', soon: 'Soon' };
