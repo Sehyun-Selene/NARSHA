@@ -7,6 +7,7 @@ import {
   Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
 } from 'lucide-react';
 import type { Lang } from '../../../app/lib/useLang';
+import { CHAR_CATEGORIES, getRecentChars, pushRecentChar } from './charPaletteData';
 
 // 사업 브랜드 팔레트 (글자색·형광펜 공용)
 const SWATCHES = ['#1e293b', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0ea5e9', '#1b99dc', '#7c3aed', '#db2777', '#64748b', '#8ecdff', '#ffffff'];
@@ -21,7 +22,7 @@ const L = {
     ul: '순서 없는 목록', ol: '순서 있는 목록', link: '링크', linkPrompt: '링크 주소를 입력하세요',
     fontSize: '글자 크기', sup: '위첨자', sub: '아래첨자',
     letterSpacing: '자간', letterNarrow: '좁게', letterNormal: '기본', letterWide: '넓게',
-    lineHeight: '줄간격',
+    lineHeight: '줄간격', charPalette: '문자표', recent: '최근 사용',
   },
   en: {
     style: 'Style', body: 'Body', h2: 'Heading', h3: 'Subheading', quote: 'Quote',
@@ -31,7 +32,7 @@ const L = {
     ul: 'Bullet list', ol: 'Numbered list', link: 'Link', linkPrompt: 'Enter the link URL',
     fontSize: 'Font size', sup: 'Superscript', sub: 'Subscript',
     letterSpacing: 'Letter spacing', letterNarrow: 'Narrow', letterNormal: 'Default', letterWide: 'Wide',
-    lineHeight: 'Line height',
+    lineHeight: 'Line height', charPalette: 'Special characters', recent: 'Recently used',
   },
 } as const;
 
@@ -39,15 +40,18 @@ const FONT_SIZES = ['11', '13', '15', '16', '19', '24', '28', '30', '34'] as con
 const LINE_HEIGHTS = ['1.0', '1.2', '1.5', '1.8', '2.0'] as const;
 const LETTER_SPACINGS = { narrow: '-0.05em', normal: null, wide: '0.05em' } as const;
 
-type OpenPanel = 'none' | 'color' | 'highlight';
+type OpenPanel = 'none' | 'color' | 'highlight' | 'char';
 
 export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }) {
   const t = L[lang];
   const wrapRef = useRef<HTMLDivElement>(null);
   const colorBtnRef = useRef<HTMLButtonElement>(null);
   const hlBtnRef = useRef<HTMLButtonElement>(null);
+  const charBtnRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState<OpenPanel>('none');
   const [panelLeft, setPanelLeft] = useState(0);
+  const [charTab, setCharTab] = useState(CHAR_CATEGORIES[0].key);
+  const [recentChars, setRecentChars] = useState<string[]>([]);
 
   // 바깥 클릭 시 팔레트 닫기
   useEffect(() => {
@@ -65,7 +69,8 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
     if (btn && wrapRef.current) {
       const b = btn.getBoundingClientRect();
       const w = wrapRef.current.getBoundingClientRect();
-      setPanelLeft(Math.max(0, Math.min(b.left - w.left, w.width - 184)));
+      const panelWidth = which === 'char' ? 300 : 184;
+      setPanelLeft(Math.max(0, Math.min(b.left - w.left, w.width - panelWidth)));
     }
     setOpen(which);
   };
@@ -95,6 +100,11 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
       return;
     }
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
+
+  const insertChar = (c: string) => {
+    editor.chain().focus().insertContent(c).run();
+    setRecentChars(pushRecentChar(c));
   };
 
   return (
@@ -138,6 +148,14 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
         <Btn label={t.strike} active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough className="w-4 h-4" /></Btn>
         <Btn label={t.sup} active={editor.isActive('superscript')} onClick={() => editor.chain().focus().toggleSuperscript().run()}><SuperscriptIcon className="w-4 h-4" /></Btn>
         <Btn label={t.sub} active={editor.isActive('subscript')} onClick={() => editor.chain().focus().toggleSubscript().run()}><SubscriptIcon className="w-4 h-4" /></Btn>
+        <Btn
+          btnRef={charBtnRef}
+          label={t.charPalette}
+          active={open === 'char'}
+          onClick={() => { if (open !== 'char') setRecentChars(getRecentChars()); openPanel('char', charBtnRef.current); }}
+        >
+          <span className="text-[15px] leading-none">Ω</span>
+        </Btn>
 
         <Sep />
 
@@ -216,6 +234,17 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
           onReset={() => { editor.chain().focus().unsetHighlight().run(); setOpen('none'); }}
         />
       )}
+      {open === 'char' && (
+        <CharPanel
+          left={panelLeft}
+          lang={lang}
+          recentLabel={t.recent}
+          recentChars={recentChars}
+          tab={charTab}
+          onTab={setCharTab}
+          onPick={insertChar}
+        />
+      )}
     </div>
   );
 }
@@ -273,6 +302,69 @@ function Palette({ left, colors, resetLabel, onPick, onReset }: {
       <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={onReset} className="mt-2 w-full text-[12px] text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#dce3f3]">
         ✕ {resetLabel}
       </button>
+    </div>
+  );
+}
+
+function CharPanel({ left, lang, recentLabel, recentChars, tab, onTab, onPick }: {
+  left: number; lang: Lang; recentLabel: string; recentChars: string[];
+  tab: string; onTab: (k: string) => void; onPick: (c: string) => void;
+}) {
+  const activeCat = CHAR_CATEGORIES.find((c) => c.key === tab) ?? CHAR_CATEGORIES[0];
+  return (
+    <div
+      className="absolute top-full mt-1 z-30 p-2 rounded-lg border border-[#e2e8f0] dark:border-[#232a36] bg-white dark:bg-[#151c27] shadow-lg w-[292px]"
+      style={{ left }}
+    >
+      {recentChars.length > 0 && (
+        <div className="mb-2 pb-2 border-b border-[#f1f5f9] dark:border-[#232a36]">
+          <div className="mb-1 text-[11px] text-[#94a3b8]">{recentLabel}</div>
+          <div className="grid grid-cols-10 gap-0.5">
+            {recentChars.map((c, i) => (
+              <button
+                key={`${c}-${i}`}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => onPick(c)}
+                className="flex items-center justify-center w-6 h-6 rounded text-[14px] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]"
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="mb-2 flex flex-wrap gap-1">
+        {CHAR_CATEGORIES.map((cat) => (
+          <button
+            key={cat.key}
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onTab(cat.key)}
+            className={[
+              'rounded px-1.5 py-0.5 text-[11px]',
+              tab === cat.key
+                ? 'bg-[#e0f2fe] dark:bg-[#1b5a7a] text-[#0369a1] dark:text-[#8ecdff]'
+                : 'text-[#64748b] dark:text-[#94a3b8] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]',
+            ].join(' ')}
+          >
+            {lang === 'ko' ? cat.labelKo : cat.labelEn}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-10 gap-0.5 max-h-[168px] overflow-y-auto">
+        {activeCat.chars.map((c, i) => (
+          <button
+            key={`${c}-${i}`}
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onPick(c)}
+            className="flex items-center justify-center w-6 h-6 rounded text-[14px] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]"
+          >
+            {c}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
