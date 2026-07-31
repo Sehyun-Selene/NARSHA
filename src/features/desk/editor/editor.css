@@ -177,6 +177,27 @@
   font-size: 0.8em;
   color: #94a3b8;
 }
+
+/* 일정(날짜) 카드 (§6.6 Phase 2) */
+.desk-date-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0 0 1.1em;
+  padding: 0.5em 0.9em;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+.dark .desk-date-card {
+  border-color: #232a36;
+  background: #151c27;
+}
+.desk-date-card-icon {
+  line-height: 1;
+}
 .dark .desk-prose a,
 .dark .desk-editor .ProseMirror a {
   color: #8ecdff;

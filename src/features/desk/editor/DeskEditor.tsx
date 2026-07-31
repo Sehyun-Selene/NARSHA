@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import { toast } from 'sonner';
 import StarterKit from '@tiptap/starter-kit';
@@ -26,7 +26,9 @@ import { DeskEmbed } from './extensions/DeskEmbed';
 import { DeskDivider } from './extensions/DeskDivider';
 import { DeskBlockquote } from './extensions/DeskBlockquote';
 import { DeskFile } from './extensions/DeskFile';
+import { DeskDateCard, type DeskDateCardAttrs } from './extensions/DeskDateCard';
 import QuickInsertMenu from './QuickInsertMenu';
+import DateCardModal from './DateCardModal';
 import { uploadImage, uploadFile, mediaErrorMessage, FILE_ALLOWED_EXT } from '../api/media';
 import type { DeskDoc } from '../types';
 import './editor.css';
@@ -59,6 +61,7 @@ export function buildExtensions(placeholder: string) {
     DeskImage.configure({ inline: false, HTMLAttributes: { loading: 'lazy' } }),
     DeskEmbed,
     DeskFile,
+    DeskDateCard,
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     TextStyle,
     FontFamily,
@@ -117,6 +120,7 @@ export default function DeskEditor({ initialContent, placeholder, onUpdate, onEd
   const editorHolder = useRef<Editor | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const attachRef = useRef<HTMLInputElement>(null);
+  const [showDateModal, setShowDateModal] = useState(false);
 
   // 문단 없는 빈 doc({content:[]})이면 '' 로 넘겨 ProseMirror 가 빈 문단을 만들게 한다.
   // (그래야 placeholder 와 좌측 + Quick Insert 가 뜬다.)
@@ -187,6 +191,7 @@ export default function DeskEditor({ initialContent, placeholder, onUpdate, onEd
         lang={lang}
         onImageClick={() => fileRef.current?.click()}
         onFileClick={() => attachRef.current?.click()}
+        onDateClick={() => setShowDateModal(true)}
       />
       <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handleFiles} />
       <input
@@ -201,6 +206,16 @@ export default function DeskEditor({ initialContent, placeholder, onUpdate, onEd
       <div className="mt-3 text-right text-[12px] text-[#94a3b8]">
         {chars.toLocaleString()} {lang === 'ko' ? '자' : 'chars'}
       </div>
+      {showDateModal && (
+        <DateCardModal
+          lang={lang}
+          onClose={() => setShowDateModal(false)}
+          onInsert={(attrs: DeskDateCardAttrs) => {
+            editor.chain().focus().setDeskDateCard(attrs).run();
+            setShowDateModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
