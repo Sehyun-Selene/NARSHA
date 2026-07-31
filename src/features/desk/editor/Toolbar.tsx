@@ -4,6 +4,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Link2, Highlighter, Baseline,
+  Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
 } from 'lucide-react';
 import type { Lang } from '../../../app/lib/useLang';
 
@@ -18,6 +19,9 @@ const L = {
     color: '글자색', highlight: '형광펜', reset: '지우기',
     alignL: '왼쪽 정렬', alignC: '가운데 정렬', alignR: '오른쪽 정렬', alignJ: '양쪽 정렬',
     ul: '순서 없는 목록', ol: '순서 있는 목록', link: '링크', linkPrompt: '링크 주소를 입력하세요',
+    fontSize: '글자 크기', sup: '위첨자', sub: '아래첨자',
+    letterSpacing: '자간', letterNarrow: '좁게', letterNormal: '기본', letterWide: '넓게',
+    lineHeight: '줄간격',
   },
   en: {
     style: 'Style', body: 'Body', h2: 'Heading', h3: 'Subheading', quote: 'Quote',
@@ -25,8 +29,15 @@ const L = {
     color: 'Text color', highlight: 'Highlight', reset: 'Reset',
     alignL: 'Align left', alignC: 'Align center', alignR: 'Align right', alignJ: 'Justify',
     ul: 'Bullet list', ol: 'Numbered list', link: 'Link', linkPrompt: 'Enter the link URL',
+    fontSize: 'Font size', sup: 'Superscript', sub: 'Subscript',
+    letterSpacing: 'Letter spacing', letterNarrow: 'Narrow', letterNormal: 'Default', letterWide: 'Wide',
+    lineHeight: 'Line height',
   },
 } as const;
+
+const FONT_SIZES = ['11', '13', '15', '16', '19', '24', '28', '30', '34'] as const;
+const LINE_HEIGHTS = ['1.0', '1.2', '1.5', '1.8', '2.0'] as const;
+const LETTER_SPACINGS = { narrow: '-0.05em', normal: null, wide: '0.05em' } as const;
 
 type OpenPanel = 'none' | 'color' | 'highlight';
 
@@ -102,12 +113,31 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
           <option value="quote">{t.quote}</option>
         </select>
 
+        {/* 글자 크기 */}
+        <select
+          aria-label={t.fontSize}
+          value={(editor.getAttributes('textStyle').fontSize as string | undefined)?.replace('pt', '') ?? ''}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (!v) editor.chain().focus().unsetFontSize().run();
+            else editor.chain().focus().setFontSize(`${v}pt`).run();
+          }}
+          className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-2 text-[13px] text-[#1e293b] dark:text-[#dce3f3] w-[64px]"
+        >
+          <option value="">{t.fontSize}</option>
+          {FONT_SIZES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
         <Sep />
 
         <Btn label={t.bold} active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold className="w-4 h-4" /></Btn>
         <Btn label={t.italic} active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic className="w-4 h-4" /></Btn>
         <Btn label={t.underline} active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()}><UnderlineIcon className="w-4 h-4" /></Btn>
         <Btn label={t.strike} active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough className="w-4 h-4" /></Btn>
+        <Btn label={t.sup} active={editor.isActive('superscript')} onClick={() => editor.chain().focus().toggleSuperscript().run()}><SuperscriptIcon className="w-4 h-4" /></Btn>
+        <Btn label={t.sub} active={editor.isActive('subscript')} onClick={() => editor.chain().focus().toggleSubscript().run()}><SubscriptIcon className="w-4 h-4" /></Btn>
 
         <Sep />
 
@@ -121,6 +151,41 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
         <Btn label={t.alignC} active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter className="w-4 h-4" /></Btn>
         <Btn label={t.alignR} active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="w-4 h-4" /></Btn>
         <Btn label={t.alignJ} active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()}><AlignJustify className="w-4 h-4" /></Btn>
+
+        <Sep />
+
+        {/* 자간 */}
+        <select
+          aria-label={t.letterSpacing}
+          value={
+            editor.getAttributes('textStyle').letterSpacing === LETTER_SPACINGS.narrow ? 'narrow'
+            : editor.getAttributes('textStyle').letterSpacing === LETTER_SPACINGS.wide ? 'wide'
+            : 'normal'
+          }
+          onChange={(e) => {
+            const v = e.target.value as keyof typeof LETTER_SPACINGS;
+            const chain = editor.chain().focus();
+            if (LETTER_SPACINGS[v]) chain.setLetterSpacing(LETTER_SPACINGS[v]).run();
+            else chain.unsetLetterSpacing().run();
+          }}
+          className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-1.5 text-[13px] text-[#1e293b] dark:text-[#dce3f3]"
+        >
+          <option value="narrow">{t.letterNarrow}</option>
+          <option value="normal">{t.letterNormal}</option>
+          <option value="wide">{t.letterWide}</option>
+        </select>
+
+        {/* 줄간격 */}
+        <select
+          aria-label={t.lineHeight}
+          value={(editor.getAttributes('paragraph').lineHeight as string | undefined) ?? '1.5'}
+          onChange={(e) => editor.chain().focus().setLineHeight(e.target.value).run()}
+          className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-1.5 text-[13px] text-[#1e293b] dark:text-[#dce3f3]"
+        >
+          {LINE_HEIGHTS.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
 
         <Sep />
 

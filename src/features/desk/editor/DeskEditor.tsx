@@ -9,8 +9,11 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
+import Superscript from '@tiptap/extension-superscript';
+import Subscript from '@tiptap/extension-subscript';
 import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
+import { FontSize, LetterSpacing, LineHeight } from './extensions/textStyleExtras';
 import { useLang, type Lang } from '../../../app/lib/useLang';
 import Toolbar from './Toolbar';
 import { DeskImage } from './extensions/DeskImage';
@@ -53,6 +56,11 @@ export function buildExtensions(placeholder: string) {
     TextStyle,
     Color,
     Highlight.configure({ multicolor: true }),
+    Superscript,
+    Subscript,
+    FontSize,
+    LetterSpacing,
+    LineHeight,
     Placeholder.configure({ placeholder }),
     CharacterCount,
   ];
