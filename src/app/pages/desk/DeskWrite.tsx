@@ -180,7 +180,7 @@ export default function DeskWrite() {
     <DeskShell width="narrow">
       {/* localStorage 복구 배너 */}
       {recovered && (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-[#8ecdff] bg-[#e0f2fe] dark:bg-[#1b5a7a]/30 px-4 py-2 text-[13px]">
+        <div className="mt-2 mb-6 flex items-center gap-3 rounded-lg border border-[#8ecdff] bg-[#e0f2fe] dark:bg-[#1b5a7a]/30 px-4 py-2 text-[13px]">
           <span className="flex-1 text-[#0369a1] dark:text-[#8ecdff]">
             {lang === 'ko' ? '저장되지 않은 작성 중 내용이 있어요. 복원할까요?' : 'Found unsaved changes. Restore?'}
           </span>

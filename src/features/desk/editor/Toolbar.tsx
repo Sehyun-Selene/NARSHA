@@ -178,7 +178,7 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
         {/* 줄간격 */}
         <select
           aria-label={t.lineHeight}
-          value={(editor.getAttributes('paragraph').lineHeight as string | undefined) ?? '1.5'}
+          value={(editor.getAttributes('paragraph').lineHeight as string | undefined) ?? '1.0'}
           onChange={(e) => editor.chain().focus().setLineHeight(e.target.value).run()}
           className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-1.5 text-[13px] text-[#1e293b] dark:text-[#dce3f3]"
         >
