@@ -99,7 +99,7 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
 
   return (
     <div ref={wrapRef} className="sticky top-16 z-10 -mx-1 mb-4 border-b border-[#e2e8f0] dark:border-[#232a36] bg-white/90 dark:bg-[#0c141f]/90 backdrop-blur">
-      <div className="flex items-center gap-1 overflow-x-auto px-1 py-2 no-scrollbar">
+      <div className="flex flex-wrap items-center gap-1 px-1 py-2">
         {/* 양식 */}
         <select
           aria-label={t.style}
@@ -122,9 +122,9 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
             if (!v) editor.chain().focus().unsetFontSize().run();
             else editor.chain().focus().setFontSize(`${v}pt`).run();
           }}
-          className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-2 text-[13px] text-[#1e293b] dark:text-[#dce3f3] w-[64px]"
+          className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-2 text-[13px] text-[#1e293b] dark:text-[#dce3f3] w-[88px]"
         >
-          <option value="">{t.fontSize}</option>
+          <option value="">{lang === 'ko' ? '크기' : 'Size'}</option>
           {FONT_SIZES.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
