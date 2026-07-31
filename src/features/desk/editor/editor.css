@@ -73,6 +73,64 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* 표 (§6.6 Phase 2) — 모바일 가로 스크롤 컨테이너 */
+.desk-prose .tableWrapper,
+.desk-editor .ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 0 0 1.1em;
+}
+.desk-prose table,
+.desk-editor .ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+}
+.desk-prose th,
+.desk-prose td,
+.desk-editor .ProseMirror th,
+.desk-editor .ProseMirror td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5em 0.7em;
+  vertical-align: top;
+  position: relative;
+}
+.dark .desk-prose th,
+.dark .desk-prose td,
+.dark .desk-editor .ProseMirror th,
+.dark .desk-editor .ProseMirror td {
+  border-color: #232a36;
+}
+.desk-prose th,
+.desk-editor .ProseMirror th {
+  background: #f8fafc;
+  font-weight: 700;
+  text-align: left;
+}
+.dark .desk-prose th,
+.dark .desk-editor .ProseMirror th {
+  background: #151c27;
+}
+.desk-editor .ProseMirror td > *,
+.desk-editor .ProseMirror th > * {
+  margin: 0;
+}
+.desk-editor .ProseMirror .selectedCell {
+  background: rgba(142, 205, 255, 0.25);
+}
+.desk-editor .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #1b99dc;
+  pointer-events: none;
+}
+.desk-editor .ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
 .dark .desk-prose a,
 .dark .desk-editor .ProseMirror a {
   color: #8ecdff;

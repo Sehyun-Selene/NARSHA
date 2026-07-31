@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FloatingMenu, type Editor } from '@tiptap/react';
-import { Plus, Image as ImageIcon, Smile, Minus, Quote, ChevronRight } from 'lucide-react';
+import { Plus, Image as ImageIcon, Smile, Minus, Quote, ChevronRight, Table as TableIcon } from 'lucide-react';
 import type { Lang } from '../../../app/lib/useLang';
 import { DIVIDER_VARIANTS, type DividerVariant } from './extensions/DeskDivider';
 import { QUOTE_VARIANTS, type QuoteVariant } from './extensions/DeskBlockquote';
@@ -44,14 +44,15 @@ export default function QuickInsertMenu({
   }, [open]);
 
   const t = lang === 'ko'
-    ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구' }
-    : { photo: 'Photo', sticker: 'Sticker', divider: 'Divider', quote: 'Quote' };
+    ? { photo: '사진', sticker: '스티커', divider: '구분선', quote: '인용구', table: '표' }
+    : { photo: 'Photo', sticker: 'Sticker', divider: 'Divider', quote: 'Quote', table: 'Table' };
 
   const close = () => { setOpen(false); setSub('none'); };
 
   const insertDivider = (v: DividerVariant) => { editor.chain().focus().setDeskDivider(v).run(); close(); };
   const insertQuote = (v: QuoteVariant) => { editor.chain().focus().setQuoteVariant(v).run(); close(); };
   const insertSticker = (emoji: string) => { editor.chain().focus().insertContent(emoji).run(); close(); };
+  const insertTable = () => { editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); close(); };
 
   return (
     <FloatingMenu
@@ -78,6 +79,7 @@ export default function QuickInsertMenu({
             <MenuRow icon={<Smile className="w-4 h-4" />} label={t.sticker} chevron active={sub === 'sticker'} onClick={() => setSub(sub === 'sticker' ? 'none' : 'sticker')} />
             <MenuRow icon={<Minus className="w-4 h-4" />} label={t.divider} chevron active={sub === 'divider'} onClick={() => setSub(sub === 'divider' ? 'none' : 'divider')} />
             <MenuRow icon={<Quote className="w-4 h-4" />} label={t.quote} chevron active={sub === 'quote'} onClick={() => setSub(sub === 'quote' ? 'none' : 'quote')} />
+            <MenuRow icon={<TableIcon className="w-4 h-4" />} label={t.table} onClick={insertTable} />
 
             {sub === 'sticker' && (
               <div className="mt-1 border-t border-[#f1f5f9] dark:border-[#232a36] pt-2 px-2 grid grid-cols-5 gap-1">

@@ -5,6 +5,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Link2, Highlighter, Baseline,
   Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
+  Rows3, Columns3, Merge, Trash2, SquareStack,
 } from 'lucide-react';
 import type { Lang } from '../../../app/lib/useLang';
 import { CHAR_CATEGORIES, getRecentChars, pushRecentChar } from './charPaletteData';
@@ -23,6 +24,9 @@ const L = {
     fontSize: '글자 크기', sup: '위첨자', sub: '아래첨자',
     letterSpacing: '자간', letterNarrow: '좁게', letterNormal: '기본', letterWide: '넓게',
     lineHeight: '줄간격', charPalette: '문자표', recent: '최근 사용',
+    rowBefore: '위에 행 추가', rowAfter: '아래에 행 추가', rowDelete: '행 삭제',
+    colBefore: '왼쪽에 열 추가', colAfter: '오른쪽에 열 추가', colDelete: '열 삭제',
+    merge: '셀 병합/분할', headerRow: '헤더 행', tableDelete: '표 삭제',
   },
   en: {
     style: 'Style', body: 'Body', h2: 'Heading', h3: 'Subheading', quote: 'Quote',
@@ -33,6 +37,9 @@ const L = {
     fontSize: 'Font size', sup: 'Superscript', sub: 'Subscript',
     letterSpacing: 'Letter spacing', letterNarrow: 'Narrow', letterNormal: 'Default', letterWide: 'Wide',
     lineHeight: 'Line height', charPalette: 'Special characters', recent: 'Recently used',
+    rowBefore: 'Insert row above', rowAfter: 'Insert row below', rowDelete: 'Delete row',
+    colBefore: 'Insert column left', colAfter: 'Insert column right', colDelete: 'Delete column',
+    merge: 'Merge/split cells', headerRow: 'Header row', tableDelete: 'Delete table',
   },
 } as const;
 
@@ -214,6 +221,24 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
 
         <Btn label={t.link} active={editor.isActive('link')} onClick={setLink}><Link2 className="w-4 h-4" /></Btn>
       </div>
+
+      {/* 표 컨텍스트 바 — 커서가 표 안에 있을 때만 노출 */}
+      {editor.isActive('table') && (
+        <div className="flex flex-wrap items-center gap-1 px-1 pb-2 border-t border-dashed border-[#e2e8f0] dark:border-[#232a36] pt-2">
+          <Btn label={t.rowBefore} onClick={() => editor.chain().focus().addRowBefore().run()}><Rows3 className="w-4 h-4" /></Btn>
+          <Btn label={t.rowAfter} onClick={() => editor.chain().focus().addRowAfter().run()}><Rows3 className="w-4 h-4 rotate-180" /></Btn>
+          <Btn label={t.rowDelete} onClick={() => editor.chain().focus().deleteRow().run()}><Trash2 className="w-4 h-4" /></Btn>
+          <Sep />
+          <Btn label={t.colBefore} onClick={() => editor.chain().focus().addColumnBefore().run()}><Columns3 className="w-4 h-4" /></Btn>
+          <Btn label={t.colAfter} onClick={() => editor.chain().focus().addColumnAfter().run()}><Columns3 className="w-4 h-4 rotate-180" /></Btn>
+          <Btn label={t.colDelete} onClick={() => editor.chain().focus().deleteColumn().run()}><Trash2 className="w-4 h-4 rotate-90" /></Btn>
+          <Sep />
+          <Btn label={t.merge} onClick={() => editor.chain().focus().mergeOrSplit().run()}><Merge className="w-4 h-4" /></Btn>
+          <Btn label={t.headerRow} active={editor.isActive('tableHeader')} onClick={() => editor.chain().focus().toggleHeaderRow().run()}><SquareStack className="w-4 h-4" /></Btn>
+          <Sep />
+          <Btn label={t.tableDelete} onClick={() => editor.chain().focus().deleteTable().run()}><Trash2 className="w-4 h-4 text-[#dc2626]" /></Btn>
+        </div>
+      )}
 
       {/* 팔레트 — 스크롤 컨테이너 밖, 버튼 아래에 온전히 표시 */}
       {open === 'color' && (
