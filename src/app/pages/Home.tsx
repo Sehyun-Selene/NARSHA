@@ -254,6 +254,7 @@ export default function Home() {
   const [apps, setApps] = useState<App[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // Quick filters (4 axes)
   const [searchQuery, setSearchQuery] = useState('');
@@ -280,14 +281,23 @@ export default function Home() {
     setHasTakenSurvey(!!localStorage.getItem('narsha-learner-type'));
   }, []);
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
+    setLoadError(false);
     Promise.all([fetchApps(), getAllReviews()])
       .then(([appsData, reviewsData]) => {
         setApps(appsData);
         setReviews(reviewsData);
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error(err);
+        setLoadError(true);
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -507,6 +517,20 @@ export default function Home() {
           {loading ? (
             <div className="flex justify-center items-center py-24">
               <div className="w-8 h-8 border-4 border-[#0ea5e9] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+              <SearchX className="w-12 h-12 text-[#94a3b8] dark:text-[#3f4850]" />
+              <div>
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">Couldn't load services</p>
+                <p className="text-[14px] text-[#64748b] dark:text-[#bec7d2]">A network or server issue occurred. Please try again.</p>
+              </div>
+              <button
+                onClick={loadData}
+                className="mt-2 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90 transition-opacity"
+              >
+                Retry
+              </button>
             </div>
           ) : filteredApps.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
