@@ -196,14 +196,14 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
         <Btn btnRef={colorBtnRef} label={t.color} active={open === 'color'} onClick={() => openPanel('color', colorBtnRef.current)}><Baseline className="w-4 h-4" /></Btn>
         <Btn btnRef={hlBtnRef} label={t.highlight} active={open === 'highlight' || editor.isActive('highlight')} onClick={() => openPanel('highlight', hlBtnRef.current)}><Highlighter className="w-4 h-4" /></Btn>
 
-        <Sep />
+        <div className="basis-full h-0" aria-hidden="true" />
 
         <Btn label={t.alignL} active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}><AlignLeft className="w-4 h-4" /></Btn>
         <Btn label={t.alignC} active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter className="w-4 h-4" /></Btn>
         <Btn label={t.alignR} active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="w-4 h-4" /></Btn>
         <Btn label={t.alignJ} active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()}><AlignJustify className="w-4 h-4" /></Btn>
 
-        <div className="basis-full h-0" aria-hidden="true" />
+        <Sep />
 
         {/* 자간 */}
         <select
