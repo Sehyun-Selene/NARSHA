@@ -152,7 +152,7 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
         <Btn label={t.alignR} active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="w-4 h-4" /></Btn>
         <Btn label={t.alignJ} active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()}><AlignJustify className="w-4 h-4" /></Btn>
 
-        <Sep />
+        <div className="basis-full h-0" aria-hidden="true" />
 
         {/* 자간 */}
         <select

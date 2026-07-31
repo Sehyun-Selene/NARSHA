@@ -178,30 +178,6 @@ export default function DeskWrite() {
 
   return (
     <DeskShell width="narrow">
-      {/* 상단 바 */}
-      <div className="sticky top-16 z-20 -mx-6 px-6 py-2 flex items-center gap-3 bg-white/90 dark:bg-[#0c141f]/90 backdrop-blur border-b border-[#e2e8f0] dark:border-[#232a36]">
-        <button
-          onClick={() => setShowRevisions(true)}
-          className="text-[13px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#1b99dc]"
-          disabled={!serverId.current}
-        >
-          {lang === 'ko' ? `임시저장 ${saveCount}` : `Drafts ${saveCount}`}
-          {saving && <span className="ml-1 text-[#94a3b8]">…</span>}
-        </button>
-        <button
-          onClick={() => { void doServerSave(); }}
-          className="text-[13px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#1b99dc]"
-        >
-          {lang === 'ko' ? '저장' : 'Save'}
-        </button>
-        <button
-          onClick={() => setShowPublish(true)}
-          className="ml-auto bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] px-5 py-2 rounded-full hover:opacity-90"
-        >
-          {lang === 'ko' ? '발행' : 'Publish'}
-        </button>
-      </div>
-
       {/* localStorage 복구 배너 */}
       {recovered && (
         <div className="mt-4 flex items-center gap-3 rounded-lg border border-[#8ecdff] bg-[#e0f2fe] dark:bg-[#1b5a7a]/30 px-4 py-2 text-[13px]">
@@ -231,11 +207,35 @@ export default function DeskWrite() {
         onChange={(e) => onTitle(e.target.value)}
         placeholder={lang === 'ko' ? '제목' : 'Title'}
         aria-label={lang === 'ko' ? '제목' : 'Title'}
-        className="mt-4 w-full bg-transparent border-none outline-none font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.03em] placeholder:text-[#cbd5e1] dark:placeholder:text-[#334155] mb-2"
+        className="w-full bg-transparent border-none outline-none font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.03em] placeholder:text-[#cbd5e1] dark:placeholder:text-[#334155] mb-2"
       />
       <div className="border-b border-[#e2e8f0] dark:border-[#232a36] mb-4" />
 
       <DeskEditor key={editorKey} initialContent={initialDoc} onUpdate={onEditorUpdate} />
+
+      {/* 하단 바 — 작성 영역 아래, 화면 하단에 고정 */}
+      <div className="sticky bottom-0 z-20 -mx-6 mt-6 px-6 py-2 flex items-center gap-3 bg-white/90 dark:bg-[#0c141f]/90 backdrop-blur border-t border-[#e2e8f0] dark:border-[#232a36]">
+        <button
+          onClick={() => setShowRevisions(true)}
+          className="text-[13px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#1b99dc]"
+          disabled={!serverId.current}
+        >
+          {lang === 'ko' ? `임시저장 ${saveCount}` : `Drafts ${saveCount}`}
+          {saving && <span className="ml-1 text-[#94a3b8]">…</span>}
+        </button>
+        <button
+          onClick={() => { void doServerSave(); }}
+          className="text-[13px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#1b99dc]"
+        >
+          {lang === 'ko' ? '저장' : 'Save'}
+        </button>
+        <button
+          onClick={() => setShowPublish(true)}
+          className="ml-auto bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] px-5 py-2 rounded-full hover:opacity-90"
+        >
+          {lang === 'ko' ? '발행' : 'Publish'}
+        </button>
+      </div>
 
       {showPublish && (
         <PublishModal
