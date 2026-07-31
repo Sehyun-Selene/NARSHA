@@ -1,6 +1,21 @@
 import type { ReactNode } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+// 글꼴 4종 자체 호스팅 (PRD §6.6, 한글 서브셋 + Latin) — 발행본·에디터 모두
+// 이 셸 아래에서 렌더되므로 여기서 한 번만 로드한다.
+// Pretendard: @fontsource 배포판은 latin 서브셋만 포함해 한글이 깨져서
+// 원저작자(orioncactus) 공식 패키지의 한글 서브셋(2,350자)판을 대신 쓴다.
+import 'pretendard/dist/web/static/pretendard-subset.css';
+import '@fontsource/nanum-gothic/korean-400.css';
+import '@fontsource/nanum-gothic/korean-700.css';
+import '@fontsource/nanum-gothic/latin-400.css';
+import '@fontsource/nanum-gothic/latin-700.css';
+import '@fontsource/nanum-myeongjo/korean-400.css';
+import '@fontsource/nanum-myeongjo/korean-700.css';
+import '@fontsource/nanum-myeongjo/latin-400.css';
+import '@fontsource/nanum-myeongjo/latin-700.css';
+import '@fontsource/nanum-brush-script/korean-400.css';
+import '@fontsource/nanum-brush-script/latin-400.css';
 
 /**
  * 「나의 한국어 책상」 공통 페이지 셸.

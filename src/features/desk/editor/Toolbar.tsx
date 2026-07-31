@@ -21,7 +21,7 @@ const L = {
     color: '글자색', highlight: '형광펜', reset: '지우기',
     alignL: '왼쪽 정렬', alignC: '가운데 정렬', alignR: '오른쪽 정렬', alignJ: '양쪽 정렬',
     ul: '순서 없는 목록', ol: '순서 있는 목록', link: '링크', linkPrompt: '링크 주소를 입력하세요',
-    fontSize: '글자 크기', sup: '위첨자', sub: '아래첨자',
+    fontSize: '글자 크기', fontFamily: '글꼴', sup: '위첨자', sub: '아래첨자',
     letterSpacing: '자간', letterNarrow: '좁게', letterNormal: '기본', letterWide: '넓게',
     lineHeight: '줄간격', charPalette: '문자표', recent: '최근 사용',
     rowBefore: '위에 행 추가', rowAfter: '아래에 행 추가', rowDelete: '행 삭제',
@@ -34,7 +34,7 @@ const L = {
     color: 'Text color', highlight: 'Highlight', reset: 'Reset',
     alignL: 'Align left', alignC: 'Align center', alignR: 'Align right', alignJ: 'Justify',
     ul: 'Bullet list', ol: 'Numbered list', link: 'Link', linkPrompt: 'Enter the link URL',
-    fontSize: 'Font size', sup: 'Superscript', sub: 'Subscript',
+    fontSize: 'Font size', fontFamily: 'Font', sup: 'Superscript', sub: 'Subscript',
     letterSpacing: 'Letter spacing', letterNarrow: 'Narrow', letterNormal: 'Default', letterWide: 'Wide',
     lineHeight: 'Line height', charPalette: 'Special characters', recent: 'Recently used',
     rowBefore: 'Insert row above', rowAfter: 'Insert row below', rowDelete: 'Delete row',
@@ -44,6 +44,13 @@ const L = {
 } as const;
 
 const FONT_SIZES = ['11', '13', '15', '16', '19', '24', '28', '30', '34'] as const;
+// 글꼴 4종 (PRD §6.6) — @fontsource 로 자체 호스팅, 한글 서브셋 + Latin
+const FONT_FAMILIES = [
+  { value: 'Pretendard', labelKo: 'Pretendard', labelEn: 'Pretendard' },
+  { value: 'Nanum Gothic', labelKo: '나눔고딕', labelEn: 'Nanum Gothic' },
+  { value: 'Nanum Myeongjo', labelKo: '나눔명조', labelEn: 'Nanum Myeongjo' },
+  { value: 'Nanum Brush Script', labelKo: '나눔손글씨 붓', labelEn: 'Nanum Brush' },
+] as const;
 const LINE_HEIGHTS = ['1.0', '1.2', '1.5', '1.8', '2.0'] as const;
 const LETTER_SPACINGS = { narrow: '-0.05em', normal: null, wide: '0.05em' } as const;
 
@@ -128,6 +135,25 @@ export default function Toolbar({ editor, lang }: { editor: Editor; lang: Lang }
           <option value="h2">{t.h2}</option>
           <option value="h3">{t.h3}</option>
           <option value="quote">{t.quote}</option>
+        </select>
+
+        {/* 글꼴 */}
+        <select
+          aria-label={t.fontFamily}
+          value={(editor.getAttributes('textStyle').fontFamily as string | undefined) ?? ''}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (!v) editor.chain().focus().unsetFontFamily().run();
+            else editor.chain().focus().setFontFamily(v).run();
+          }}
+          className="h-8 rounded-md border border-[#e2e8f0] dark:border-[#232a36] bg-transparent px-2 text-[13px] text-[#1e293b] dark:text-[#dce3f3] w-[128px]"
+        >
+          <option value="">{t.fontFamily}</option>
+          {FONT_FAMILIES.map((f) => (
+            <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+              {lang === 'ko' ? f.labelKo : f.labelEn}
+            </option>
+          ))}
         </select>
 
         {/* 글자 크기 */}

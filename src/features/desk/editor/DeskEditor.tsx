@@ -7,6 +7,7 @@ import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 // StarterKit 2.27 은 textStyle 마크를 등록하지 않는다 → Color/Highlight 가 붙을 수 있도록 명시 추가.
 import TextStyle from '@tiptap/extension-text-style';
+import FontFamily from '@tiptap/extension-font-family';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Superscript from '@tiptap/extension-superscript';
@@ -60,6 +61,7 @@ export function buildExtensions(placeholder: string) {
     DeskFile,
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     TextStyle,
+    FontFamily,
     Color,
     Highlight.configure({ multicolor: true }),
     Superscript,
