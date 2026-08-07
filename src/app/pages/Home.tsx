@@ -8,6 +8,7 @@ import { AppLogoMark } from '../components/AppLogoMark';
 import { fetchApps, getAppLevelDisplayTags, type App } from '../data/apps';
 import { getAllReviews, type Review } from '../data/reviews';
 import { applySearch } from '../data/searchKeywords';
+import { useT } from '../i18n';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 // ── Placeholder rotation ──────────────────────────────────────────────────────
@@ -252,6 +253,8 @@ function computeRating(reviews: Review[], appId: string): number {
 
 export default function Home() {
   useDocumentTitle();
+  const { t, tLines, tag, lang } = useT();
+
   // Data
   const [apps, setApps] = useState<App[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -278,6 +281,11 @@ export default function Home() {
   // Placeholder rotation
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [placeholderVisible, setPlaceholderVisible] = useState(true);
+
+  // 한국어 문장이 영어보다 길어 같은 상한에서는 3줄로 흐른다 (PRD R3.3).
+  const heroSize = lang === 'ko'
+    ? 'text-[clamp(2rem,4vw+0.75rem,4rem)]'
+    : 'text-[clamp(2.625rem,5vw+1.125rem,5.375rem)]';
 
   useEffect(() => {
     setHasTakenSurvey(!!localStorage.getItem('narsha-learner-type'));
@@ -407,13 +415,23 @@ export default function Home() {
         {/* Hero */}
         <div className="max-w-[1280px] mx-auto px-6 min-h-[calc(100vh-4rem)] pt-14 pb-10 flex flex-col items-center justify-center gap-8">
           <div className="flex flex-col items-center gap-6 w-full">
-            <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[clamp(2.625rem,5vw+1.125rem,5.375rem)] leading-[1.12] tracking-[-0.042em] text-center bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible px-1">
-              Find your path to fluency.
+            <h1 className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold ${heroSize} leading-[1.12] tracking-[-0.042em] text-center bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible px-1`}>
+              {tLines('home.hero.title').map((line, i) => (
+                <span key={i} className="block">{line}</span>
+              ))}
             </h1>
-            <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2] text-center max-w-[672px]">
-              Discover, compare, and master Korean with our architecturally curated<br />
-              database of the world's best language resources.
-            </p>
+            <div className="text-center max-w-[672px] flex flex-col gap-1">
+              {tLines('home.hero.sub').map((line, i) => (
+                <p
+                  key={i}
+                  className={i === 0
+                    ? "font-['Inter:Medium',sans-serif] font-medium text-[18px] leading-[28px] text-[#1e293b] dark:text-[#dce3f3]"
+                    : "font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2]"}
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
           </div>
 
           {/* Search + chip filters */}
