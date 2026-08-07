@@ -8,3 +8,33 @@
   75%  { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/*
+  아래 규칙들은 레이어 밖에 둔다 — Tailwind v4 에서 레이어 없는 CSS 가
+  @layer utilities 보다 우선하므로, 컴포넌트의 유틸리티 클래스를 덮을 수 있다.
+*/
+
+body {
+  font-family: var(--font-body);
+}
+
+/*
+  Figma 내보내기가 남긴 `font-['Manrope:Bold',sans-serif]` 류의 이름은 실제
+  폰트 패밀리가 아니다. 지금까지 500곳 넘는 선언이 전부 system sans 로
+  폴백되고 있었고, Manrope·Inter 는 한 번도 다운로드되지 않았다.
+  클래스 이름을 그대로 둔 채 실제 스택으로 되돌린다.
+  (굵기는 함께 붙어 있는 font-bold / font-extrabold 유틸리티가 담당한다.)
+*/
+[class*="font-['Manrope"] { font-family: var(--font-display); }
+[class*="font-['Inter"]   { font-family: var(--font-body); }
+
+/*
+  Manrope 와 Pretendard 는 x-height 가 달라, 영문 기준으로 잡은 음수 자간이
+  한글에서는 과하게 좁아 보인다. 한국어일 때만 헤딩 자간을 완화한다 (R5.11).
+  <html lang> 은 Root.tsx 가 언어와 동기화한다 (R5.8).
+*/
+html[lang='ko'] h1,
+html[lang='ko'] h2,
+html[lang='ko'] h3 {
+  letter-spacing: -0.02em;
+}

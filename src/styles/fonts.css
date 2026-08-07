@@ -1,1 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+/*
+  한/영 공용 폰트 스택 (PRD R5.10).
+  Manrope·Inter 에는 한글 글리프가 없어 한글은 Pretendard 로 자동 폴백된다.
+  덕분에 언어 분기 없이 스택 하나로 해결된다.
+  Pretendard 서브셋 자체는 main.tsx 에서 로드한다 (font-display: swap 포함).
+*/
+:root {
+  --font-display: 'Manrope', 'Pretendard', system-ui, sans-serif;
+  --font-body:    'Inter', 'Pretendard', system-ui, sans-serif;
+}
