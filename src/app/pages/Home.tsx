@@ -208,13 +208,12 @@ export default function Home() {
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [placeholderVisible, setPlaceholderVisible] = useState(true);
 
-  // 한국어 문장이 영어보다 길어 같은 상한에서는 3줄로 흐른다 (PRD R3.3).
-  // EN은 원문이 한 줄 문장이라 md 이상에서는 줄바꿈 없이 한 줄로 붙인다 —
-  // 각 값은 컨테이너 여백(px-6 + h1 px-1)을 뺀 실제 가용 폭 안에서 줄바꿈이
-  // 안 일어나는 최대 크기를 브라우저로 직접 재서 정했다 (여유 폭 몇 px 남김).
-  const heroSize = lang === 'ko'
-    ? 'text-[clamp(2rem,4vw+0.75rem,4rem)]'
-    : 'text-[2.625rem] md:text-[2.125rem] lg:text-[3rem] xl:text-[3.625rem]';
+  // KO/EN 모두 같은 크기를 쓴다 — 언어를 바꿔도 히어로가 화면에서 차지하는
+  // 비율이 달라지지 않게 하기 위함이다. 각 값은 컨테이너 여백(px-6 + h1 px-1)을
+  // 뺀 실제 가용 폭 안에서 EN 한 줄이 줄바꿈되지 않는 최대 크기를 브라우저로
+  // 직접 재서 정했다(여유 폭 몇 px 남김). KO 두 줄도 같은 값에서 md 이상은
+  // 줄 안 꺾이는 것을 확인했다 — 768px 미만은 원래도 두 줄 이상으로 흐른다.
+  const heroSize = 'text-[2.625rem] md:text-[2.125rem] lg:text-[3rem] xl:text-[3.625rem]';
 
   useEffect(() => {
     setHasTakenSurvey(!!localStorage.getItem('narsha-learner-type'));
