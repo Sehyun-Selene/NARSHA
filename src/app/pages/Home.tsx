@@ -209,9 +209,12 @@ export default function Home() {
   const [placeholderVisible, setPlaceholderVisible] = useState(true);
 
   // 한국어 문장이 영어보다 길어 같은 상한에서는 3줄로 흐른다 (PRD R3.3).
+  // EN은 원문이 한 줄 문장이라 md 이상에서는 줄바꿈 없이 한 줄로 붙인다 —
+  // 각 값은 컨테이너 여백(px-6 + h1 px-1)을 뺀 실제 가용 폭 안에서 줄바꿈이
+  // 안 일어나는 최대 크기를 브라우저로 직접 재서 정했다 (여유 폭 몇 px 남김).
   const heroSize = lang === 'ko'
     ? 'text-[clamp(2rem,4vw+0.75rem,4rem)]'
-    : 'text-[clamp(2.625rem,5vw+1.125rem,5.375rem)]';
+    : 'text-[2.625rem] md:text-[2.125rem] lg:text-[3rem] xl:text-[3.625rem]';
 
   useEffect(() => {
     setHasTakenSurvey(!!localStorage.getItem('narsha-learner-type'));
