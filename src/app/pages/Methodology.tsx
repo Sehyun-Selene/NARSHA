@@ -1,6 +1,7 @@
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useLang } from '../lib/useLang';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const TYPES = [
   { code: '가', sensory: 'Visual',   style: 'Exploratory', sensoryKo: '시각', styleKo: '탐색형' },
@@ -54,6 +55,7 @@ function LangToggle({ lang, setLang }: { lang: 'en' | 'ko'; setLang: (l: 'en' | 
 }
 
 export default function Methodology() {
+  useDocumentTitle('title.methodology');
   const [lang, setLang] = useLang();
   const isEn = lang === 'en';
 

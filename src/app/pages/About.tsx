@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SuggestServiceModal from '../components/SuggestServiceModal';
 import { useLang } from '../lib/useLang';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const content = {
   en: {
@@ -96,6 +97,7 @@ function LangToggle({ lang, setLang }: { lang: 'en' | 'ko'; setLang: (l: 'en' | 
 }
 
 export default function About() {
+  useDocumentTitle('title.about');
   const [lang, setLang] = useLang();
   const [showModal, setShowModal] = useState(false);
   const c = content[lang];

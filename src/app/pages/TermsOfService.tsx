@@ -1,6 +1,7 @@
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useLang } from '../lib/useLang';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 function LangToggle({ lang, setLang }: { lang: 'en' | 'ko'; setLang: (l: 'en' | 'ko') => void }) {
   return (
@@ -182,6 +183,7 @@ const EN = () => (
 );
 
 export default function TermsOfService() {
+  useDocumentTitle('title.terms');
   const [lang, setLang] = useLang();
 
   return (

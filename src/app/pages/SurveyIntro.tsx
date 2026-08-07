@@ -3,10 +3,12 @@ import { ChevronRight, Clock, ListChecks, MessageSquareQuote } from 'lucide-reac
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { surveyQuestions } from '../data/learnerTypes';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const questionCount = surveyQuestions.length;
 
 export default function SurveyIntro() {
+  useDocumentTitle('title.survey');
   return (
     <div className="min-h-dvh bg-[#ffffff] dark:bg-[#0c141f] flex flex-col relative">
       <Header />

@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { getAllReviews, formatUsagePeriod, type Review } from '../data/reviews';
 import { fetchApps, type App } from '../data/apps';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const learnerTypeLabels: Record<string, string> = {
   '가': 'Visual Exploratory',
@@ -27,6 +28,7 @@ const learnerTypeColors: Record<string, { bg: string; text: string }> = {
 type ReviewWithAppName = Review & { appName: string };
 
 export default function Reviews() {
+  useDocumentTitle('title.reviews');
   const [allReviews, setAllReviews] = useState<ReviewWithAppName[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string | null>(null);

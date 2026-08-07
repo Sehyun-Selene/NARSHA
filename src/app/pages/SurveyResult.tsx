@@ -5,8 +5,10 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
 import { LearnerTypeLogo } from '../components/LearnerTypeLogo';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function SurveyResult() {
+  useDocumentTitle('title.survey');
   const navigate = useNavigate();
   const [learnerType, setLearnerType] = useState<LearnerType | null>(null);
   const [returnAppId, setReturnAppId] = useState<string | null>(null);

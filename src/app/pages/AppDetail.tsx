@@ -15,6 +15,7 @@ import {
 } from '../data/reviews';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import { STRENGTH_LABELS } from '../lib/tagLabels';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 import {
   RadarChart,
   PolarGrid,
@@ -42,6 +43,9 @@ export default function AppDetail() {
   const [helpfulReviews, setHelpfulReviews] = useState<Record<string, { count: number; userMarked: boolean }>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+
+  // 서비스 고유명사는 번역하지 않는다 (PRD §5.5) — 앱 이름을 그대로 타이틀에 쓴다.
+  useDocumentTitle(undefined, app?.name);
   const [filterByType, setFilterByType] = useState(false);
   const [userLearnerType, setUserLearnerType] = useState<string | null>(null);
 

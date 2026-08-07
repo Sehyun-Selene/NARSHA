@@ -8,6 +8,7 @@ import { AppLogoMark } from '../components/AppLogoMark';
 import { fetchApps, getAppLevelDisplayTags, type App } from '../data/apps';
 import { getAllReviews, type Review } from '../data/reviews';
 import { applySearch } from '../data/searchKeywords';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 // ── Placeholder rotation ──────────────────────────────────────────────────────
 
@@ -250,6 +251,7 @@ function computeRating(reviews: Review[], appId: string): number {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  useDocumentTitle();
   // Data
   const [apps, setApps] = useState<App[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);

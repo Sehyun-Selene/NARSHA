@@ -4,8 +4,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { surveyQuestions, calculateLearnerType } from '../data/learnerTypes';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function Survey() {
+  useDocumentTitle('title.survey');
   const navigate = useNavigate();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [responses, setResponses] = useState<number[]>(Array(10).fill(0));

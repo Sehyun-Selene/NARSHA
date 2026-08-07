@@ -2,8 +2,10 @@ import { Link } from 'react-router';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useT } from '../i18n';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function NotFound() {
+  useDocumentTitle('title.notfound');
   const { t } = useT();
 
   return (

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { useDocumentTitle } from '../../lib/useDocumentTitle';
 // 글꼴 4종 자체 호스팅 (PRD §6.6, 한글 서브셋 + Latin) — 발행본·에디터 모두
 // 이 셸 아래에서 렌더되므로 여기서 한 번만 로드한다.
 // Pretendard 는 사이트 전역 한글 폰트가 되어 main.tsx 에서 로드한다.
@@ -27,6 +28,8 @@ export default function DeskShell({
   children: ReactNode;
   width?: 'wide' | 'narrow';
 }) {
+  useDocumentTitle('title.desk');
+
   const inner = width === 'narrow' ? 'max-w-[800px]' : 'max-w-[1120px]';
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
