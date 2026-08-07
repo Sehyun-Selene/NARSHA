@@ -39,6 +39,18 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /*
+    About 페이지 구역 액센트 (PRD §11).
+    Coral 은 Problem, Amber 는 Values 구역 밖으로 나가지 않는다. CTA·링크·
+    포커스 링은 언제나 sky 다. 두 색을 합쳐 화면 컬러 면적의 5%를 넘기지 않는다.
+    IR 덱 원본의 레드·옐로보다 채도를 한 단계 낮춰 하늘색과 함께 놓아도
+    튀지 않게 맞춘 값이다.
+  */
+  --accent-problem: #e4573f;
+  --accent-problem-bg: #fef0ed;
+  --accent-values: #d97706;
+  --accent-values-bg: #fef6e7;
 }
 
 .dark {
@@ -76,6 +88,12 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  /* 라이트 모드 값은 어두운 배경에서 탁해지므로 밝은 쪽으로 교체한다. */
+  --accent-problem: #ff7a6b;
+  --accent-problem-bg: rgba(255, 122, 107, 0.1);
+  --accent-values: #fbbf24;
+  --accent-values-bg: rgba(251, 191, 36, 0.1);
 }
 
 @theme inline {
