@@ -2,20 +2,21 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveSuggestion, checkRecentDuplicate } from '../data/suggestions';
+import { useT } from '../i18n';
 
 const SUGGESTION_TAGS = [
-  { value: 'strength.grammar_explanation',  label: 'Grammar'            },
-  { value: 'strength.pronunciation',        label: 'Pronunciation'      },
-  { value: 'strength.vocabulary_volume',    label: 'Vocabulary'         },
-  { value: 'strength.kpop_kdrama_context',  label: 'K-Pop / K-Drama'   },
-  { value: 'strength.exam_focused',         label: 'TOPIK Prep'         },
-  { value: 'social.live_class_option',      label: 'Live Classes'       },
-  { value: 'ux.offline_available',          label: 'Offline Access'     },
-  { value: 'format.flashcard',              label: 'Flashcards'         },
-  { value: 'strength.real_life_phrases',    label: 'Real Phrases'       },
-  { value: 'ux.gamification',               label: 'Gamification'       },
-  { value: 'mechanism.scenario_based',      label: 'Real-life Scenarios'},
-  { value: 'social.community_forum',        label: 'Community'          },
+  'strength.grammar_explanation',
+  'strength.pronunciation',
+  'strength.vocabulary_volume',
+  'strength.kpop_kdrama_context',
+  'strength.exam_focused',
+  'social.live_class_option',
+  'ux.offline_available',
+  'format.flashcard',
+  'strength.real_life_phrases',
+  'ux.gamification',
+  'mechanism.scenario_based',
+  'social.community_forum',
 ];
 
 const CHIP_OFF = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cursor-pointer font-medium bg-[#f1f5f9] dark:bg-[#232a36] text-[#64748b] dark:text-[#8a94a6] border-[#e2e8f0] dark:border-[#2e3541] hover:bg-[#e2e8f0] dark:hover:bg-[#2e3541]';
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function SuggestServiceModal({ open, onClose }: Props) {
+  const { t, tag, lang } = useT();
   const [serviceName, setServiceName]           = useState('');
   const [serviceUrl, setServiceUrl]             = useState('');
   const [selectedStrengths, setSelectedStrengths] = useState<string[]>([]);
@@ -41,34 +43,38 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const toggleStrength = (tag: string) => {
-    if (selectedStrengths.includes(tag)) {
-      setSelectedStrengths(prev => prev.filter(t => t !== tag));
+  const selectedLabel = lang === 'ko'
+    ? `${selectedStrengths.length}${t('suggest.selectedCount')}`
+    : `${selectedStrengths.length} ${t('suggest.selectedCount')}`;
+
+  const toggleStrength = (tagValue: string) => {
+    if (selectedStrengths.includes(tagValue)) {
+      setSelectedStrengths(prev => prev.filter(v => v !== tagValue));
     } else {
       if (selectedStrengths.length >= 3) {
-        toast.info('Up to 3 strengths can be selected.');
+        toast.info(t('suggest.maxTags'));
         return;
       }
-      setSelectedStrengths(prev => [...prev, tag]);
+      setSelectedStrengths(prev => [...prev, tagValue]);
     }
   };
 
   const validate = () => {
     let valid = true;
     if (!serviceName.trim()) {
-      setNameError('Please enter the service name.');
+      setNameError(t('suggest.errName'));
       valid = false;
     } else {
       setNameError('');
     }
     if (serviceUrl.trim() && !/^(https?:\/\/|www\.)/i.test(serviceUrl.trim())) {
-      setUrlError('Please enter a valid URL (https:// or www.)');
+      setUrlError(t('suggest.errUrl'));
       valid = false;
     } else {
       setUrlError('');
     }
     if (reporterEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reporterEmail.trim())) {
-      setEmailError('Please enter a valid email address.');
+      setEmailError(t('suggest.errEmail'));
       valid = false;
     } else {
       setEmailError('');
@@ -94,7 +100,7 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
     e.preventDefault();
     if (!validate()) return;
     if (checkRecentDuplicate(serviceName)) {
-      toast.info("You just suggested this! Please wait 5 minutes before resubmitting.");
+      toast.info(t('suggest.duplicate'));
       return;
     }
     setSubmitting(true);
@@ -106,10 +112,10 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
         customReason: showCustomReason ? customReason : undefined,
         reporterEmail: reporterEmail.trim() || undefined,
       });
-      toast.success("Thanks for the suggestion! We'll review it soon.");
+      toast.success(t('suggest.success'));
       handleClose();
     } catch {
-      toast.error('Failed to submit. Please try again.');
+      toast.error(t('suggest.fail'));
     } finally {
       setSubmitting(false);
     }
@@ -124,15 +130,16 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
         <div className="flex items-start justify-between px-6 py-5 border-b border-[#e2e8f0] dark:border-[#232a36] shrink-0">
           <div>
             <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3]">
-              Suggest a Service
+              {t('suggest.title')}
             </h2>
             <p className="text-[13px] text-[#64748b] dark:text-[#8a94a6] mt-0.5">
-              Know a great resource that's not on NARSHA?
+              {t('suggest.subtitle')}
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
+            aria-label={t('suggest.cancel')}
             className="text-[#94a3b8] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors ml-4 mt-0.5"
           >
             <X className="w-5 h-5" />
@@ -146,13 +153,13 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
             {/* Service name */}
             <div>
               <label className="block text-[13px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1.5">
-                Service Name <span className="text-[#0ea5e9]">*</span>
+                {t('suggest.nameLabel')} <span className="text-[#0ea5e9]">*</span>
               </label>
               <input
                 type="text"
                 value={serviceName}
                 onChange={e => { setServiceName(e.target.value); if (nameError) setNameError(''); }}
-                placeholder="e.g. Korean with Vinnie"
+                placeholder={t('suggest.namePlaceholder')}
                 className={`w-full bg-[#f8fafc] dark:bg-[#0c141f] border rounded-[8px] px-3 py-2.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] ${nameError ? 'border-[#ef4444]' : 'border-[#e2e8f0] dark:border-[#232a36]'}`}
               />
               {nameError && <p className="mt-1 text-[12px] text-[#ef4444]">{nameError}</p>}
@@ -161,7 +168,7 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
             {/* URL */}
             <div>
               <label className="block text-[13px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1.5">
-                Website URL <span className="text-[#94a3b8] font-normal">(optional)</span>
+                {t('suggest.urlLabel')} <span className="text-[#94a3b8] font-normal">{t('suggest.optional')}</span>
               </label>
               <input
                 type="text"
@@ -176,20 +183,20 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
             {/* Strength tags */}
             <div>
               <label className="block text-[13px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1">
-                Why recommend it?{' '}
+                {t('suggest.whyLabel')}{' '}
                 <span className="text-[#94a3b8] font-normal">
-                  (up to 3{selectedStrengths.length > 0 ? ` · ${selectedStrengths.length} selected` : ''})
+                  ({t('suggest.whyHint')}{selectedStrengths.length > 0 ? ` · ${selectedLabel}` : ''})
                 </span>
               </label>
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {SUGGESTION_TAGS.map(tag => (
+                {SUGGESTION_TAGS.map(value => (
                   <button
-                    key={tag.value}
+                    key={value}
                     type="button"
-                    onClick={() => { setShowCustomReason(false); toggleStrength(tag.value); }}
-                    className={selectedStrengths.includes(tag.value) ? CHIP_ON : CHIP_OFF}
+                    onClick={() => { setShowCustomReason(false); toggleStrength(value); }}
+                    className={selectedStrengths.includes(value) ? CHIP_ON : CHIP_OFF}
                   >
-                    {tag.label}
+                    {tag(value)}
                   </button>
                 ))}
                 <button
@@ -197,14 +204,14 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
                   onClick={() => { setShowCustomReason(p => !p); setSelectedStrengths([]); }}
                   className={showCustomReason ? CHIP_WARN : CHIP_OFF}
                 >
-                  None of the above
+                  {t('suggest.noneOfAbove')}
                 </button>
               </div>
               {showCustomReason && (
                 <textarea
                   value={customReason}
                   onChange={e => setCustomReason(e.target.value)}
-                  placeholder="Tell us why you'd recommend it..."
+                  placeholder={t('suggest.customPlaceholder')}
                   rows={2}
                   className="mt-2.5 w-full bg-[#f8fafc] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-3 py-2 text-[14px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] resize-none"
                 />
@@ -214,14 +221,14 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
             {/* Email */}
             <div>
               <label className="block text-[13px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1.5">
-                Your Email{' '}
-                <span className="text-[#94a3b8] font-normal">(optional — we'll reply if we add it)</span>
+                {t('suggest.emailLabel')}{' '}
+                <span className="text-[#94a3b8] font-normal">{t('suggest.emailHint')}</span>
               </label>
               <input
                 type="email"
                 value={reporterEmail}
                 onChange={e => { setReporterEmail(e.target.value); if (emailError) setEmailError(''); }}
-                placeholder="you@example.com"
+                placeholder={t('suggest.emailPlaceholder')}
                 className={`w-full bg-[#f8fafc] dark:bg-[#0c141f] border rounded-[8px] px-3 py-2.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] ${emailError ? 'border-[#ef4444]' : 'border-[#e2e8f0] dark:border-[#232a36]'}`}
               />
               {emailError && <p className="mt-1 text-[12px] text-[#ef4444]">{emailError}</p>}
@@ -236,14 +243,14 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
               onClick={handleClose}
               className="text-[13px] text-[#64748b] dark:text-[#8a94a6] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors px-4 py-2"
             >
-              Cancel
+              {t('suggest.cancel')}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[14px] px-5 py-2 rounded-full hover:opacity-90 transition-opacity disabled:opacity-60"
             >
-              {submitting ? 'Submitting…' : 'Submit Suggestion'}
+              {submitting ? t('suggest.submitting') : t('suggest.submit')}
             </button>
           </div>
         </form>

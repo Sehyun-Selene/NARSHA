@@ -1,14 +1,25 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import SuggestServiceModal from './SuggestServiceModal';
+import { useT } from '../i18n';
+import type { StringKey } from '../i18n';
 
 type FooterProps = {
   /** Tighter padding for short pages (e.g. survey intro) so primary CTA stays above the fold. */
   compact?: boolean;
 };
 
+const LINKS: { to: string; key: StringKey }[] = [
+  { to: '/about',       key: 'footer.about' },
+  { to: '/faq',         key: 'footer.faq' },
+  { to: '/methodology', key: 'footer.methodology' },
+  { to: '/privacy',     key: 'footer.privacy' },
+  { to: '/terms',       key: 'footer.terms' },
+];
+
 export default function Footer({ compact = false }: FooterProps) {
   const [showModal, setShowModal] = useState(false);
+  const { t } = useT();
 
   return (
     <>
@@ -22,29 +33,24 @@ export default function Footer({ compact = false }: FooterProps) {
             </div>
 
             <div className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#64748b] leading-[20px]">
-              © 2026 NARSHA. The Scholarly Architect.
+              {t('footer.tagline')}
             </div>
 
             <div className="flex gap-6 flex-wrap items-center">
-              {[
-                { to: '/about',       label: 'About' },
-                { to: '/methodology', label: 'Methodology' },
-                { to: '/privacy',     label: 'Privacy' },
-                { to: '/terms',       label: 'Terms' },
-              ].map(link => (
+              {LINKS.map(link => (
                 <Link
                   key={link.to}
                   to={link.to}
                   className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#64748b] hover:text-[#1e293b] dark:hover:text-[#8ecdff] leading-[20px] transition-colors"
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               ))}
               <button
                 onClick={() => setShowModal(true)}
                 className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#0ea5e9] dark:text-[#8ecdff] hover:opacity-75 leading-[20px] transition-opacity"
               >
-                Suggest a Service
+                {t('footer.suggest')}
               </button>
             </div>
           </div>

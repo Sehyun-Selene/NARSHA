@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { Link, NavLink, useLocation } from 'react-router';
 import { Moon, Sun, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { useLang, type Lang } from '../lib/useLang';
+import { type Lang } from '../lib/useLang';
+import { useT } from '../i18n';
 
 const LOGO_SRC = '/narsha-logo.png';
 
@@ -55,13 +56,13 @@ function LangToggle({ lang, setLang, className = '' }: { lang: Lang; setLang: (l
   );
 }
 
-function ThemeToggle({ theme, toggleTheme }: { theme: string; toggleTheme: () => void }) {
+function ThemeToggle({ theme, toggleTheme, label }: { theme: string; toggleTheme: () => void; label: string }) {
   return (
     <button
       type="button"
       onClick={toggleTheme}
       className="text-[#8ecdff] dark:text-[#8ecdff] hover:opacity-80 transition-opacity p-2 rounded-full shrink-0"
-      aria-label="Toggle theme"
+      aria-label={label}
     >
       {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
     </button>
@@ -70,7 +71,7 @@ function ThemeToggle({ theme, toggleTheme }: { theme: string; toggleTheme: () =>
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
-  const [lang, setLang] = useLang();
+  const { t, lang, setLang } = useT();
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
@@ -105,17 +106,15 @@ export default function Header() {
         {/* 데스크톱 내비게이션 — lg 미만에서는 햄버거로 대체 */}
         <div className="hidden lg:flex items-center justify-end gap-4 xl:gap-6 min-w-0">
           <nav className="flex items-center justify-end gap-4 xl:gap-6" aria-label="Main">
-            <NavLink to="/" end className={navLinkClass}>Discover</NavLink>
-            <NavLink to="/reviews" className={navLinkClass}>Reviews</NavLink>
-            <NavLink to="/desk" className={navLinkClass}>
-              {lang === 'ko' ? '나의 한국어 책상' : 'Korean Desks'}
-            </NavLink>
+            <NavLink to="/" end className={navLinkClass}>{t('nav.discover')}</NavLink>
+            <NavLink to="/reviews" className={navLinkClass}>{t('nav.reviews')}</NavLink>
+            <NavLink to="/desk" className={navLinkClass}>{t('nav.desk')}</NavLink>
             <NavLink to="/survey" end className={learningTypeButtonClass} onClick={clearReturnApp}>
-              {lang === 'ko' ? '학습 유형 검사' : 'Want to know your Learning Type?'}
+              {t('nav.surveyLong')}
             </NavLink>
           </nav>
           <LangToggle lang={lang} setLang={setLang} />
-          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} label={t('nav.toggleTheme')} />
         </div>
 
         {/* 모바일 — 햄버거 */}
@@ -123,7 +122,7 @@ export default function Header() {
           type="button"
           onClick={() => setOpen(true)}
           className="lg:hidden p-2 -mr-2 text-[#1e293b] dark:text-[#dce3f3] shrink-0"
-          aria-label={lang === 'ko' ? '메뉴 열기' : 'Open menu'}
+          aria-label={t('nav.openMenu')}
           aria-expanded={open}
         >
           <Menu className="w-6 h-6" />
@@ -144,7 +143,7 @@ export default function Header() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={lang === 'ko' ? '메뉴' : 'Menu'}
+          aria-label={t('nav.menu')}
           className="absolute top-0 right-0 h-full w-[78%] max-w-[320px] bg-white dark:bg-[#0c141f] shadow-xl flex flex-col"
           // Tailwind v4 의 translate 유틸 대신 인라인 transform 사용
           // (유틸이 translate 프로퍼티를 쓰면서 전환이 안정적으로 반영되지 않음)
@@ -159,26 +158,24 @@ export default function Header() {
               type="button"
               onClick={() => setOpen(false)}
               className="p-2 -mr-2 text-[#64748b] dark:text-[#bec7d2]"
-              aria-label={lang === 'ko' ? '메뉴 닫기' : 'Close menu'}
+              aria-label={t('nav.closeMenu')}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <nav className="flex-1 overflow-y-auto px-5 py-2" aria-label="Mobile">
-            <NavLink to="/" end className={drawerLinkClass}>Discover</NavLink>
-            <NavLink to="/reviews" className={drawerLinkClass}>Reviews</NavLink>
-            <NavLink to="/desk" className={drawerLinkClass}>
-              {lang === 'ko' ? '나의 한국어 책상' : 'Korean Desks'}
-            </NavLink>
+            <NavLink to="/" end className={drawerLinkClass}>{t('nav.discover')}</NavLink>
+            <NavLink to="/reviews" className={drawerLinkClass}>{t('nav.reviews')}</NavLink>
+            <NavLink to="/desk" className={drawerLinkClass}>{t('nav.desk')}</NavLink>
             <NavLink to="/survey" end className={drawerLinkClass} onClick={clearReturnApp}>
-              {lang === 'ko' ? '학습 유형 검사' : 'Learning Type Test'}
+              {t('nav.survey')}
             </NavLink>
           </nav>
 
           <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0] dark:border-[#232a36]">
             <LangToggle lang={lang} setLang={setLang} />
-            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+            <ThemeToggle theme={theme} toggleTheme={toggleTheme} label={t('nav.toggleTheme')} />
           </div>
         </div>
       </div>,
