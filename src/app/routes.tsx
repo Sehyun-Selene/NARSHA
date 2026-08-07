@@ -9,6 +9,7 @@ import SurveyResult from './pages/SurveyResult';
 import ReviewWrite from './pages/ReviewWrite';
 import Reviews from './pages/Reviews';
 import About from './pages/About';
+import Faq from './pages/Faq';
 import Methodology from './pages/Methodology';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
       { path: 'survey/result', Component: SurveyResult },
       { path: 'survey', Component: SurveyIntro },
       { path: 'about', Component: About },
+      { path: 'faq', Component: Faq },
       { path: 'methodology', Component: Methodology },
       { path: 'privacy', Component: PrivacyPolicy },
       { path: 'terms', Component: TermsOfService },
