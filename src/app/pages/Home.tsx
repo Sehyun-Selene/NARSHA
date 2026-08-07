@@ -11,184 +11,127 @@ import { applySearch } from '../data/searchKeywords';
 import { useT } from '../i18n';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
-// ── Placeholder rotation ──────────────────────────────────────────────────────
+// ── Filter chip axes ──────────────────────────────────────────────────────────
+//
+// 값(value)은 DB 태그이자 필터 쿼리 키다 — 절대 바꾸지 않는다.
+// 표시 라벨은 `i18n/tags.ts` 의 사전에서 언어에 맞춰 꺼낸다 (PRD R5.16).
 
-const PLACEHOLDERS = [
-  "e.g. TOPIK Intermediate...",
-  "e.g. Pronunciation Practice...",
-  "e.g. Free K-Pop Apps...",
-  "e.g. Duolingo...",
-  "e.g. Listening for Beginners...",
-  "e.g. Grammar in English...",
-  "e.g. YouTube Channels...",
-  "e.g. 1-on-1 Tutoring...",
-];
+// Quick axis 1 — Level (single-select, app.levels[])
+const LEVEL_CHIPS = ['beginner', 'elementary', 'intermediate', 'advanced'];
 
-// ── Quick filter chip axes ────────────────────────────────────────────────────
+// Quick axis 2 — Purpose (single-select, app.purposes[])
+const PURPOSE_CHIPS = ['topikPreparation', 'academic', 'businessProficiency', 'entertainment'];
 
-const LEVEL_CHIPS = [
-  { value: 'beginner',     label: 'Beginner' },
-  { value: 'elementary',   label: 'Elementary' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced',     label: 'Advanced' },
-];
+// Quick axis 3 — Learner type (single-select, 검사 완료 후 노출)
+const LEARNER_TYPE_CHIPS = ['가', '나', '다', '라', '마', '바'];
 
-const PURPOSE_CHIPS = [
-  { value: 'topikPreparation',    label: 'TOPIK' },
-  { value: 'academic',            label: 'Academic' },
-  { value: 'businessProficiency', label: 'Business' },
-  { value: 'entertainment',       label: 'K-Content' },
-];
-
-const LEARNER_TYPE_CHIPS = [
-  { value: '가', label: '가 Vis·Open'   },
-  { value: '나', label: '나 Vis·Guided' },
-  { value: '다', label: '다 Aud·Open'   },
-  { value: '라', label: '라 Aud·Guided' },
-  { value: '마', label: '마 Mix·Open'   },
-  { value: '바', label: '바 Mix·Guided' },
-];
-
-// Axis 4 — 8 key differentiators (multi-select)
+// Quick axis 4 — 8 key differentiators (multi-select)
 const DIFFERENTIATOR_CHIPS = [
-  { value: 'strength.grammar_explanation',  label: 'Grammar'      },
-  { value: 'strength.pronunciation',        label: 'Pronunciation' },
-  { value: 'strength.vocabulary_volume',    label: 'Vocabulary'   },
-  { value: 'strength.kpop_kdrama_context',  label: 'K-Pop'        },
-  { value: 'strength.exam_focused',         label: 'TOPIK Prep'   },
-  { value: 'social.live_class_option',      label: 'Live Classes' },
-  { value: 'ux.offline_available',          label: 'Offline'      },
-  { value: 'format.flashcard',              label: 'Flashcard'    },
+  'strength.grammar_explanation',
+  'strength.pronunciation',
+  'strength.vocabulary_volume',
+  'strength.kpop_kdrama_context',
+  'strength.exam_focused',
+  'social.live_class_option',
+  'ux.offline_available',
+  'format.flashcard',
 ];
 
 // ── Advanced filter chip data (Groups A–M) ────────────────────────────────────
 
 // Group A: Price (single-select, app.pricing[])
-const PRICE_CHIPS = [
-  { value: 'free',               label: 'Free'         },
-  { value: 'freemium',           label: 'Free + Paid'  },
-  { value: 'one-time purchase',  label: 'One-time'     },
-  { value: 'subscription-only', label: 'Subscription' },
-];
+const PRICE_CHIPS = ['free', 'freemium', 'one-time purchase', 'subscription-only'];
 
 // Group B: Platform (multi-select, app.platform[])
-const PLATFORM_CHIPS = [
-  { value: 'iOS',            label: 'iOS'     },
-  { value: 'Android',        label: 'Android' },
-  { value: 'Website',        label: 'Web'     },
-  { value: 'youtubeChannel', label: 'YouTube' },
-];
+const PLATFORM_CHIPS = ['iOS', 'Android', 'Website', 'youtubeChannel'];
 
 // Group C: Teaching Language (single-select, app.teachingLanguage[])
 const TEACHING_LANG_CHIPS = [
-  { value: 'lang.english',             label: 'English'      },
-  { value: 'lang.japanese',            label: 'Japanese'     },
-  { value: 'lang.chinese',             label: 'Chinese'      },
-  { value: 'lang.vietnamese',          label: 'Vietnamese'   },
-  { value: 'lang.spanish',             label: 'Spanish'      },
-  { value: 'lang.french',              label: 'French'       },
-  { value: 'lang.german',              label: 'German'       },
-  { value: 'lang.italian',             label: 'Italian'      },
-  { value: 'lang.portuguese',          label: 'Portuguese'   },
-  { value: 'lang.russian',             label: 'Russian'      },
-  { value: 'lang.arabic',              label: 'Arabic'       },
-  { value: 'lang.turkish',             label: 'Turkish'      },
-  { value: 'lang.dutch',               label: 'Dutch'        },
-  { value: 'lang.polish',              label: 'Polish'       },
-  { value: 'lang.indonesian',          label: 'Indonesian'   },
-  { value: 'lang.hindi',               label: 'Hindi'        },
-  { value: 'lang.korean',              label: 'Korean (meta)'},
-  { value: 'lang.user_defined',        label: 'User-defined' },
-  { value: 'lang.tutor_dependent',     label: 'Tutor-set'    },
-  { value: 'lang.multilingual_20plus', label: '20+ Languages'},
+  'lang.english', 'lang.japanese', 'lang.chinese', 'lang.vietnamese',
+  'lang.spanish', 'lang.french', 'lang.german', 'lang.italian',
+  'lang.portuguese', 'lang.russian', 'lang.arabic', 'lang.turkish',
+  'lang.dutch', 'lang.polish', 'lang.indonesian', 'lang.hindi',
+  'lang.korean', 'lang.user_defined', 'lang.tutor_dependent', 'lang.multilingual_20plus',
 ];
 
 // Group D: Realtime Feedback (multi-select, app.realtimeFeedback[])
-const FEEDBACK_CHIPS = [
-  { value: 'aiFeedback',    label: 'AI Feedback'    },
-  { value: 'humanFeedback', label: 'Human / Tutor'  },
-  { value: 'noFeedback',    label: 'No Feedback'    },
-];
+const FEEDBACK_CHIPS = ['aiFeedback', 'humanFeedback', 'noFeedback'];
 
 // Groups E–M: all query app.differentiators[]
 
 // Group E: Learning Mechanism
 const MECHANISM_CHIPS = [
-  { value: 'mechanism.active_recall',       label: 'Active Recall'       },
-  { value: 'mechanism.self_assessment',     label: 'Self-assessment'     },
-  { value: 'mechanism.scenario_based',      label: 'Real-life Scenarios' },
-  { value: 'mechanism.numbered_curriculum', label: 'Step-by-step Path'   },
-  { value: 'mechanism.textbook_aligned',    label: 'Textbook-aligned'    },
-  { value: 'mechanism.topic_based',         label: 'Topic-based'         },
-  { value: 'mechanism.bite_sized_lessons',  label: 'Bite-sized'          },
+  'mechanism.active_recall',
+  'mechanism.self_assessment',
+  'mechanism.scenario_based',
+  'mechanism.numbered_curriculum',
+  'mechanism.textbook_aligned',
+  'mechanism.topic_based',
+  'mechanism.bite_sized_lessons',
 ];
 
 // Group F: Content Format (excludes format.flashcard already in axis 4)
 const FORMAT_CHIPS = [
-  { value: 'format.video_lecture',          label: 'Video Lecture'      },
-  { value: 'format.native_speaker_clips',   label: 'Native Clips'       },
-  { value: 'format.animated_lesson',        label: 'Animation'          },
-  { value: 'format.live_action_drama',      label: 'Live-action Drama'  },
-  { value: 'format.whiteboard_explanation', label: 'Whiteboard'         },
-  { value: 'format.text_with_audio',        label: 'Text + Audio'       },
-  { value: 'format.handwriting_practice',   label: 'Handwriting'        },
-  { value: 'format.downloadable_pdf',       label: 'PDF Download'       },
-  { value: 'format.subtitles_dual',         label: 'Dual Subtitles'     },
+  'format.video_lecture',
+  'format.native_speaker_clips',
+  'format.animated_lesson',
+  'format.live_action_drama',
+  'format.whiteboard_explanation',
+  'format.text_with_audio',
+  'format.handwriting_practice',
+  'format.downloadable_pdf',
+  'format.subtitles_dual',
 ];
 
 // Group G: Instructor
 const INSTRUCTOR_CHIPS = [
-  { value: 'instructor.native_speaker',   label: 'Native Speaker'    },
-  { value: 'instructor.foreign_learner',  label: 'Foreign Learner'   },
-  { value: 'instructor.bilingual_tutor',  label: 'Bilingual Tutor'   },
-  { value: 'instructor.institutional',    label: 'Institutional'     },
-  { value: 'instructor.community_built',  label: 'Community-built'   },
+  'instructor.native_speaker',
+  'instructor.foreign_learner',
+  'instructor.bilingual_tutor',
+  'instructor.institutional',
+  'instructor.community_built',
 ];
 
 // Group H: Strength Areas (excludes the 8 already in axis 4)
 const STRENGTH_AREA_CHIPS = [
-  { value: 'strength.cultural_context',  label: 'Korean Culture'  },
-  { value: 'strength.real_life_phrases', label: 'Real Phrases'    },
-  { value: 'strength.slang_trendy',      label: 'Slang & Trends'  },
-  { value: 'strength.formal_language',   label: 'Honorifics'      },
+  'strength.cultural_context',
+  'strength.real_life_phrases',
+  'strength.slang_trendy',
+  'strength.formal_language',
 ];
 
 // Group I: Learner Fit
 const FIT_CHIPS = [
-  { value: 'fit.needs_structure', label: 'Needs Structure'   },
-  { value: 'fit.casual_learner',  label: 'Casual Learner'    },
-  { value: 'fit.kpop_fan',        label: 'K-Pop Fan'         },
-  { value: 'fit.career_focused',  label: 'Career Focus'      },
-  { value: 'fit.shy_speaker',     label: 'Shy Speaker'       },
+  'fit.needs_structure',
+  'fit.casual_learner',
+  'fit.kpop_fan',
+  'fit.career_focused',
+  'fit.shy_speaker',
 ];
 
 // Group J: Accessibility / UX (excludes ux.offline_available already in axis 4)
 const UX_CHIPS = [
-  { value: 'ux.gamification',         label: 'Gamification'    },
-  { value: 'ux.short_videos',         label: 'Short Videos'    },
-  { value: 'ux.long_form_content',    label: 'Long-form'       },
-  { value: 'ux.multilingual_interface', label: 'Multilingual UI' },
+  'ux.gamification',
+  'ux.short_videos',
+  'ux.long_form_content',
+  'ux.multilingual_interface',
 ];
 
 // Group K: Social (excludes social.live_class_option already in axis 4)
 const SOCIAL_CHIPS = [
-  { value: 'social.community_forum',         label: 'Community Forum'     },
-  { value: 'social.peer_interaction',        label: 'Peer Interaction'    },
-  { value: 'social.companion_service_paid',  label: 'Companion (paid)'    },
+  'social.community_forum',
+  'social.peer_interaction',
+  'social.companion_service_paid',
 ];
 
 // Group L: Learning Pace
-const PACE_CHIPS = [
-  { value: 'pace.daily_short_session', label: 'Daily 5–15 min'  },
-  { value: 'pace.deep_dive_session',   label: '30 min+ Dive'    },
-  { value: 'pace.flexible_pacing',     label: 'Flexible Pace'   },
-];
+const PACE_CHIPS = ['pace.daily_short_session', 'pace.deep_dive_session', 'pace.flexible_pacing'];
 
 // Group M: Content Authority
 const AUTHORITY_CHIPS = [
-  { value: 'authority.official_curriculum', label: 'Official Curriculum' },
-  { value: 'authority.expert_designed',     label: 'Expert-designed'     },
-  { value: 'authority.research_backed',     label: 'Research-backed'     },
+  'authority.official_curriculum',
+  'authority.expert_designed',
+  'authority.research_backed',
 ];
 
 // Groups D–M in order — used for AND-between-groups filtering
@@ -205,30 +148,6 @@ const ADV_TAG_GROUPS = [
   AUTHORITY_CHIPS,
 ];
 
-// ── Label lookups ─────────────────────────────────────────────────────────────
-
-const LEVEL_LABELS: Record<string, string> = Object.fromEntries(LEVEL_CHIPS.map(c => [c.value, c.label]));
-const PURPOSE_LABELS: Record<string, string> = Object.fromEntries(PURPOSE_CHIPS.map(c => [c.value, c.label]));
-const LEARNER_TYPE_LABELS: Record<string, string> = Object.fromEntries(LEARNER_TYPE_CHIPS.map(c => [c.value, c.label]));
-const DIFFERENTIATOR_LABELS: Record<string, string> = Object.fromEntries(DIFFERENTIATOR_CHIPS.map(c => [c.value, c.label]));
-const PRICE_LABELS: Record<string, string> = Object.fromEntries(PRICE_CHIPS.map(c => [c.value, c.label]));
-const PLATFORM_LABELS: Record<string, string> = Object.fromEntries(PLATFORM_CHIPS.map(c => [c.value, c.label]));
-
-// Combined label map for all advanced filter tags (groups C–M)
-const ADVANCED_TAG_LABELS: Record<string, string> = Object.fromEntries([
-  ...TEACHING_LANG_CHIPS,
-  ...FEEDBACK_CHIPS,
-  ...MECHANISM_CHIPS,
-  ...FORMAT_CHIPS,
-  ...INSTRUCTOR_CHIPS,
-  ...STRENGTH_AREA_CHIPS,
-  ...FIT_CHIPS,
-  ...UX_CHIPS,
-  ...SOCIAL_CHIPS,
-  ...PACE_CHIPS,
-  ...AUTHORITY_CHIPS,
-].map(c => [c.value, c.label]));
-
 // ── Misc constants ────────────────────────────────────────────────────────────
 
 const LEARNER_TYPE_MAP: Record<string, { sensory: string[]; style: string }> = {
@@ -239,6 +158,12 @@ const LEARNER_TYPE_MAP: Record<string, { sensory: string[]; style: string }> = {
   '마': { sensory: ['visual', 'auditory', 'mixed'], style: 'exploratory' },
   '바': { sensory: ['visual', 'auditory', 'mixed'], style: 'structured' },
 };
+
+const SENSORY_KEY = {
+  visual:   'card.sensory.visual',
+  auditory: 'card.sensory.auditory',
+  mixed:    'card.sensory.mixed',
+} as const;
 
 const CHIP_OFF = "whitespace-nowrap text-[11px] px-2 py-1 rounded-full border transition-all cursor-pointer font-['Manrope:Medium',sans-serif] font-medium bg-[#f1f5f9] dark:bg-[#232a36] text-[#64748b] dark:text-[#8a94a6] border-[#e2e8f0] dark:border-[#2e3541] hover:bg-[#e2e8f0] dark:hover:bg-[#2e3541]";
 const CHIP_ON  = "whitespace-nowrap text-[11px] px-2 py-1 rounded-full border transition-all cursor-pointer font-['Manrope:Medium',sans-serif] font-medium bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] border-transparent";
@@ -254,6 +179,7 @@ function computeRating(reviews: Review[], appId: string): number {
 export default function Home() {
   useDocumentTitle();
   const { t, tLines, tag, lang } = useT();
+  const placeholders = tLines('home.placeholders');
 
   // Data
   const [apps, setApps] = useState<App[]>([]);
@@ -317,7 +243,7 @@ export default function Home() {
     const intervalId = setInterval(() => {
       setPlaceholderVisible(false);
       timerId = setTimeout(() => {
-        setPlaceholderIdx(i => (i + 1) % PLACEHOLDERS.length);
+        setPlaceholderIdx(i => (i + 1) % placeholders.length);
         setPlaceholderVisible(true);
       }, 300);
     }, 1500);
@@ -351,7 +277,7 @@ export default function Home() {
 
     // Groups D–M: AND between groups, OR within group
     for (const group of ADV_TAG_GROUPS) {
-      const groupValues = group.map(c => c.value);
+      const groupValues = group;
       const selected = advancedTagFilters.filter(t => groupValues.includes(t));
       if (selected.length > 0 &&
           !selected.some(t => app.realtimeFeedback.includes(t) || app.differentiators.includes(t))
@@ -395,14 +321,14 @@ export default function Home() {
     );
 
   const activeFilterChips = [
-    ...(levelFilter ? [{ key: 'level', label: LEVEL_LABELS[levelFilter], onRemove: () => setLevelFilter(null) }] : []),
-    ...(purposeFilter ? [{ key: 'purpose', label: PURPOSE_LABELS[purposeFilter], onRemove: () => setPurposeFilter(null) }] : []),
-    ...(learnerTypeFilter ? [{ key: 'type', label: LEARNER_TYPE_LABELS[learnerTypeFilter], onRemove: () => setLearnerTypeFilter(null) }] : []),
-    ...differentiatorFilters.map(df => ({ key: df, label: DIFFERENTIATOR_LABELS[df], onRemove: () => setDifferentiatorFilters(p => p.filter(x => x !== df)) })),
-    ...(priceFilter ? [{ key: 'price', label: PRICE_LABELS[priceFilter], onRemove: () => setPriceFilter(null) }] : []),
-    ...platformFilters.map(pf => ({ key: `plat-${pf}`, label: PLATFORM_LABELS[pf], onRemove: () => setPlatformFilters(p => p.filter(x => x !== pf)) })),
-    ...(teachingLangFilter ? [{ key: 'tlang', label: ADVANCED_TAG_LABELS[teachingLangFilter], onRemove: () => setTeachingLangFilter(null) }] : []),
-    ...advancedTagFilters.map(t => ({ key: `adv-${t}`, label: ADVANCED_TAG_LABELS[t], onRemove: () => setAdvancedTagFilters(p => p.filter(x => x !== t)) })),
+    ...(levelFilter ? [{ key: 'level', label: tag(levelFilter), onRemove: () => setLevelFilter(null) }] : []),
+    ...(purposeFilter ? [{ key: 'purpose', label: tag(purposeFilter), onRemove: () => setPurposeFilter(null) }] : []),
+    ...(learnerTypeFilter ? [{ key: 'type', label: tag(learnerTypeFilter), onRemove: () => setLearnerTypeFilter(null) }] : []),
+    ...differentiatorFilters.map(df => ({ key: df, label: tag(df), onRemove: () => setDifferentiatorFilters(p => p.filter(x => x !== df)) })),
+    ...(priceFilter ? [{ key: 'price', label: tag(priceFilter), onRemove: () => setPriceFilter(null) }] : []),
+    ...platformFilters.map(pf => ({ key: `plat-${pf}`, label: tag(pf), onRemove: () => setPlatformFilters(p => p.filter(x => x !== pf)) })),
+    ...(teachingLangFilter ? [{ key: 'tlang', label: tag(teachingLangFilter), onRemove: () => setTeachingLangFilter(null) }] : []),
+    ...advancedTagFilters.map(tagValue => ({ key: `adv-${tagValue}`, label: tag(tagValue), onRemove: () => setAdvancedTagFilters(p => p.filter(x => x !== tagValue)) })),
   ];
 
   // ── JSX ─────────────────────────────────────────────────────────────────────
@@ -445,6 +371,7 @@ export default function Home() {
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
+                    aria-label={t('home.searchLabel')}
                     className="w-full bg-transparent font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] outline-none"
                   />
                 </div>
@@ -457,7 +384,7 @@ export default function Home() {
                   aria-hidden="true"
                   className={`absolute left-16 top-1/2 -translate-y-1/2 pointer-events-none font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#94a3b8] dark:text-[#3f4850] transition-opacity duration-300 ${placeholderVisible ? 'opacity-100' : 'opacity-0'}`}
                 >
-                  {PLACEHOLDERS[placeholderIdx]}
+                  {placeholders[placeholderIdx]}
                 </span>
               )}
             </div>
@@ -465,36 +392,36 @@ export default function Home() {
             {/* Chip filter rows (all on one line) */}
             <div className="flex flex-col gap-2 pt-1">
               <div className="flex items-center gap-2">
-                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">Level</span>
+                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.level')}</span>
                 <div className="flex flex-wrap gap-1">
-                  {LEVEL_CHIPS.map(chip => (
-                    <button key={chip.value} onClick={() => setLevelFilter(p => p === chip.value ? null : chip.value)} className={levelFilter === chip.value ? CHIP_ON : CHIP_OFF}>{chip.label}</button>
+                  {LEVEL_CHIPS.map(value => (
+                    <button key={value} onClick={() => setLevelFilter(p => p === value ? null : value)} className={levelFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">Purpose</span>
+                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.purpose')}</span>
                 <div className="flex flex-wrap gap-1">
-                  {PURPOSE_CHIPS.map(chip => (
-                    <button key={chip.value} onClick={() => setPurposeFilter(p => p === chip.value ? null : chip.value)} className={purposeFilter === chip.value ? CHIP_ON : CHIP_OFF}>{chip.label}</button>
+                  {PURPOSE_CHIPS.map(value => (
+                    <button key={value} onClick={() => setPurposeFilter(p => p === value ? null : value)} className={purposeFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </div>
               {hasTakenSurvey && (
                 <div className="flex items-center gap-2">
-                  <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">Type</span>
+                  <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.type')}</span>
                   <div className="flex flex-wrap gap-1">
-                    {LEARNER_TYPE_CHIPS.map(chip => (
-                      <button key={chip.value} onClick={() => setLearnerTypeFilter(p => p === chip.value ? null : chip.value)} className={learnerTypeFilter === chip.value ? CHIP_ON : CHIP_OFF}>{chip.label}</button>
+                    {LEARNER_TYPE_CHIPS.map(value => (
+                      <button key={value} onClick={() => setLearnerTypeFilter(p => p === value ? null : value)} className={learnerTypeFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                     ))}
                   </div>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">Strengths</span>
+                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.strengths')}</span>
                 <div className="flex flex-wrap gap-1">
-                  {DIFFERENTIATOR_CHIPS.map(chip => (
-                    <button key={chip.value} onClick={() => setDifferentiatorFilters(p => p.includes(chip.value) ? p.filter(x => x !== chip.value) : [...p, chip.value])} className={differentiatorFilters.includes(chip.value) ? CHIP_ON : CHIP_OFF}>{chip.label}</button>
+                  {DIFFERENTIATOR_CHIPS.map(value => (
+                    <button key={value} onClick={() => setDifferentiatorFilters(p => p.includes(value) ? p.filter(x => x !== value) : [...p, value])} className={differentiatorFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </div>
@@ -507,13 +434,13 @@ export default function Home() {
                 className="flex items-center gap-1.5 text-[13px] text-[#64748b] dark:text-[#8a94a6] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors"
               >
                 <SlidersHorizontal className="w-[13px] h-[13px]" />
-                Advanced Filters
+                {t('home.adv.open')}
                 {advancedFilterCount > 0 && (
                   <span className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                     {advancedFilterCount}
                   </span>
                 )}
-                <span className="text-[#94a3b8] dark:text-[#3f4850]">(price, platform, language…)</span>
+                <span className="text-[#94a3b8] dark:text-[#3f4850]">{t('home.adv.hint')}</span>
               </button>
             </div>
 
@@ -524,13 +451,13 @@ export default function Home() {
         <div className="max-w-[1280px] mx-auto px-6 pb-24">
           {activeFilterChips.length > 0 && (
             <div className="mb-6 flex items-center gap-2 flex-wrap">
-              <span className="text-[13px] text-[#64748b] dark:text-[#bec7d2] mr-1">Results: {filteredApps.length}</span>
+              <span className="text-[13px] text-[#64748b] dark:text-[#bec7d2] mr-1">{t('home.results')}: {filteredApps.length}</span>
               {activeFilterChips.map(chip => (
                 <button key={chip.key} onClick={chip.onRemove} className="flex items-center gap-1 bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Medium',sans-serif] font-medium text-[12px] px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity">
                   {chip.label}<X className="w-3 h-3" />
                 </button>
               ))}
-              <button onClick={clearAllFilters} className="text-[12px] text-[#94a3b8] dark:text-[#3f4850] hover:text-[#64748b] dark:hover:text-[#8a94a6] transition-colors">Clear all</button>
+              <button onClick={clearAllFilters} className="text-[12px] text-[#94a3b8] dark:text-[#3f4850] hover:text-[#64748b] dark:hover:text-[#8a94a6] transition-colors">{t('home.clearAll')}</button>
             </div>
           )}
 
@@ -542,29 +469,35 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
               <SearchX className="w-12 h-12 text-[#94a3b8] dark:text-[#3f4850]" />
               <div>
-                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">Couldn't load services</p>
-                <p className="text-[14px] text-[#64748b] dark:text-[#bec7d2]">A network or server issue occurred. Please try again.</p>
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">{t('home.errorTitle')}</p>
+                <p className="text-[14px] text-[#64748b] dark:text-[#bec7d2]">{t('home.errorBody')}</p>
               </div>
               <button
                 onClick={loadData}
                 className="mt-2 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90 transition-opacity"
               >
-                Retry
+                {t('home.retry')}
               </button>
             </div>
           ) : filteredApps.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
               <SearchX className="w-12 h-12 text-[#94a3b8] dark:text-[#3f4850]" />
               <div>
-                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">No results found</p>
-                <p className="text-[14px] text-[#64748b] dark:text-[#bec7d2]">Can't find the service you're looking for on NARSHA?</p>
+                <p className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">{t('home.emptyTitle')}</p>
+                <p className="text-[14px] text-[#64748b] dark:text-[#bec7d2]">{t('home.emptyBody')}</p>
               </div>
               <button
                 onClick={() => setShowSuggestModal(true)}
                 className="mt-2 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[14px] px-6 py-2.5 rounded-full hover:opacity-90 transition-opacity"
               >
-                Suggest a Service →
+                {t('home.emptySuggest')}
               </button>
+              <Link
+                to="/faq"
+                className="text-[13px] text-[#0ea5e9] dark:text-[#8ecdff] hover:underline"
+              >
+                {t('home.emptyFaq')}
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -593,10 +526,14 @@ export default function Home() {
                       </div>
                       <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#64748b] dark:text-[#bec7d2] mb-4 line-clamp-2">{app.description}</p>
                       <div className="flex flex-wrap gap-2">
-                        <span className="bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">{app.sensory.charAt(0).toUpperCase() + app.sensory.slice(1)}</span>
-                        <span className="bg-[#ddd6fe] dark:bg-[#2e1f4a] text-[#8b5cf6] dark:text-[#c4b5fd] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">{app.style === 'exploratory' ? 'Exploratory' : 'Structured'}</span>
+                        <span className="bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">{t(SENSORY_KEY[app.sensory])}</span>
+                        <span className="bg-[#ddd6fe] dark:bg-[#2e1f4a] text-[#8b5cf6] dark:text-[#c4b5fd] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">{app.style === 'exploratory' ? t('card.style.exploratory') : t('card.style.structured')}</span>
                         {reviewCount > 0 && (
-                          <span className="bg-[#f1f5f9] dark:bg-[#1e293b] text-[#64748b] dark:text-[#94a3b8] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">{reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
+                          <span className="bg-[#f1f5f9] dark:bg-[#1e293b] text-[#64748b] dark:text-[#94a3b8] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">
+                            {reviewCount === 1
+                              ? t('card.reviewCount.one')
+                              : t('card.reviewCount.other').replace('{n}', String(reviewCount))}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -620,7 +557,7 @@ export default function Home() {
 
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#e2e8f0] dark:border-[#232a36] shrink-0">
-              <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3]">Advanced Filters</h2>
+              <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3]">{t('home.adv.title')}</h2>
               <button onClick={() => setShowAdvancedFilters(false)} className="text-[#94a3b8] dark:text-[#3f4850] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors">
                 <X className="w-5 h-5" />
               </button>
@@ -633,12 +570,12 @@ export default function Home() {
               {!hasTakenSurvey && (
                 <section>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850]">Learner Type</p>
-                    <a href="/survey" className="text-[10px] text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">Take the test →</a>
+                    <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850]">{t('home.adv.learnerType')}</p>
+                    <a href="/survey" className="text-[10px] text-[#0ea5e9] dark:text-[#8ecdff] hover:underline">{t('home.adv.takeTest')}</a>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {LEARNER_TYPE_CHIPS.map(c => (
-                      <button key={c.value} onClick={() => setLearnerTypeFilter(p => p === c.value ? null : c.value)} className={learnerTypeFilter === c.value ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                    {LEARNER_TYPE_CHIPS.map(value => (
+                      <button key={value} onClick={() => setLearnerTypeFilter(p => p === value ? null : value)} className={learnerTypeFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                     ))}
                   </div>
                 </section>
@@ -646,130 +583,130 @@ export default function Home() {
 
               {/* A: Price */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Price</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.price')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {PRICE_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => setPriceFilter(p => p === c.value ? null : c.value)} className={priceFilter === c.value ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {PRICE_CHIPS.map(value => (
+                    <button key={value} onClick={() => setPriceFilter(p => p === value ? null : value)} className={priceFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* B: Platform */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Platform</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.platform')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {PLATFORM_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => setPlatformFilters(p => p.includes(c.value) ? p.filter(x => x !== c.value) : [...p, c.value])} className={platformFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {PLATFORM_CHIPS.map(value => (
+                    <button key={value} onClick={() => setPlatformFilters(p => p.includes(value) ? p.filter(x => x !== value) : [...p, value])} className={platformFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* C: Teaching Language */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Teaching Language</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.teachingLang')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {TEACHING_LANG_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => setTeachingLangFilter(p => p === c.value ? null : c.value)} className={teachingLangFilter === c.value ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {TEACHING_LANG_CHIPS.map(value => (
+                    <button key={value} onClick={() => setTeachingLangFilter(p => p === value ? null : value)} className={teachingLangFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* D: Feedback */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Realtime Feedback</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.feedback')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {FEEDBACK_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {FEEDBACK_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* E: Mechanism */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Learning Mechanism</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.mechanism')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {MECHANISM_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {MECHANISM_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* F: Format */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Content Format</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.format')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {FORMAT_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {FORMAT_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* G: Instructor */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Instructor</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.instructor')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {INSTRUCTOR_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {INSTRUCTOR_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* H: Strength Areas */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Strength Areas</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.strengthArea')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {STRENGTH_AREA_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {STRENGTH_AREA_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* I: Learner Fit */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Learner Fit</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.fit')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {FIT_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {FIT_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* J: UX / Accessibility */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Accessibility & UX</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.ux')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {UX_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {UX_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* K: Social */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Social Features</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.social')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {SOCIAL_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {SOCIAL_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* L: Pace */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Learning Pace</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.pace')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {PACE_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {PACE_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
 
               {/* M: Authority */}
               <section>
-                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">Content Authority</p>
+                <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#94a3b8] dark:text-[#3f4850] mb-2">{t('home.adv.authority')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {AUTHORITY_CHIPS.map(c => (
-                    <button key={c.value} onClick={() => toggleAdvTag(c.value)} className={advancedTagFilters.includes(c.value) ? CHIP_ON : CHIP_OFF}>{c.label}</button>
+                  {AUTHORITY_CHIPS.map(value => (
+                    <button key={value} onClick={() => toggleAdvTag(value)} className={advancedTagFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
               </section>
@@ -779,10 +716,10 @@ export default function Home() {
             {/* Footer */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-[#e2e8f0] dark:border-[#232a36] shrink-0">
               <button onClick={clearAdvancedFilters} className="text-[13px] text-[#64748b] dark:text-[#8a94a6] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors">
-                Reset
+                {t('home.adv.reset')}
               </button>
               <button onClick={() => setShowAdvancedFilters(false)} className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Medium',sans-serif] font-medium text-[14px] px-5 py-2.5 rounded-full hover:opacity-90 transition-opacity">
-                View results ({filteredApps.length})
+                {t('home.adv.viewResults')} ({filteredApps.length})
               </button>
             </div>
 
