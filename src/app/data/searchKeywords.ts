@@ -149,9 +149,12 @@ export function applySearch(app: App, normalizedQuery: string): boolean {
     if (mappedTags.some(mt => allAppTags.includes(mt))) return true;
   }
 
-  // Direct exact-word tag matching across all DB fields
+  // Direct exact-word tag matching across all DB fields.
+  // 이름은 KO/EN 양쪽을 다 본다 — EN 화면에서 `듀오링고`를 쳐도 Duolingo 가
+  // 나와야 하고, 그 반대도 마찬가지다 (PRD R5.18).
   return (
     app.name.toLowerCase().includes(normalizedQuery) ||
+    app.nameKo.toLowerCase().includes(normalizedQuery) ||
     app.aliases.some(a => a.toLowerCase().includes(normalizedQuery)) ||
     app.learningField.some(f => matchesTag(f, normalizedQuery)) ||
     app.levels.some(l => matchesTag(l, normalizedQuery)) ||

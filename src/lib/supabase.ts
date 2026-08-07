@@ -25,6 +25,8 @@ export type Database = {
 export interface AppRow {
   id: string;
   name: string;
+  /** 한국어 표기명. 마이그레이션 20260808000000 으로 추가됐고, 비어 있을 수 있다. */
+  name_ko?: string | null;
   aliases: string[];
   learning_field: string[];
   learning_type: string | null;

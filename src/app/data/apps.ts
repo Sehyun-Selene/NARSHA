@@ -1,9 +1,11 @@
 import { supabase, type AppRow } from '../../lib/supabase';
 
+import type { Lang } from '../lib/useLang';
+
 export interface App {
   id: string;
   name: string;
-  /** Legacy Korean display name — used for search and card display */
+  /** 한국어 표기명. DB에 값이 없으면 영문 `name` 과 같다. */
   nameKo: string;
   aliases: string[];
   learningField: string[];
@@ -30,19 +32,38 @@ export interface App {
 
 const LEVEL_ORDER = ['beginner', 'elementary', 'intermediate', 'advanced'] as const;
 
-const LEVEL_DISPLAY_LABEL: Record<(typeof LEVEL_ORDER)[number], string> = {
-  beginner: 'Beginner',
-  elementary: 'Elementary',
-  intermediate: 'Intermediate',
-  advanced: 'Advanced',
-};
-
+/**
+ * 카드에 표시할 레벨 **태그 값**을 돌려준다. 표시 문자열이 아니라 값이므로,
+ * 호출부에서 `i18n` 의 `tagLabel()` 로 언어에 맞는 라벨을 꺼내야 한다.
+ */
 export function getAppLevelDisplayTags(app: App): string[] {
   const normalized = LEVEL_ORDER.filter((level) => app.levels.includes(level));
   if (normalized.length === LEVEL_ORDER.length) {
-    return ['All levels'];
+    return ['all_levels'];
   }
-  return normalized.map((l) => LEVEL_DISPLAY_LABEL[l]);
+  return [...normalized];
+}
+
+const missingKoDescription = new Set<string>();
+
+/**
+ * 표시 시점에 언어를 고른다 — 데이터를 받을 때 고르면 언어 전환마다
+ * 재요청이 필요해진다 (PRD R5.13).
+ * 한국어 설명이 비어 있으면 영문으로 폴백한다 (R5.14).
+ */
+export function appDescription(app: App, lang: Lang): string {
+  if (lang !== 'ko') return app.description;
+  if (app.descriptionKo) return app.descriptionKo;
+  if (import.meta.env.DEV && !missingKoDescription.has(app.id)) {
+    missingKoDescription.add(app.id);
+    console.warn(`[i18n] apps.description_ko 누락: ${app.id}`);
+  }
+  return app.description;
+}
+
+/** 앱 이름도 같은 규칙을 따른다. 한국어 표기가 없으면 원 표기를 그대로 쓴다. */
+export function appName(app: App, lang: Lang): string {
+  return lang === 'ko' ? (app.nameKo || app.name) : app.name;
 }
 
 /** Map a Supabase AppRow to the frontend App interface */
@@ -50,7 +71,7 @@ export function rowToApp(row: AppRow): App {
   return {
     id: row.id,
     name: row.name,
-    nameKo: row.description_ko ?? row.name,
+    nameKo: row.name_ko ?? row.name,
     aliases: row.aliases,
     learningField: row.learning_field,
     sensory: (row.sensory ?? 'mixed') as App['sensory'],
@@ -66,7 +87,7 @@ export function rowToApp(row: AppRow): App {
     platform: row.platform,
     url: row.url ?? undefined,
     description: row.description ?? row.name,
-    descriptionKo: row.description_ko ?? row.name,
+    descriptionKo: row.description_ko ?? '',
     logoSrc: row.logo_src ?? undefined,
   };
 }

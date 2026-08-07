@@ -16,6 +16,8 @@ import {
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import { STRENGTH_LABELS } from '../lib/tagLabels';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { tagLabel } from '../i18n';
+import { useLang } from '../lib/useLang';
 import {
   RadarChart,
   PolarGrid,
@@ -31,6 +33,8 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 export default function AppDetail() {
   const { id } = useParams<{ id: string }>();
+  // 페이지 전체 i18n 은 Phase 2 — 여기서는 레벨 배지 라벨만 언어에 맞춘다.
+  const [lang] = useLang();
   const [app, setApp] = useState<App | null>(null);
   const [appReviews, setAppReviews] = useState<Review[]>([]);
   const [typeRatings, setTypeRatings] = useState<Record<LearnerType, number>>({
@@ -212,7 +216,7 @@ export default function AppDetail() {
                         key={level}
                         className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] sm:text-[11px] tracking-[1px] uppercase px-2.5 py-0.5 rounded-full"
                       >
-                        {level}
+                        {tagLabel(level, lang)}
                       </span>
                     ))}
                   </div>

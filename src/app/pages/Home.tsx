@@ -5,7 +5,7 @@ import SuggestServiceModal from '../components/SuggestServiceModal';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
-import { fetchApps, getAppLevelDisplayTags, type App } from '../data/apps';
+import { fetchApps, getAppLevelDisplayTags, appDescription, appName, type App } from '../data/apps';
 import { getAllReviews, type Review } from '../data/reviews';
 import { applySearch } from '../data/searchKeywords';
 import { useT } from '../i18n';
@@ -507,8 +507,8 @@ export default function Home() {
                 return (
                   <Link key={app.id} to={`/apps/${app.id}`} className="group relative bg-[#ffffff] dark:bg-[#151c27] rounded-[16px] overflow-hidden shadow-[0px_4px_16px_rgba(0,0,0,0.08)] dark:shadow-none border border-[#e2e8f0] dark:border-[#232a36] hover:shadow-[0px_8px_32px_rgba(0,0,0,0.12)] dark:hover:border-[#8ecdff] transition-all">
                     <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1 max-w-[75%]">
-                      {getAppLevelDisplayTags(app).map(label => (
-                        <span key={label} className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full">{label}</span>
+                      {getAppLevelDisplayTags(app).map(level => (
+                        <span key={level} className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full">{tag(level)}</span>
                       ))}
                     </div>
                     <div className="aspect-square bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
@@ -516,7 +516,7 @@ export default function Home() {
                     </div>
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px]">{app.name}</h3>
+                        <h3 className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px]">{appName(app, lang)}</h3>
                         {rating > 0 && (
                           <div className="flex items-center gap-1">
                             <span className="text-[#fbbf24]">★</span>
@@ -524,7 +524,7 @@ export default function Home() {
                           </div>
                         )}
                       </div>
-                      <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#64748b] dark:text-[#bec7d2] mb-4 line-clamp-2">{app.description}</p>
+                      <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#64748b] dark:text-[#bec7d2] mb-4 line-clamp-2">{appDescription(app, lang)}</p>
                       <div className="flex flex-wrap gap-2">
                         <span className="bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">{t(SENSORY_KEY[app.sensory])}</span>
                         <span className="bg-[#ddd6fe] dark:bg-[#2e1f4a] text-[#8b5cf6] dark:text-[#c4b5fd] font-['Manrope:Medium',sans-serif] font-medium text-[11px] px-2 py-1 rounded">{app.style === 'exploratory' ? t('card.style.exploratory') : t('card.style.structured')}</span>
