@@ -59,14 +59,17 @@ export const DICT = {
   'suggest.fail':            { ko: '전송에 실패했습니다. 다시 시도해주세요.', en: 'Failed to submit. Please try again.' },
 
   // ── 메인 히어로 (PRD §3) ──────────────────────────────────────────────────
-  // EN 은 1행, KO 는 2행. 빈 문자열 줄은 렌더링 시 걸러진다 (R3.1).
+  // 줄바꿈 위치를 디자인이 정한다 — KO 3행, EN 4행.
+  // 언어마다 행 수가 달라 빈 문자열로 자리를 비우고, 렌더링 시 걸러낸다 (R3.1).
   'home.hero.title': [
-    { ko: '당신에게 필요한',                 en: 'Find the Korean learning service you need.' },
-    { ko: '한국어 학습 서비스를 찾아보세요', en: '' },
+    { ko: '당신에게 필요한',     en: 'Find' },
+    { ko: '한국어 학습 서비스를', en: 'the Korean' },
+    { ko: '찾아보세요',          en: 'learning service' },
+    { ko: '',                    en: 'you need' },
   ],
   'home.hero.sub': [
     { ko: '“학습 유형 검사부터 학습 서비스 검색까지”', en: '“From learning-type test to the right service”' },
-    { ko: '효과적인 한국어 학습 경험을 만들어드립니다.', en: 'We design an effective Korean learning experience that works for you.' },
+    { ko: '효과적인 한국어 학습 경험을 만들어드립니다.', en: 'We design an effective Korean learning experience.' },
   ],
 
   // ── 메인 검색창 회전 플레이스홀더 ─────────────────────────────────────────

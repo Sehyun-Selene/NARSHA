@@ -35,6 +35,9 @@ export function t(key: StringKey, lang: Lang): string {
 /**
  * 여러 줄 카피 조회. 언어마다 줄 수가 다를 수 있으므로 빈 줄은 걸러낸다 (R3.1).
  * 단일 Entry 키에 써도 1개짜리 배열로 돌려준다.
+ *
+ * 여기서는 EN 폴백을 쓰지 않는다 — 줄 배열의 빈 값은 "번역 누락"이 아니라
+ * "이 언어에는 이 줄이 없다"는 뜻이다. 폴백하면 한국어 헤딩 끝에 영어 줄이 붙는다.
  */
 export function tLines(key: StringKey, lang: Lang): string[] {
   const entry = DICT[key] as Entry | Entry[] | undefined;
@@ -43,7 +46,7 @@ export function tLines(key: StringKey, lang: Lang): string[] {
     return [key];
   }
   const list = Array.isArray(entry) ? entry : [entry];
-  return list.map(e => pick(e, lang)).filter(Boolean);
+  return list.map(e => (lang === 'ko' ? e.ko : e.en)).filter(Boolean);
 }
 
 /** 필터 칩 / 태그 라벨. 사전에 없는 값은 값 자체를 표시한다. */

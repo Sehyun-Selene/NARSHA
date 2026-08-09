@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { Search, X, SlidersHorizontal, SearchX } from 'lucide-react';
+import {
+  Search, X, SlidersHorizontal, SearchX, ChevronDown,
+  BarChart3, Target, Fingerprint, Sparkles,
+} from 'lucide-react';
 import SuggestServiceModal from '../components/SuggestServiceModal';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -159,14 +162,22 @@ const LEARNER_TYPE_MAP: Record<string, { sensory: string[]; style: string }> = {
   '바': { sensory: ['visual', 'auditory', 'mixed'], style: 'structured' },
 };
 
+/** 빠른 필터 축 — 서랍 손잡이 순서와 아이콘. `type` 은 검사 완료 후에만 노출된다. */
+const AXES = [
+  { key: 'level',     labelKey: 'home.axis.level',     Icon: BarChart3 },
+  { key: 'purpose',   labelKey: 'home.axis.purpose',   Icon: Target },
+  { key: 'type',      labelKey: 'home.axis.type',      Icon: Fingerprint },
+  { key: 'strengths', labelKey: 'home.axis.strengths', Icon: Sparkles },
+] as const;
+
 const SENSORY_KEY = {
   visual:   'card.sensory.visual',
   auditory: 'card.sensory.auditory',
   mixed:    'card.sensory.mixed',
 } as const;
 
-const CHIP_OFF = "whitespace-nowrap text-[11px] px-2 py-1 rounded-full border transition-all cursor-pointer font-['Manrope:Medium',sans-serif] font-medium bg-[#f1f5f9] dark:bg-[#232a36] text-[#64748b] dark:text-[#8a94a6] border-[#e2e8f0] dark:border-[#2e3541] hover:bg-[#e2e8f0] dark:hover:bg-[#2e3541]";
-const CHIP_ON  = "whitespace-nowrap text-[11px] px-2 py-1 rounded-full border transition-all cursor-pointer font-['Manrope:Medium',sans-serif] font-medium bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] border-transparent";
+const CHIP_OFF = "whitespace-nowrap text-[11px] px-1.5 py-1 rounded-full border transition-all cursor-pointer font-['Manrope:Medium',sans-serif] font-medium bg-[#f1f5f9] dark:bg-[#232a36] text-[#64748b] dark:text-[#8a94a6] border-[#e2e8f0] dark:border-[#2e3541] hover:bg-[#e2e8f0] dark:hover:bg-[#2e3541]";
+const CHIP_ON  = "whitespace-nowrap text-[11px] px-1.5 py-1 rounded-full border transition-all cursor-pointer font-['Manrope:Medium',sans-serif] font-medium bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] border-transparent";
 
 function computeRating(reviews: Review[], appId: string): number {
   const appReviews = reviews.filter(r => r.appId === appId);
@@ -200,6 +211,9 @@ export default function Home() {
   const [teachingLangFilter, setTeachingLangFilter] = useState<string | null>(null); // C
   const [advancedTagFilters, setAdvancedTagFilters] = useState<string[]>([]);   // D–M
 
+  /** 펼쳐 둔 빠른 필터 축. 한 번에 하나만 연다 — 서랍 하나씩 여는 느낌. */
+  const [openAxis, setOpenAxis] = useState<string | null>(null);
+
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [hasTakenSurvey, setHasTakenSurvey] = useState(false);
@@ -213,7 +227,7 @@ export default function Home() {
   // 뺀 실제 가용 폭 안에서 EN 한 줄이 줄바꿈되지 않는 최대 크기를 브라우저로
   // 직접 재서 정했다(여유 폭 몇 px 남김). KO 두 줄도 같은 값에서 md 이상은
   // 줄 안 꺾이는 것을 확인했다 — 768px 미만은 원래도 두 줄 이상으로 흐른다.
-  const heroSize = 'text-[2.625rem] md:text-[2.125rem] lg:text-[3rem] xl:text-[3.625rem]';
+  const heroSize = 'text-[clamp(2rem,9vw,3rem)] md:text-[3.5rem] xl:text-[4rem]';
 
   useEffect(() => {
     setHasTakenSurvey(!!localStorage.getItem('narsha-learner-type'));
@@ -317,6 +331,14 @@ export default function Home() {
     advancedTagFilters.length +
     (!hasTakenSurvey && learnerTypeFilter ? 1 : 0);
 
+  /** 서랍이 닫혀 있어도 선택 개수는 손잡이에 보여야 한다. */
+  const axisCounts: Record<string, number> = {
+    level:     levelFilter ? 1 : 0,
+    purpose:   purposeFilter ? 1 : 0,
+    type:      learnerTypeFilter ? 1 : 0,
+    strengths: differentiatorFilters.length,
+  };
+
   const toggleAdvTag = (tag: string) =>
     setAdvancedTagFilters(prev =>
       prev.includes(tag) ? prev.filter(x => x !== tag) : [...prev, tag]
@@ -340,15 +362,20 @@ export default function Home() {
       <Header />
 
       <main className="flex-1 pt-16">
-        {/* Hero */}
-        <div className="max-w-[1280px] mx-auto px-6 min-h-[calc(100vh-4rem)] pt-14 pb-10 flex flex-col items-center justify-center gap-8">
-          <div className="flex flex-col items-center gap-6 w-full">
-            <h1 className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold ${heroSize} leading-[1.12] tracking-[-0.042em] text-center bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible px-1`}>
+        {/* Hero — 좌: 문구 / 우: 검색+필터. 둘을 나란히 두면 헤딩 줄 수가
+            언어마다 달라져도 검색바 위치가 밀리지 않는다. */}
+        <div className="max-w-[1280px] mx-auto px-6 py-14 xl:min-h-[calc(100vh-4rem)] flex items-center">
+          {/* 2열 분할은 xl 부터. lg 이하에서 나누면 칩 행이 좁아져 영어 라벨이
+              두 줄로 흐른다 — 스택 상태에서는 칩이 컨테이너 전폭을 쓴다. */}
+          <div className="w-full grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-10 xl:gap-14 items-center">
+
+          <div className="flex flex-col items-center xl:items-start gap-6 w-full text-center xl:text-left xl:pl-6">
+            <h1 className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold ${heroSize} leading-[1.08] tracking-[-0.042em] bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible`}>
               {tLines('home.hero.title').map((line, i) => (
                 <span key={i} className="block">{line}</span>
               ))}
             </h1>
-            <div className="text-center max-w-[672px] flex flex-col gap-1">
+            <div className="max-w-[480px] flex flex-col gap-1">
               {tLines('home.hero.sub').map((line, i) => (
                 <p
                   key={i}
@@ -363,11 +390,16 @@ export default function Home() {
           </div>
 
           {/* Search + chip filters */}
-          <div className="w-full max-w-[768px] flex flex-col gap-3">
+          <div className="w-full flex flex-col gap-3">
 
             {/* Search bar */}
             <div className="relative">
-              <div className="bg-[#f1f5f9] dark:bg-[#070e19] rounded-[12px] shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden">
+              {/*
+                다크에서 배경(#070e19)이 페이지 배경(#0c141f)과 거의 같아 검색창이
+                묻혔다. 한 단계 밝은 표면 + 보더로 경계를 만들고, 포커스 시 sky 링을
+                준다. 그림자만으로는 어두운 배경에서 형태가 드러나지 않는다.
+              */}
+              <div className="bg-[#f1f5f9] dark:bg-[#1e293b] rounded-[12px] border-2 border-[#94a3b8] dark:border-[#35708f] shadow-[0px_20px_40px_-16px_rgba(15,23,42,0.28)] dark:shadow-[0px_20px_40px_-16px_rgba(0,0,0,0.7)] overflow-hidden transition-colors focus-within:border-[#0ea5e9] dark:focus-within:border-[#8ecdff]">
                 <div className="flex items-center pl-16 pr-6 py-6">
                   <input
                     type="text"
@@ -384,48 +416,77 @@ export default function Home() {
               {!searchQuery && (
                 <span
                   aria-hidden="true"
-                  className={`absolute left-16 top-1/2 -translate-y-1/2 pointer-events-none font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#94a3b8] dark:text-[#3f4850] transition-opacity duration-300 ${placeholderVisible ? 'opacity-100' : 'opacity-0'}`}
+                  className={`absolute left-16 top-1/2 -translate-y-1/2 pointer-events-none font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#94a3b8] dark:text-[#64748b] transition-opacity duration-300 ${placeholderVisible ? 'opacity-100' : 'opacity-0'}`}
                 >
                   {placeholders[placeholderIdx]}
                 </span>
               )}
             </div>
 
-            {/* Chip filter rows (all on one line) */}
-            <div className="flex flex-col gap-2 pt-1">
-              <div className="flex items-center gap-2">
-                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.level')}</span>
-                <div className="flex flex-wrap gap-1">
-                  {LEVEL_CHIPS.map(value => (
+            {/*
+              축 이름만 서랍 손잡이처럼 늘어놓고, 누른 축의 칩만 아래에 펼친다.
+              칩 96개를 한 번에 보여주면 글자가 너무 많아 지저분해 보인다.
+              mt-8 은 검색바 그림자(아래로 25px 번짐)를 피하기 위한 간격이다.
+            */}
+            <div className="mt-8 flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                {AXES.filter(axis => axis.key !== 'type' || hasTakenSurvey).map(axis => {
+                  const open = openAxis === axis.key;
+                  const count = axisCounts[axis.key];
+                  return (
+                    <button
+                      key={axis.key}
+                      type="button"
+                      aria-expanded={open}
+                      aria-controls="axis-panel"
+                      onClick={() => setOpenAxis(prev => (prev === axis.key ? null : axis.key))}
+                      className={`flex items-center gap-1.5 text-[13px] pl-3 pr-2.5 py-1.5 rounded-full border transition-all font-['Manrope:Medium',sans-serif] font-medium ${
+                        open || count > 0
+                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] border-transparent'
+                          : 'bg-[#f1f5f9] dark:bg-[#232a36] text-[#64748b] dark:text-[#8a94a6] border-[#e2e8f0] dark:border-[#2e3541] hover:bg-[#e2e8f0] dark:hover:bg-[#2e3541]'
+                      }`}
+                    >
+                      <axis.Icon className="w-[14px] h-[14px]" aria-hidden="true" />
+                      {t(axis.labelKey)}
+                      {count > 0 && (
+                        <span className="bg-white/25 dark:bg-black/25 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                          {count}
+                        </span>
+                      )}
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`w-[13px] h-[13px] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/*
+                히어로는 세로 중앙 정렬이라 우측 컬럼이 커지면 전체가 위로 밀린다.
+                패널 자리를 미리 비워 둬서 열고 닫아도 검색바·손잡이가 안 움직이게 한다.
+                2열 정렬(xl)에서만 필요하다 — 그 아래는 중앙 정렬이 걸리지 않는다.
+              */}
+              <div className="xl:min-h-[52px]">
+              {openAxis && (
+                <div
+                  id="axis-panel"
+                  className="rounded-[12px] border border-[#e2e8f0] dark:border-[#232a36] bg-[#f8fafc] dark:bg-[#151c27] px-4 py-3 flex flex-wrap gap-1.5"
+                >
+                  {openAxis === 'level' && LEVEL_CHIPS.map(value => (
                     <button key={value} onClick={() => setLevelFilter(p => p === value ? null : value)} className={levelFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.purpose')}</span>
-                <div className="flex flex-wrap gap-1">
-                  {PURPOSE_CHIPS.map(value => (
+                  {openAxis === 'purpose' && PURPOSE_CHIPS.map(value => (
                     <button key={value} onClick={() => setPurposeFilter(p => p === value ? null : value)} className={purposeFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
-                </div>
-              </div>
-              {hasTakenSurvey && (
-                <div className="flex items-center gap-2">
-                  <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.type')}</span>
-                  <div className="flex flex-wrap gap-1">
-                    {LEARNER_TYPE_CHIPS.map(value => (
-                      <button key={value} onClick={() => setLearnerTypeFilter(p => p === value ? null : value)} className={learnerTypeFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <span className="min-w-[58px] text-[11px] text-[#94a3b8] dark:text-[#3f4850] text-right shrink-0">{t('home.axis.strengths')}</span>
-                <div className="flex flex-wrap gap-1">
-                  {DIFFERENTIATOR_CHIPS.map(value => (
+                  {openAxis === 'type' && LEARNER_TYPE_CHIPS.map(value => (
+                    <button key={value} onClick={() => setLearnerTypeFilter(p => p === value ? null : value)} className={learnerTypeFilter === value ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
+                  ))}
+                  {openAxis === 'strengths' && DIFFERENTIATOR_CHIPS.map(value => (
                     <button key={value} onClick={() => setDifferentiatorFilters(p => p.includes(value) ? p.filter(x => x !== value) : [...p, value])} className={differentiatorFilters.includes(value) ? CHIP_ON : CHIP_OFF}>{tag(value)}</button>
                   ))}
                 </div>
+              )}
               </div>
             </div>
 
@@ -446,6 +507,7 @@ export default function Home() {
               </button>
             </div>
 
+          </div>
           </div>
         </div>
 
