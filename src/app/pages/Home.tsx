@@ -227,7 +227,7 @@ export default function Home() {
   // 뺀 실제 가용 폭 안에서 EN 한 줄이 줄바꿈되지 않는 최대 크기를 브라우저로
   // 직접 재서 정했다(여유 폭 몇 px 남김). KO 두 줄도 같은 값에서 md 이상은
   // 줄 안 꺾이는 것을 확인했다 — 768px 미만은 원래도 두 줄 이상으로 흐른다.
-  const heroSize = 'text-[clamp(2rem,9vw,3rem)] md:text-[3.5rem] xl:text-[4rem]';
+  const heroSize = 'text-[clamp(2rem,9vw,3rem)] md:text-[3.5rem] lg:text-[2.5rem] xl:text-[4rem]';
 
   useEffect(() => {
     setHasTakenSurvey(!!localStorage.getItem('narsha-learner-type'));
@@ -364,12 +364,13 @@ export default function Home() {
       <main className="flex-1 pt-16">
         {/* Hero — 좌: 문구 / 우: 검색+필터. 둘을 나란히 두면 헤딩 줄 수가
             언어마다 달라져도 검색바 위치가 밀리지 않는다. */}
-        <div className="max-w-[1280px] mx-auto px-6 py-14 xl:min-h-[calc(100vh-4rem)] flex items-center">
-          {/* 2열 분할은 xl 부터. lg 이하에서 나누면 칩 행이 좁아져 영어 라벨이
-              두 줄로 흐른다 — 스택 상태에서는 칩이 컨테이너 전폭을 쓴다. */}
-          <div className="w-full grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-10 xl:gap-14 items-center">
+        <div className="max-w-[1280px] mx-auto px-6 py-14 lg:min-h-[calc(100vh-4rem)] flex items-center">
+          {/* 2열 분할은 lg 부터. 이 폭에서는 영어 칩이 두 줄로 흐르지만,
+              칩은 기본이 접힌 상태라 펼쳤을 때만 보인다. 패널 자리를 두 줄
+              기준으로 미리 비워 둬서 줄 수가 변해도 위쪽은 안 움직인다. */}
+          <div className="w-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-10 lg:gap-14 items-center">
 
-          <div className="flex flex-col items-center xl:items-start gap-6 w-full text-center xl:text-left xl:pl-6">
+          <div className="flex flex-col items-center lg:items-start gap-6 w-full text-center lg:text-left lg:pl-6">
             <h1 className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold ${heroSize} leading-[1.08] tracking-[-0.042em] bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible`}>
               {tLines('home.hero.title').map((line, i) => (
                 <span key={i} className="block">{line}</span>
@@ -465,9 +466,13 @@ export default function Home() {
               {/*
                 히어로는 세로 중앙 정렬이라 우측 컬럼이 커지면 전체가 위로 밀린다.
                 패널 자리를 미리 비워 둬서 열고 닫아도 검색바·손잡이가 안 움직이게 한다.
-                2열 정렬(xl)에서만 필요하다 — 그 아래는 중앙 정렬이 걸리지 않는다.
+                2열 정렬(lg 이상)에서만 필요하다 — 그 아래는 중앙 정렬이 걸리지 않는다.
+
+                lg 는 컬럼이 좁아 영어 칩이 두 줄까지 흐르므로 두 줄(83px) 기준,
+                xl 은 모든 축이 한 줄(51px)로 들어가므로 한 줄 기준으로 잡는다.
+                칩을 더 추가해 줄 수가 늘면 이 값도 같이 올려야 한다.
               */}
-              <div className="xl:min-h-[52px]">
+              <div className="lg:min-h-[84px] xl:min-h-[52px]">
               {openAxis && (
                 <div
                   id="axis-panel"
