@@ -14,9 +14,8 @@ import {
   type ReviewReply,
 } from '../data/reviews';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
-import { STRENGTH_LABELS } from '../lib/tagLabels';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
-import { tagLabel } from '../i18n';
+import { tagLabel, tagLongLabel } from '../i18n';
 import { useLang } from '../lib/useLang';
 import {
   RadarChart,
@@ -347,7 +346,7 @@ export default function AppDetail() {
                       key={tag}
                       className="flex items-center gap-1 bg-[#e0f2fe] dark:bg-[#0f3a4a] text-[#0c4a6e] dark:text-[#8ecdff] text-[12px] font-medium px-2.5 py-1 rounded-full"
                     >
-                      ✓ {STRENGTH_LABELS[tag] ?? tag}
+                      ✓ {tagLongLabel(tag, lang)}
                     </span>
                   ))}
                 </div>
@@ -398,7 +397,7 @@ export default function AppDetail() {
                         <div key={tag} className="flex items-center gap-3">
                           <span className="text-[18px] w-6 shrink-0">{MEDALS[idx]}</span>
                           <span className="flex-1 font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3]">
-                            {STRENGTH_LABELS[tag] ?? tag}
+                            {tagLongLabel(tag, lang)}
                           </span>
                           {curatorTags.has(tag) ? (
                             <span className="text-[11px] text-[#0ea5e9] dark:text-[#8ecdff] font-medium">✓ 운영자 동의</span>
@@ -420,7 +419,7 @@ export default function AppDetail() {
                         <div key={tag} className="flex items-center gap-3">
                           <span className="text-[16px] w-6 shrink-0">⚠️</span>
                           <span className="flex-1 text-[14px] text-[#64748b] dark:text-[#8a94a6]">
-                            {STRENGTH_LABELS[tag] ?? tag}
+                            {tagLongLabel(tag, lang)}
                           </span>
                           <span className="text-[12px] text-[#94a3b8] dark:text-[#3f4850] min-w-[3.5rem] text-right">
                             {count}명

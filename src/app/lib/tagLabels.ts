@@ -1,39 +1,15 @@
-export const STRENGTH_LABELS: Record<string, string> = {
-  'strength.grammar_explanation':  'Grammar Explanation',
-  'strength.pronunciation':        'Pronunciation Practice',
-  'strength.vocabulary_volume':    'Vocabulary Building',
-  'strength.cultural_context':     'Korean Culture',
-  'strength.real_life_phrases':    'Real-life Phrases',
-  'strength.slang_trendy':         'Slang & Trends',
-  'strength.formal_language':      'Honorifics & Formal',
-  'strength.kpop_kdrama_context':  'K-Pop / K-Drama',
-  'strength.exam_focused':         'TOPIK Prep',
-  'format.flashcard':              'Flashcards',
-  'format.video_lecture':          'Video Lectures',
-  'format.native_speaker_clips':   'Native Speaker Clips',
-  'format.live_action_drama':      'Live-action Drama',
-  'format.whiteboard_explanation': 'Whiteboard Lessons',
-  'format.downloadable_pdf':       'Downloadable PDF',
-  'format.subtitles_dual':         'Dual Subtitles',
-  'fit.needs_structure':           'Needs Structure',
-  'fit.casual_learner':            'Casual Learning',
-  'fit.kpop_fan':                  'K-Pop / K-Culture Fans',
-  'fit.career_focused':            'Career / Exam Focus',
-  'fit.shy_speaker':               'Shy Speakers',
-  'ux.offline_available':          'Offline Access',
-  'ux.gamification':               'Gamification',
-  'ux.short_videos':               'Short Videos (5–15 min)',
-  'ux.multilingual_interface':     'Multilingual UI',
-  'social.live_class_option':      'Live Classes',
-  'social.community_forum':        'Learning Community',
-  // Limitations
-  'limit.weak_in_speaking':              'Weak in Speaking',
-  'limit.weak_in_writing':               'Weak in Writing',
-  'limit.weak_in_advanced':              'Lacks Advanced Content',
-  'limit.weak_in_grammar':               'Lacks Grammar Explanation',
-  'limit.weak_in_reading':               'Weak in Reading',
-  'limit.no_human_feedback':             'No Human Feedback',
-  'limit.voice_recognition_unreliable':  'Unreliable Voice Recognition',
-  'limit.requires_supplementary':        'Best with Supplements',
-  'limit.no_certification':              'No Certificate',
-};
+import { TAG_LONG } from '../i18n/tags';
+
+/**
+ * 서술형 태그 라벨의 영어판.
+ *
+ * 사전은 `i18n/tags.ts` 의 `TAG_LONG` 하나뿐이다 — 여기서 영어 값만 뽑아 쓴다.
+ * 라벨을 두 곳에 적어 두면 한쪽만 고치는 일이 생긴다.
+ *
+ * @deprecated 사용자에게 보이는 화면에서는 언어를 인식하는
+ * `tagLongLabel(value, lang)` 을 쓸 것. 이 맵은 언어를 따지지 않는
+ * 운영자 화면용으로만 남긴다.
+ */
+export const STRENGTH_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(TAG_LONG).map(([value, entry]) => [value, entry.en]),
+);
