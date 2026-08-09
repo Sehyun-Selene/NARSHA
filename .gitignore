@@ -29,3 +29,11 @@ Thumbs.db
 
 # Supabase CLI 로컬 상태 (링크된 프로젝트 ref 등) — 저장소에 넣지 않는다
 supabase/.temp/
+
+# 내부 기획·법무 문서 — 저장소가 public 이므로 커밋하지 않는다.
+# 사양·비용·로드맵·법무 검토가 담겨 있어 외부 공개 대상이 아니다. 공유는 별도 경로로.
+docs/
+FEEDBACK_FEATURES_SPEC.md
+STATIC_PAGES_AND_TOOLTIP_SPEC.md
+TAG_DUAL_DISPLAY_AMENDMENT.md
+src/imports/pasted_text/
