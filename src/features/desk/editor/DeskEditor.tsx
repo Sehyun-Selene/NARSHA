@@ -104,8 +104,9 @@ async function uploadAndInsertFiles(editor: Editor, files: File[], lang: Lang) {
   const toastId = toast.loading(lang === 'ko' ? '파일 업로드 중…' : 'Uploading file…');
   try {
     for (const file of files) {
-      const { url, name, size, ext } = await uploadFile(file);
-      editor.chain().focus().setDeskFile({ url, name, size, ext }).run();
+      // uploadFile 은 크기를 bytes 로 돌려준다 (size 로 받으면 undefined → 카드에 0B)
+      const { url, name, bytes, ext } = await uploadFile(file);
+      editor.chain().focus().setDeskFile({ url, name, size: bytes, ext }).run();
     }
     toast.success(lang === 'ko' ? '업로드 완료' : 'Uploaded', { id: toastId });
   } catch (e) {

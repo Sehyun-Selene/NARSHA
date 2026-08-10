@@ -32,14 +32,21 @@ export default function RevisionsModal({
   };
 
   const t = lang === 'ko'
-    ? { title: '임시저장 기록', empty: '저장된 기록이 없어요.', restore: '복원', close: '닫기' }
-    : { title: 'Saved drafts', empty: 'No saved drafts yet.', restore: 'Restore', close: 'Close' };
+    ? {
+        title: '버전 기록', empty: '아직 기록이 없어요.', restore: '복원', close: '닫기',
+        hint: '작성 중 자동으로 저장된 시점들이에요. 발행과는 관계없어요.',
+      }
+    : {
+        title: 'Version history', empty: 'No versions yet.', restore: 'Restore', close: 'Close',
+        hint: 'Points automatically saved while you write. Unrelated to publishing.',
+      };
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4" onClick={onClose} role="dialog" aria-modal="true">
       <div className="relative w-full max-w-[420px] max-h-[80vh] overflow-y-auto rounded-[16px] bg-white dark:bg-[#151c27] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <button type="button" onClick={onClose} aria-label={t.close} className="absolute top-4 right-4 text-[#94a3b8] hover:text-[#1e293b] dark:hover:text-[#dce3f3]"><X className="w-5 h-5" /></button>
-        <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-4">{t.title}</h2>
+        <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-1">{t.title}</h2>
+        <p className="mb-4 text-[12px] text-[#94a3b8]">{t.hint}</p>
 
         {items === null ? (
           <div className="py-8 flex justify-center"><div className="h-6 w-6 rounded-full border-2 border-[#8ecdff] border-t-transparent animate-spin" /></div>

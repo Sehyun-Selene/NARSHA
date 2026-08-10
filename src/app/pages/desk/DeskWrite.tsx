@@ -18,6 +18,23 @@ type LoadState = 'loading' | 'ready';
 
 interface LocalDraft { title: string; json: DeskDoc; savedAt: number; }
 
+/**
+ * 초안이 사실상 비었는지 판정. 에디터를 열어만 봐도 빈 문단 하나가 자동저장되므로,
+ * 이걸 걸러내지 않으면 새 글을 쓸 때마다 복구 배너가 뜬다.
+ */
+function isDraftEmpty(draft: LocalDraft): boolean {
+  if (draft.title?.trim()) return false;
+  const walk = (node: unknown): boolean => {
+    if (!node || typeof node !== 'object') return true;
+    const n = node as { type?: string; text?: string; content?: unknown[] };
+    if (n.text?.trim()) return false;
+    // 이미지·구분선·표 같은 내용 노드가 있으면 빈 글이 아니다
+    if (n.type && !['doc', 'paragraph', 'text'].includes(n.type)) return false;
+    return (n.content ?? []).every(walk);
+  };
+  return walk(draft.json);
+}
+
 export default function DeskWrite() {
   const [lang] = useLang();
   const navigate = useNavigate();
@@ -34,6 +51,8 @@ export default function DeskWrite() {
   const latest = useRef<{ title: string; json: DeskDoc; html: string; text: string }>({ title: '', json: { type: 'doc', content: [] }, html: '', text: '' });
   const dirtyLocal = useRef(false);
   const dirtyServer = useRef(false);
+  // 마지막으로 버전 기록에 남긴 내용. 같은 내용이면 새 버전을 만들지 않는다.
+  const lastRevision = useRef<string | null>(null);
 
   const [saveCount, setSaveCount] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -49,18 +68,30 @@ export default function DeskWrite() {
       let doc: DeskDoc = { type: 'doc', content: [] };
       let t = '';
 
+      let serverUpdatedAt = 0;
       if (routePostId) {
         // 기존 글 로드 (본인 글만 RLS 로 열림)
         const { data } = await supabase.from('desk_posts').select('*').eq('id', routePostId).maybeSingle();
-        if (data) { doc = data.content_json as DeskDoc; t = data.title ?? ''; }
+        if (data) {
+          doc = data.content_json as DeskDoc;
+          t = data.title ?? '';
+          serverUpdatedAt = new Date(data.updated_at).getTime();
+        }
       }
 
-      // localStorage 복구본이 더 최신이면 배너로 제안
+      // localStorage 복구본이 더 최신일 때만 배너로 제안한다.
+      // 빈 초안이나 이미 서버에 반영된 초안은 지우고 배너를 띄우지 않는다 —
+      // 그러지 않으면 새 글을 열 때마다 배너가 뜬다.
       try {
         const raw = localStorage.getItem(localKey);
         if (raw) {
           const ld = JSON.parse(raw) as LocalDraft;
-          if (ld?.json) setRecovered(ld);
+          const stale = serverUpdatedAt > 0 && (ld.savedAt ?? 0) <= serverUpdatedAt;
+          if (!ld?.json || isDraftEmpty(ld) || stale) {
+            localStorage.removeItem(localKey);
+          } else {
+            setRecovered(ld);
+          }
         }
       } catch { /* ignore */ }
 
@@ -94,15 +125,24 @@ export default function DeskWrite() {
       const { title: tt, json, html, text } = latest.current;
       const res = await saveDraft({ id: serverId.current ?? undefined, title: tt || (lang === 'ko' ? '(제목 없음)' : '(untitled)'), contentJson: json, contentHtml: html, contentText: text });
       serverId.current = res.id;
-      await addRevision(res.id, tt, json);
-      setSaveCount((n) => n + 1);
+      // 제목·본문이 지난 버전과 같으면 기록을 남기지 않는다 (같은 내용이 여러 줄로
+      // 쌓여서 서로 다른 초안처럼 보이던 문제).
+      const fingerprint = JSON.stringify({ tt, json });
+      if (fingerprint !== lastRevision.current) {
+        await addRevision(res.id, tt, json);
+        lastRevision.current = fingerprint;
+        setSaveCount((n) => n + 1);
+      }
       dirtyLocal.current = false;
+      // 서버에 반영됐으므로 로컬 복구본은 역할이 끝났다. 남겨두면 다음 진입에서
+      // 이미 저장된 내용을 "복구할까요?" 로 다시 묻게 된다.
+      try { localStorage.removeItem(localKey); } catch { /* ignore */ }
     } catch {
       dirtyServer.current = true; // 실패 시 다음 주기 재시도
     } finally {
       setSaving(false);
     }
-  }, [lang, saving]);
+  }, [lang, saving, localKey]);
 
   useEffect(() => {
     const iv = setInterval(() => { void doServerSave(); }, AUTOSAVE_SERVER_MS);
@@ -196,7 +236,14 @@ export default function DeskWrite() {
           >
             {lang === 'ko' ? '복원' : 'Restore'}
           </button>
-          <button className="text-[#64748b]" onClick={() => setRecovered(null)}>
+          <button
+            className="text-[#64748b]"
+            onClick={() => {
+              // 상태만 끄면 다음 진입에서 같은 배너가 다시 뜬다 — 저장본까지 지운다.
+              try { localStorage.removeItem(localKey); } catch { /* ignore */ }
+              setRecovered(null);
+            }}
+          >
             {lang === 'ko' ? '무시' : 'Dismiss'}
           </button>
         </div>
@@ -220,7 +267,9 @@ export default function DeskWrite() {
           className="text-[13px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#1b99dc]"
           disabled={!serverId.current}
         >
-          {lang === 'ko' ? `임시저장 ${saveCount}` : `Drafts ${saveCount}`}
+          {/* '임시저장'은 /desk/manage 의 미발행 글 탭과 이름이 겹쳐 오해를 부른다.
+              이 버튼이 여는 것은 자동저장이 쌓아 온 '버전 기록'이다. */}
+          {lang === 'ko' ? `버전 기록 ${saveCount}` : `History ${saveCount}`}
           {saving && <span className="ml-1 text-[#94a3b8]">…</span>}
         </button>
         <button
