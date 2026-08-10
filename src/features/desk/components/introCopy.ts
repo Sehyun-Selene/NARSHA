@@ -9,7 +9,10 @@ export function introCopy(n: number | null, lang: Lang): string {
     const who = n && n > 0 ? `한국어 학습자 ${n}인이` : '한국어 학습자들이';
     return `「나의 한국어 책상」은 2026 국민공공외교 사업의 일환으로 만들어진 기록 공간으로, 인도네시아와 필리핀의 ${who} 자신의 학습 여정을 직접 기록하는 곳입니다. 누구나 이들의 학습 여정을 읽어보고 함께할 수 있습니다.`;
   }
-  const who = n && n > 0 ? `${n} Korean-language learners` : 'Korean-language learners';
+  // 영어는 수 일치가 필요하다 — 1명일 때 "1 ... learners" 가 되지 않게 단수형을 쓴다.
+  const who = n && n > 0
+    ? `${n} Korean-language learner${n === 1 ? '' : 's'}`
+    : 'Korean-language learners';
   return `Korean Desks of the World is an archive created as part of the 2026 Korean Public Diplomacy Project, where ${who} in Indonesia and the Philippines record their own learning journeys. Anyone is welcome to read along and join them.`;
 }
 
