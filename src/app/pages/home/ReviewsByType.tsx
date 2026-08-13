@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Star, ThumbsUp } from 'lucide-react';
-import { getAllReviews, type Review } from '../../data/reviews';
+import { getAllReviews, sortReviews, isReviewSort, type Review, type ReviewSort } from '../../data/reviews';
+import ReviewSortSelect from '../../components/ReviewSortSelect';
 import { fetchApps, appName, type App } from '../../data/apps';
 import { learnerTypes, type LearnerType } from '../../data/learnerTypes';
 import { useT } from '../../i18n';
@@ -38,10 +39,14 @@ export default function ReviewsByType({
   appIds,
   filteredAppCount,
   onClearFilters,
+  sort,
+  onSortChange,
 }: {
   appIds: string[] | null;
   filteredAppCount: number;
   onClearFilters: () => void;
+  sort: ReviewSort;
+  onSortChange: (next: ReviewSort) => void;
 }) {
   const { t, lang } = useT();
   const [allReviews, setAllReviews] = useState<ReviewWithAppName[]>([]);
@@ -99,7 +104,10 @@ export default function ReviewsByType({
 
   // Home 의 검색어·필터를 계승한다 (D11)
   const inScope = appIds === null ? allReviews : allReviews.filter(r => appIds.includes(r.appId));
-  const shown = filterType ? inScope.filter(r => r.learnerType === filterType) : inScope;
+  const shown = sortReviews(
+    filterType ? inScope.filter(r => r.learnerType === filterType) : inScope,
+    sort,
+  );
 
   const chipClass = (on: boolean) =>
     `flex items-center gap-2.5 px-5 py-2.5 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[13px] transition-all whitespace-nowrap ${
@@ -124,6 +132,11 @@ export default function ReviewsByType({
           </button>
         </div>
       )}
+
+      {/* 정렬 (REQ-F / F-2) */}
+      <div className="mb-4 flex justify-end">
+        <ReviewSortSelect value={sort} onChange={onSortChange} />
+      </div>
 
       {/* 유형 필터 칩 */}
       <div className="mb-8 max-w-[800px] mx-auto flex gap-3 justify-center flex-wrap">

@@ -464,6 +464,14 @@ export const DICT = {
   'rbt.filterNotice':  { ko: '현재 필터 조건에 해당하는 앱 {n}개의 후기만 보고 있어요', en: 'Showing reviews from {n} apps matching your filters' },
   'rbt.clearFilters':  { ko: '필터 해제', en: 'Clear filters' },
   'rbt.emptyFiltered': { ko: '조건에 맞는 후기가 없어요. 필터를 조정해 보세요.', en: 'No reviews match your filters. Try adjusting them.' },
+
+  // ── 후기 정렬 (GNB PRD REQ-F / F-2) ──────────────────────────────────────
+  // '유용해요순'은 helpful_count 가 서버에 실제로 쌓이는 F-1 이후에 추가한다 —
+  // 지금 넣으면 값이 항상 0 이라 아무 일도 하지 않는 선택지가 된다.
+  'sort.label':     { ko: '정렬', en: 'Sort' },
+  'sort.recent':    { ko: '최신순', en: 'Latest' },
+  'sort.ratingHigh': { ko: '평점 높은순', en: 'Highest rated' },
+  'sort.ratingLow':  { ko: '평점 낮은순', en: 'Lowest rated' },
 } satisfies Record<string, Entry | Entry[]>;
 
 export type StringKey = keyof typeof DICT;

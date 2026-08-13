@@ -10,7 +10,7 @@ import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
 import ReviewsByType from './home/ReviewsByType';
 import { fetchApps, getAppLevelDisplayTags, appDescription, appName, type App } from '../data/apps';
-import { getAllReviews, type Review } from '../data/reviews';
+import { getAllReviews, isReviewSort, type Review, type ReviewSort } from '../data/reviews';
 import { applySearch } from '../data/searchKeywords';
 import { useT } from '../i18n';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
@@ -205,6 +205,16 @@ export default function Home() {
     requestAnimationFrame(() => {
       document.getElementById('discover-views')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     });
+  };
+
+  // 후기 정렬도 URL 에 남긴다 (REQ-F / F-2) — 정렬 상태까지 링크로 공유된다
+  const sortParam = searchParams.get('sort');
+  const reviewSort: ReviewSort = isReviewSort(sortParam) ? sortParam : 'recent';
+  const setReviewSort = (next: ReviewSort) => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'recent') params.delete('sort');
+    else params.set('sort', next);
+    setSearchParams(params, { replace: true });
   };
 
   // Data
@@ -583,6 +593,8 @@ export default function Home() {
               appIds={hasActiveConditions ? filteredApps.map(a => a.id) : null}
               filteredAppCount={filteredApps.length}
               onClearFilters={() => { clearAllFilters(); setSearchQuery(''); }}
+              sort={reviewSort}
+              onSortChange={setReviewSort}
             />
           </div>
         ) : (

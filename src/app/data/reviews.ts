@@ -216,3 +216,27 @@ export async function addReviewReply(
     createdAt: new Date(r.created_at),
   };
 }
+
+// ── 후기 정렬 (GNB PRD REQ-F / F-2) ─────────────────────────────────────────
+// 앱 상세와 Discover 유형별 보기가 같은 기준을 써야 하므로 데이터 계층에 둔다.
+
+export type ReviewSort = 'recent' | 'ratingHigh' | 'ratingLow';
+
+export const REVIEW_SORTS: ReviewSort[] = ['recent', 'ratingHigh', 'ratingLow'];
+
+export function isReviewSort(v: string | null): v is ReviewSort {
+  return v === 'recent' || v === 'ratingHigh' || v === 'ratingLow';
+}
+
+/** 원본 배열을 건드리지 않고 정렬된 새 배열을 돌려준다. */
+export function sortReviews<T extends { rating: number; createdAt: Date }>(
+  list: T[],
+  sort: ReviewSort,
+): T[] {
+  const byRecent = (a: T, b: T) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  return list.slice().sort((a, b) => {
+    if (sort === 'ratingHigh') return b.rating - a.rating || byRecent(a, b);
+    if (sort === 'ratingLow') return a.rating - b.rating || byRecent(a, b);
+    return byRecent(a, b);
+  });
+}

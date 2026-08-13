@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams, Link, useSearchParams } from 'react-router';
 import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare, BookMarked, Users } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -10,9 +10,13 @@ import {
   getAverageRatingByType,
   getRepliesForReview,
   addReviewReply,
+  sortReviews,
+  isReviewSort,
   type Review,
   type ReviewReply,
+  type ReviewSort,
 } from '../data/reviews';
+import ReviewSortSelect from '../components/ReviewSortSelect';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { tagLabel, tagLongLabel } from '../i18n';
@@ -42,6 +46,17 @@ export default function AppDetail() {
   const [repliesMap, setRepliesMap] = useState<Record<string, ReviewReply[]>>({});
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'all' | LearnerType>('all');
+
+  // 후기 정렬 (REQ-F / F-2). 정렬 상태를 URL 에 남겨 링크로 공유된다.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sortParam = searchParams.get('sort');
+  const reviewSort: ReviewSort = isReviewSort(sortParam) ? sortParam : 'recent';
+  const setReviewSort = (next: ReviewSort) => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'recent') params.delete('sort');
+    else params.set('sort', next);
+    setSearchParams(params, { replace: true });
+  };
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [helpfulReviews, setHelpfulReviews] = useState<Record<string, { count: number; userMarked: boolean }>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -156,10 +171,12 @@ export default function AppDetail() {
       ? appReviews.reduce((sum, r) => sum + r.rating, 0) / appReviews.length
       : 0;
 
-  const filteredReviews =
+  const filteredReviews = sortReviews(
     selectedFilter === 'all'
       ? appReviews
-      : appReviews.filter((r) => r.learnerType === selectedFilter);
+      : appReviews.filter((r) => r.learnerType === selectedFilter),
+    reviewSort,
+  );
 
   // Reviews for learner-eval section (optionally filtered to user's type)
   const reviewsForEval = filterByType && userLearnerType
@@ -456,7 +473,7 @@ export default function AppDetail() {
               </Link>
             </div>
 
-            <div className="flex flex-wrap gap-3 mb-8">
+            <div className="flex flex-wrap items-center gap-3 mb-8">
               <button
                 onClick={() => setSelectedFilter('all')}
                 className={`px-4 py-2 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[14px] transition-colors ${
@@ -485,6 +502,11 @@ export default function AppDetail() {
                   </button>
                 );
               })}
+
+              {/* 정렬 (REQ-F / F-2) — 칩 줄 오른쪽 끝 */}
+              <div className="ml-auto">
+                <ReviewSortSelect value={reviewSort} onChange={setReviewSort} />
+              </div>
             </div>
 
             <div className="space-y-6">
