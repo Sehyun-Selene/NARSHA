@@ -41,22 +41,11 @@ const CATEGORIES = {
   ],
 };
 
-function LangToggle({ lang, setLang }: { lang: 'en' | 'ko'; setLang: (l: 'en' | 'ko') => void }) {
-  return (
-    <div className="flex gap-1 bg-[#f1f5f9] dark:bg-[#232a36] rounded-full p-0.5">
-      {(['en', 'ko'] as const).map(l => (
-        <button key={l} onClick={() => setLang(l)}
-          className={`text-[12px] font-bold px-3 py-1 rounded-full transition-all ${lang === l ? 'bg-white dark:bg-[#151c27] text-[#1e293b] dark:text-[#dce3f3] shadow-sm' : 'text-[#64748b] dark:text-[#8a94a6]'}`}>
-          {l.toUpperCase()}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export default function Methodology() {
   useDocumentTitle('title.methodology');
-  const [lang, setLang] = useLang();
+  // 언어 전환은 헤더 한 곳에서만 제공한다 — 페이지 안에 토글을 또 두면
+  // 같은 상태를 가리키는 UI 가 둘이 되어 혼란을 준다 (About 과 동일한 정리).
+  const [lang] = useLang();
   const isEn = lang === 'en';
 
   return (
@@ -65,9 +54,6 @@ export default function Methodology() {
       <main className="flex-1 pt-16">
         <div className="max-w-[800px] mx-auto px-6 py-16">
 
-          <div className="flex justify-end mb-10">
-            <LangToggle lang={lang} setLang={setLang} />
-          </div>
 
           {/* ── Section 1: Learning Type Assessment ── */}
           <section className="mb-20">
