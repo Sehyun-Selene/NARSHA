@@ -24,8 +24,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { generateCode, hashCode, json, corsHeaders } from '../_shared/util.ts';
 
+// 폴백 도메인은 실제 서비스 주소로 유지해야 한다 — 구 주소(narsha-mvp-ver2)는
+// 404 라서, SITE_URL 을 설정하지 않으면 가입 링크가 죽은 주소로 발급된다.
 const SITE_URL =
-  Deno.env.get('SITE_URL') ?? 'https://narsha-mvp-ver2.vercel.app';
+  Deno.env.get('SITE_URL') ?? 'https://narsha.vercel.app';
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin');

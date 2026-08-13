@@ -7,7 +7,7 @@
 // 배포
 //   supabase functions deploy redeem-invite --no-verify-jwt
 //   supabase secrets set INVITE_CODE_PEPPER="$(openssl rand -hex 32)"
-//   supabase secrets set ALLOWED_ORIGINS="https://narsha-mvp-ver2.vercel.app,http://localhost:5173"
+//   supabase secrets set ALLOWED_ORIGINS="https://narsha.vercel.app,http://localhost:5173"
 //
 // 요청
 //   POST { action: 'validate', code }

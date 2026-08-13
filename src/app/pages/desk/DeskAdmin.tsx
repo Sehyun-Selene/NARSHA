@@ -80,8 +80,10 @@ function AdminPanel({ lang }: { lang: 'ko' | 'en' }) {
       setCreated(res);
       setLabel('');
       reloadInvites();
-    } catch {
-      toast.error(lang === 'ko' ? '발급 실패' : 'Create failed');
+    } catch (e) {
+      // 원인 코드를 함께 보여준다 — '발급 실패'만 뜨면 무엇을 고쳐야 할지 알 수 없다.
+      const code = e instanceof Error ? e.message : 'UNKNOWN';
+      toast.error((lang === 'ko' ? '발급 실패' : 'Create failed') + ` (${code})`);
     } finally {
       setCreating(false);
     }
@@ -116,7 +118,15 @@ function AdminPanel({ lang }: { lang: 'ko' | 'en' }) {
             <option value="co_creator">{lang === 'ko' ? '공동제작자' : 'Co-creator'}</option>
             <option value="creator_partner">{lang === 'ko' ? '파트너' : 'Partner'}</option>
           </select>
-          <input type="number" min={1} max={365} value={days} onChange={(e) => setDays(Number(e.target.value))} className={`${inputClass} w-20`} title={lang === 'ko' ? '만료일(일)' : 'Expires (days)'} />
+          {/* 숫자만 있으면 무슨 값인지 알 수 없다 — 라벨을 눈에 보이게 붙인다 */}
+          <label className="flex items-center gap-1.5 text-[13px] text-[#64748b] dark:text-[#bec7d2]">
+            <input
+              type="number" min={1} max={365} value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              className={`${inputClass} w-20`}
+            />
+            {lang === 'ko' ? '일 후 만료' : 'days to expire'}
+          </label>
           <button onClick={create} disabled={creating || !label.trim()} className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-extrabold text-[14px] px-5 py-2 rounded-[10px] disabled:opacity-50">{lang === 'ko' ? '발급' : 'Create'}</button>
         </div>
 
