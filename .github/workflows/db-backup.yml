@@ -51,6 +51,19 @@ jobs:
             echo "::error::SUPABASE_DB_URL 시크릿이 설정되지 않았습니다."
             exit 1
           fi
+
+          # 접속 주소만 먼저 확인한다 — 실패 원인의 대부분이 "어떤 주소로 붙었는지"에서
+          # 갈린다. 비밀번호는 찍지 않고 host:port 만 남긴다 (host 는 공개 값인
+          # VITE_SUPABASE_URL 에도 이미 드러나 있다).
+          HOSTPORT=$(printf '%s' "$SUPABASE_DB_URL" | sed -E 's#^[^@]*@##; s#/.*$##')
+          echo "접속 대상: $HOSTPORT"
+          case "$HOSTPORT" in
+            db.*.supabase.co*)
+              # Supabase 직접 연결은 IPv6 전용이고 GitHub 러너는 IPv4 전용이라 붙지 않는다.
+              echo "::error::직접 연결 주소($HOSTPORT)는 IPv6 전용이라 GitHub Actions 에서 붙지 않습니다. Supabase 대시보드 상단 Connect > Session pooler 의 URI(aws-…pooler.supabase.com:5432)로 SUPABASE_DB_URL 을 교체하세요."
+              exit 1
+              ;;
+          esac
           # 스키마와 데이터를 각각 받는다. 스키마만 되돌리고 싶은 경우가 종종 있다.
           supabase db dump --db-url "$SUPABASE_DB_URL" -f schema.sql
           supabase db dump --db-url "$SUPABASE_DB_URL" --data-only -f data.sql
