@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import Root from './pages/Root';
 import Home from './pages/Home';
 import AppDetail from './pages/AppDetail';
@@ -7,7 +7,6 @@ import Survey from './pages/Survey';
 import SurveyIntro from './pages/SurveyIntro';
 import SurveyResult from './pages/SurveyResult';
 import ReviewWrite from './pages/ReviewWrite';
-import Reviews from './pages/Reviews';
 import About from './pages/About';
 import Faq from './pages/Faq';
 import Methodology from './pages/Methodology';
@@ -47,7 +46,9 @@ export const router = createBrowserRouter([
     Component: Root,
     children: [
       { index: true, Component: Home },
-      { path: 'reviews', Component: Reviews },
+      // 후기 탭은 Discover 안의 '학습유형별로 보기' 로 옮겼다 (REQ-A / A-4).
+      // 외부에 공유된 링크와 검색엔진 색인을 살리기 위해 리다이렉트를 남긴다.
+      { path: 'reviews', element: <Navigate to="/?view=type" replace /> },
       { path: 'apps/:id', Component: AppDetail },
       { path: 'apps/:id/review/new', Component: ReviewWrite },
       { path: 'survey/questions', Component: Survey },

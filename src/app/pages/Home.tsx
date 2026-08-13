@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import {
   Search, X, SlidersHorizontal, SearchX, ChevronDown,
   BarChart3, Target, Fingerprint, Sparkles,
@@ -8,6 +8,7 @@ import SuggestServiceModal from '../components/SuggestServiceModal';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
+import ReviewsByType from './home/ReviewsByType';
 import { fetchApps, getAppLevelDisplayTags, appDescription, appName, type App } from '../data/apps';
 import { getAllReviews, type Review } from '../data/reviews';
 import { applySearch } from '../data/searchKeywords';
@@ -192,6 +193,20 @@ export default function Home() {
   const { t, tLines, tag, lang } = useT();
   const placeholders = tLines('home.placeholders');
 
+  // 보기 전환 (REQ-A / A-2). URL 쿼리와 동기화해 링크 공유·뒤로가기가 동작한다.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view: 'apps' | 'type' = searchParams.get('view') === 'type' ? 'type' : 'apps';
+  const setView = (next: 'apps' | 'type') => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'apps') params.delete('view');
+    else params.set('view', 'type');
+    setSearchParams(params, { replace: false });
+    // 히어로는 그대로 두고 아래 콘텐츠만 바뀌므로, 탭 위치로 스크롤을 맞춘다
+    requestAnimationFrame(() => {
+      document.getElementById('discover-views')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+  };
+
   // Data
   const [apps, setApps] = useState<App[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -355,6 +370,10 @@ export default function Home() {
     ...advancedTagFilters.map(tagValue => ({ key: `adv-${tagValue}`, label: tag(tagValue), onRemove: () => setAdvancedTagFilters(p => p.filter(x => x !== tagValue)) })),
   ];
 
+  // 유형별 보기에 조건을 물려줄지 판단한다 (D11). 검색어도 조건에 포함된다.
+  // activeFilterChips 보다 뒤에 두어야 한다 — const 는 호이스팅되지 않는다.
+  const hasActiveConditions = activeFilterChips.length > 0 || searchQuery.trim().length > 0;
+
   // ── JSX ─────────────────────────────────────────────────────────────────────
 
   return (
@@ -387,6 +406,26 @@ export default function Home() {
                   {line}
                 </p>
               ))}
+
+              {/*
+                안내 페이지 진입점 (REQ-B). 첫 방문자가 "학습 유형이 뭔데?", "누가
+                어떤 근거로 만들었나?" 를 물을 곳이 푸터뿐이었다. 검사 CTA 와
+                경쟁하지 않도록 버튼이 아닌 텍스트 링크로 둔다.
+              */}
+              <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-5">
+                <Link
+                  to="/about"
+                  className="text-[14px] text-[#0ea5e9] dark:text-[#8ecdff] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                >
+                  {t('home.hero.linkAbout')}
+                </Link>
+                <Link
+                  to="/methodology"
+                  className="text-[14px] text-[#0ea5e9] dark:text-[#8ecdff] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                >
+                  {t('home.hero.linkMethod')}
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -516,7 +555,38 @@ export default function Home() {
           </div>
         </div>
 
-        {/* App Grid */}
+        {/* 보기 전환 (REQ-A) — 서비스 탐색과 후기 열람은 하나의 과업이므로 한 화면에 둔다 */}
+        <div id="discover-views" className="max-w-[1280px] mx-auto px-6 pt-2 pb-6 scroll-mt-20">
+          <div className="inline-flex gap-1 rounded-full bg-[#f1f5f9] dark:bg-[#232a36] p-1">
+            {(['apps', 'type'] as const).map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                aria-pressed={view === v}
+                className={`px-4 py-2 rounded-full text-[13px] font-bold transition-colors ${
+                  view === v
+                    ? 'bg-white dark:bg-[#151c27] text-[#0ea5e9] dark:text-[#8ecdff] shadow-sm'
+                    : 'text-[#64748b] dark:text-[#8a94a6] hover:text-[#1e293b] dark:hover:text-[#dce3f3]'
+                }`}
+              >
+                {t(v === 'apps' ? 'home.view.apps' : 'home.view.type')}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {view === 'type' ? (
+          <div className="max-w-[1280px] mx-auto px-6 pb-24">
+            <ReviewsByType
+              // 검색어·필터를 계승한다 (D11). 조건이 없으면 null 로 넘겨 전건을 보여준다.
+              appIds={hasActiveConditions ? filteredApps.map(a => a.id) : null}
+              filteredAppCount={filteredApps.length}
+              onClearFilters={() => { clearAllFilters(); setSearchQuery(''); }}
+            />
+          </div>
+        ) : (
+        /* App Grid */
         <div className="max-w-[1280px] mx-auto px-6 pb-24">
           {activeFilterChips.length > 0 && (
             <div className="mb-6 flex items-center gap-2 flex-wrap">
@@ -612,6 +682,7 @@ export default function Home() {
             </div>
           )}
         </div>
+        )}
       </main>
 
       <Footer />

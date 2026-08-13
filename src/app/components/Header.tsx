@@ -106,8 +106,9 @@ export default function Header() {
         {/* 데스크톱 내비게이션 — lg 미만에서는 햄버거로 대체 */}
         <div className="hidden lg:flex items-center justify-end gap-4 xl:gap-6 min-w-0">
           <nav className="flex items-center justify-end gap-4 xl:gap-6" aria-label="Main">
+            {/* '후기'는 별도 목적지가 아니라 탐색 과업의 일부다 — Discover 안의
+                '학습유형별로 보기' 탭으로 옮겼다 (GNB PRD REQ-A / A-1) */}
             <NavLink to="/" end className={navLinkClass}>{t('nav.discover')}</NavLink>
-            <NavLink to="/reviews" className={navLinkClass}>{t('nav.reviews')}</NavLink>
             <NavLink to="/desk" className={navLinkClass}>{t('nav.desk')}</NavLink>
             <NavLink to="/survey" end className={learningTypeButtonClass} onClick={clearReturnApp}>
               {t('nav.surveyLong')}
@@ -166,7 +167,6 @@ export default function Header() {
 
           <nav className="flex-1 overflow-y-auto px-5 py-2" aria-label="Mobile">
             <NavLink to="/" end className={drawerLinkClass}>{t('nav.discover')}</NavLink>
-            <NavLink to="/reviews" className={drawerLinkClass}>{t('nav.reviews')}</NavLink>
             <NavLink to="/desk" className={drawerLinkClass}>{t('nav.desk')}</NavLink>
             <NavLink to="/survey" end className={drawerLinkClass} onClick={clearReturnApp}>
               {t('nav.survey')}

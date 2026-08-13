@@ -10,7 +10,6 @@ export type Entry = { ko: string; en: string };
 export const DICT = {
   // ── 내비게이션 ────────────────────────────────────────────────────────────
   'nav.discover':      { ko: '서비스 찾기',      en: 'Discover' },
-  'nav.reviews':       { ko: '후기',             en: 'Reviews' },
   'nav.desk':          { ko: '나의 한국어 책상', en: 'Korean Desks' },
   'nav.surveyLong':    { ko: '학습 유형 검사',   en: 'Want to know your Learning Type?' },
   'nav.survey':        { ko: '학습 유형 검사',   en: 'Learning Type Test' },
@@ -67,10 +66,13 @@ export const DICT = {
     { ko: '찾아보세요',          en: 'learning service' },
     { ko: '',                    en: 'you need' },
   ],
+  // 2행은 정보량 없는 슬로건이라 걷어내고, 그 자리를 안내 페이지 진입점으로 쓴다
+  // (GNB PRD REQ-B). 1행만 남긴다.
   'home.hero.sub': [
     { ko: '“학습 유형 검사부터 학습 서비스 검색까지”', en: '“From learning-type test to the right service”' },
-    { ko: '효과적인 한국어 학습 경험을 만들어드립니다.', en: 'We design an effective Korean learning experience.' },
   ],
+  'home.hero.linkAbout':  { ko: 'NARSHA는 어떤 팀인가요 →', en: 'Who we are →' },
+  'home.hero.linkMethod': { ko: '학습유형은 어떻게 만들었나요 →', en: 'How we built the test →' },
 
   // ── 메인 검색창 회전 플레이스홀더 ─────────────────────────────────────────
   'home.placeholders': [
@@ -140,7 +142,6 @@ export const DICT = {
   // ── 문서 타이틀 (PRD §6.4) ────────────────────────────────────────────────
   'title.about':       { ko: '소개',                 en: 'About' },
   'title.faq':         { ko: '자주 묻는 질문',       en: 'FAQ' },
-  'title.reviews':     { ko: '후기',                 en: 'Reviews' },
   'title.survey':      { ko: '학습 유형 검사',       en: 'Learning Type Test' },
   'title.desk':        { ko: '나의 한국어 책상',     en: 'Korean Desks' },
   'title.methodology': { ko: '방법론',               en: 'Methodology' },
@@ -448,6 +449,21 @@ export const DICT = {
   'review.step3': { ko: '후기 작성', en: 'The Critique' },
   'review.rating':  { ko: '별점', en: 'Your Rating' },
   'review.content': { ko: '후기 내용', en: 'Your Review' },
+
+  // ── Discover 이중 보기 (GNB PRD REQ-A) ───────────────────────────────────
+  'home.view.apps': { ko: '앱으로 보기', en: 'By app' },
+  'home.view.type': { ko: '학습유형별로 보기', en: 'By learning type' },
+
+  // 유형별 보기 — 기존 /reviews 화면을 Discover 안으로 옮긴 것
+  'rbt.allTypes': { ko: '전체 유형', en: 'All Types' },
+  'rbt.type':     { ko: '{t}형', en: 'Type {t}' },
+  'rbt.empty':    { ko: '이 조건에 맞는 후기가 없어요.', en: 'No reviews found for this filter.' },
+  'rbt.helpful':  { ko: '유용해요', en: 'Helpful' },
+  'rbt.level':    { ko: '수준: {v}', en: 'Level: {v}' },
+  // 필터 계승 안내 (D11). {n} 조건을 만족하는 앱 수
+  'rbt.filterNotice':  { ko: '현재 필터 조건에 해당하는 앱 {n}개의 후기만 보고 있어요', en: 'Showing reviews from {n} apps matching your filters' },
+  'rbt.clearFilters':  { ko: '필터 해제', en: 'Clear filters' },
+  'rbt.emptyFiltered': { ko: '조건에 맞는 후기가 없어요. 필터를 조정해 보세요.', en: 'No reviews match your filters. Try adjusting them.' },
 } satisfies Record<string, Entry | Entry[]>;
 
 export type StringKey = keyof typeof DICT;

@@ -48,7 +48,8 @@ const ITEMS: FaqItem[] = [
   { id: 'faq-list-mine',  category: 'listing', q: 'faq.q.listMine.q',  a: 'faq.q.listMine.a',
     opensSuggest: true },
   { id: 'faq-who-review', category: 'review',  q: 'faq.q.whoReview.q', a: 'faq.q.whoReview.a',
-    link: { to: '/reviews', labelKey: 'faq.link.reviews' } },
+    // 후기는 Discover 안의 '학습유형별로 보기' 로 이동했다 (REQ-A)
+    link: { to: '/?view=type', labelKey: 'faq.link.reviews' } },
 ];
 
 function isCategory(value: string | null): value is 'all' | Category {
