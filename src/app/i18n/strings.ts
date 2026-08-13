@@ -472,6 +472,14 @@ export const DICT = {
   'sort.recent':    { ko: '최신순', en: 'Latest' },
   'sort.ratingHigh': { ko: '평점 높은순', en: 'Highest rated' },
   'sort.ratingLow':  { ko: '평점 낮은순', en: 'Lowest rated' },
+
+  // ── 후기 입력 검증 (GNB PRD REQ-E / E-2) ─────────────────────────────────
+  'review.err.nicknameLen': { ko: '닉네임은 2~20자로 입력해 주세요.', en: 'Nickname must be 2–20 characters.' },
+  'review.err.contentMin':  { ko: '후기는 20자 이상 적어 주세요.', en: 'Please write at least 20 characters.' },
+  'review.err.contentMax':  { ko: '후기는 2,000자까지 쓸 수 있어요.', en: 'Reviews can be up to 2,000 characters.' },
+  'review.err.duplicate':   { ko: '이 서비스에 같은 내용의 후기가 이미 있어요.', en: 'A review with the same text already exists for this service.' },
+  // {n} 현재 글자 수, {max} 상한
+  'review.counter': { ko: '{n} / {max}자', en: '{n} / {max}' },
 } satisfies Record<string, Entry | Entry[]>;
 
 export type StringKey = keyof typeof DICT;

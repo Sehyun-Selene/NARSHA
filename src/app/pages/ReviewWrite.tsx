@@ -9,6 +9,7 @@ import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import {
   saveUserReview,
   mapFormGoalToReviewGoal,
+  hasDuplicateReview,
   usagePeriodLabels,
   type UsagePeriod,
 } from '../data/reviews';
@@ -86,6 +87,12 @@ const CHIP_ON  = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cur
 const CHIP_LIMIT_ON = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cursor-pointer font-medium bg-[#f59e0b] text-white border-transparent';
 
 type ReviewFieldKey = 'nickname' | 'rating' | 'content';
+
+// 입력 검증 기준 (GNB PRD REQ-E / E-2)
+const NICKNAME_MIN = 2;
+const NICKNAME_MAX = 20;
+const CONTENT_MIN = 20;
+const CONTENT_MAX = 2000;
 
 export default function ReviewWrite() {
   const { id } = useParams<{ id: string }>();
@@ -189,10 +196,17 @@ export default function ReviewWrite() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // 입력 검증 (REQ-E / E-2). 서버 판정이 필요한 빈도 제한은 E-1 에서 다룬다.
+    const nick = nickname.trim();
+    const body = content.trim();
+
     const errors: Partial<Record<ReviewFieldKey, string>> = {};
-    if (!nickname.trim()) errors.nickname = t('review.err.nickname');
+    if (!nick) errors.nickname = t('review.err.nickname');
+    else if (nick.length < NICKNAME_MIN || nick.length > NICKNAME_MAX) errors.nickname = t('review.err.nicknameLen');
     if (rating < 1) errors.rating = t('review.err.rating');
-    if (!content.trim()) errors.content = t('review.err.content');
+    if (!body) errors.content = t('review.err.content');
+    else if (body.length < CONTENT_MIN) errors.content = t('review.err.contentMin');
+    else if (body.length > CONTENT_MAX) errors.content = t('review.err.contentMax');
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -204,6 +218,18 @@ export default function ReviewWrite() {
 
     setFieldErrors({});
     setSubmitting(true);
+
+    // 중복 제출 차단 (E-2) — 같은 앱에 같은 본문이 이미 있으면 거부한다.
+    // 실패해도 제출을 막지는 않는다 (조회가 안 되는 상황에서 작성을 잃게 하지 않는다).
+    try {
+      const dup = await hasDuplicateReview(id!, body);
+      if (dup) {
+        setSubmitting(false);
+        setFieldErrors({ content: t('review.err.duplicate') });
+        setScrollToField('content');
+        return;
+      }
+    } catch { /* 조회 실패는 무시하고 진행 */ }
 
     try {
       await saveUserReview({
@@ -321,6 +347,7 @@ export default function ReviewWrite() {
                       }
                     }}
                     placeholder={t('review.nicknamePh')}
+                    maxLength={NICKNAME_MAX}
                     aria-invalid={Boolean(fieldErrors.nickname)}
                     aria-describedby={fieldErrors.nickname ? 'review-nickname-error' : undefined}
                     className={`w-full bg-[#ffffff] dark:bg-[#151c27] border rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff] ${
@@ -565,11 +592,25 @@ export default function ReviewWrite() {
                         : 'border-[#e2e8f0] dark:border-[#232a36]'
                     }`}
                   />
-                  {fieldErrors.content && (
-                    <p id="review-content-error" className="mt-2 text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
-                      {fieldErrors.content}
-                    </p>
-                  )}
+                  <div className="mt-2 flex items-start justify-between gap-3">
+                    {fieldErrors.content ? (
+                      <p id="review-content-error" className="text-[14px] text-[#ef4444] dark:text-[#f87171] font-['Inter:Regular',sans-serif]">
+                        {fieldErrors.content}
+                      </p>
+                    ) : <span />}
+                    {/* 글자 수 — 하한(20자) 미달이면 눈에 보이게 표시한다 */}
+                    <span
+                      className={`shrink-0 text-[13px] ${
+                        content.trim().length > CONTENT_MAX || (content.length > 0 && content.trim().length < CONTENT_MIN)
+                          ? 'text-[#ea580c] dark:text-[#fb923c]'
+                          : 'text-[#94a3b8]'
+                      }`}
+                    >
+                      {t('review.counter')
+                        .replace('{n}', String(content.trim().length))
+                        .replace('{max}', String(CONTENT_MAX))}
+                    </span>
+                  </div>
                 </div>
 
                 {/*

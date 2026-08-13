@@ -240,3 +240,23 @@ export function sortReviews<T extends { rating: number; createdAt: Date }>(
     return byRecent(a, b);
   });
 }
+
+/**
+ * 같은 앱에 같은 본문의 후기가 이미 있는지 (GNB PRD REQ-E / E-2 중복 제출 차단).
+ *
+ * 본문 해시 컬럼을 새로 두지 않고 본문 자체를 비교한다 — 마이그레이션 없이
+ * 목적을 달성할 수 있고, 후기 물량이 적은 MVP 단계에서는 비용도 무의미하다.
+ * 클라이언트 검증이므로 우회할 수 있다. 실제 차단은 E-1 의 서버 판정이 담당한다.
+ */
+export async function hasDuplicateReview(appId: string, content: string): Promise<boolean> {
+  const body = content.trim();
+  if (!body) return false;
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id')
+    .eq('app_id', appId)
+    .eq('content', body)
+    .limit(1);
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
