@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
-import { Star, Upload, Check, ChevronDown } from 'lucide-react';
+import { Star, Check, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -572,15 +572,12 @@ export default function ReviewWrite() {
                   )}
                 </div>
 
-                <div className="border-2 border-dashed border-[#cbd5e1] dark:border-[#3f4850] rounded-[12px] p-12 text-center hover:border-[#0ea5e9] dark:hover:border-[#8ecdff] transition-colors cursor-pointer">
-                  <Upload className="w-12 h-12 text-[#94a3b8] dark:text-[#64748b] mx-auto mb-4" />
-                  <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3] mb-2">
-                    Upload Photo
-                  </div>
-                  <div className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#bec7d2]">
-                    Showcase your progress or curriculum notes
-                  </div>
-                </div>
+                {/*
+                  사진 첨부 영역을 제거했다 (REQ-D / D9). 테두리와 아이콘만 있는
+                  껍데기였고 파일 선택 핸들러도 업로드 로직도 없었다 — 눌러도 아무
+                  일이 없어 고장난 화면으로 보였다. 후기는 텍스트만 받는다.
+                  `reviews.image_urls` 컬럼은 남겨 둔다 (지우는 이득이 없다).
+                */}
               </div>
             </div>
 
