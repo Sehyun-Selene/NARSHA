@@ -480,6 +480,17 @@ export const DICT = {
   'review.err.duplicate':   { ko: '이 서비스에 같은 내용의 후기가 이미 있어요.', en: 'A review with the same text already exists for this service.' },
   // {n} 현재 글자 수, {max} 상한
   'review.counter': { ko: '{n} / {max}자', en: '{n} / {max}' },
+
+  // ── 내 학습유형 필터 (GNB PRD REQ-F / F-3) ───────────────────────────────
+  // {t} 유형 코드(가~바)
+  'myType.only':      { ko: '나와 같은 유형({t}형)의 후기만 보기', en: 'Only reviews from my type ({t})' },
+  'myType.showAll':   { ko: '전체 후기 보기', en: 'Show all reviews' },
+  'myType.takeTest':  { ko: '학습 유형 검사하고 나와 맞는 후기 보기 →', en: 'Take the test to see reviews from learners like you →' },
+  'myType.evalOnly':  { ko: '{t}형만', en: 'Type {t} only' },
+  'myType.evalBasisType': { ko: '{t}형 후기 {n}건 기준', en: 'Based on {n} reviews from type {t}' },
+  'myType.evalBasisAll':  { ko: '전체 후기 {n}건 기준', en: 'Based on {n} reviews' },
+  'myType.evalLimits':    { ko: ' · 아쉬운 점 응답 {n}건', en: ' · {n} noted weak points' },
+  'myType.learnerReviews': { ko: '학습자 평가', en: 'Learner Reviews' },
 } satisfies Record<string, Entry | Entry[]>;
 
 export type StringKey = keyof typeof DICT;

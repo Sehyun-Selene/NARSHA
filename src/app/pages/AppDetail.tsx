@@ -19,7 +19,7 @@ import {
 import ReviewSortSelect from '../components/ReviewSortSelect';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
-import { tagLabel, tagLongLabel } from '../i18n';
+import { tagLabel, tagLongLabel, useT } from '../i18n';
 import { useLang } from '../lib/useLang';
 import {
   RadarChart,
@@ -38,6 +38,7 @@ export default function AppDetail() {
   const { id } = useParams<{ id: string }>();
   // 페이지 전체 i18n 은 Phase 2 — 여기서는 레벨 배지 라벨만 언어에 맞춘다.
   const [lang] = useLang();
+  const { t } = useT();
   const [app, setApp] = useState<App | null>(null);
   const [appReviews, setAppReviews] = useState<Review[]>([]);
   const [typeRatings, setTypeRatings] = useState<Record<LearnerType, number>>({
@@ -379,7 +380,7 @@ export default function AppDetail() {
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#64748b] dark:text-[#8a94a6]" />
                   <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-[#64748b] dark:text-[#8a94a6]">
-                    Learner Reviews
+                    {t('myType.learnerReviews')}
                   </span>
                 </div>
                 {userLearnerType && (
@@ -391,7 +392,7 @@ export default function AppDetail() {
                       className="w-3.5 h-3.5 accent-[#0ea5e9]"
                     />
                     <span className="text-[12px] text-[#64748b] dark:text-[#8a94a6]">
-                      Type {userLearnerType} only
+                      {t('myType.evalOnly').replace('{t}', userLearnerType)}
                     </span>
                   </label>
                 )}
@@ -449,9 +450,12 @@ export default function AppDetail() {
                   {/* Footer */}
                   <p className="text-[11px] text-[#94a3b8] dark:text-[#3f4850] mt-3 pt-3 border-t border-[#e2e8f0] dark:border-[#232a36]">
                     {filterByType && userLearnerType
-                      ? `Type ${userLearnerType} 리뷰어 ${reviewsWithStrengths.length}명 기준`
-                      : `전체 리뷰어 ${reviewsWithStrengths.length}명 기준`}
-                    {reviewsWithLimits.length > 0 && ` · 약점 응답 ${reviewsWithLimits.length}명`}
+                      ? t('myType.evalBasisType')
+                          .replace('{t}', userLearnerType)
+                          .replace('{n}', String(reviewsWithStrengths.length))
+                      : t('myType.evalBasisAll').replace('{n}', String(reviewsWithStrengths.length))}
+                    {reviewsWithLimits.length > 0 &&
+                      t('myType.evalLimits').replace('{n}', String(reviewsWithLimits.length))}
                   </p>
                 </>
               )}
@@ -471,6 +475,42 @@ export default function AppDetail() {
                 Write Review
                 <ChevronRight className="w-4 h-4" />
               </Link>
+            </div>
+
+            {/*
+              내 학습유형 후기만 보기 (REQ-F / F-3).
+              검사를 마친 사용자에게만 토글을 노출하고, 미검사자에게는 검사로 가는
+              링크를 대신 둔다. 유형 칩과 따로 상태를 두지 않고 selectedFilter 를
+              그대로 조작한다 — 필터가 두 개가 되면 서로 어긋난다.
+            */}
+            <div className="mb-4">
+              {userLearnerType ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedFilter(prev =>
+                      prev === userLearnerType ? 'all' : (userLearnerType as LearnerType),
+                    )
+                  }
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-bold transition-colors ${
+                    selectedFilter === userLearnerType
+                      ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff]'
+                      : 'border border-[#8ecdff] text-[#0ea5e9] dark:text-[#8ecdff] hover:bg-[#e0f2fe] dark:hover:bg-[#0f3a4a]'
+                  }`}
+                >
+                  {selectedFilter === userLearnerType
+                    ? t('myType.showAll')
+                    : t('myType.only').replace('{t}', userLearnerType)}
+                </button>
+              ) : (
+                <Link
+                  to="/survey"
+                  onClick={() => { try { localStorage.setItem('narsha-return-app-id', app.id); } catch { /* ignore */ } }}
+                  className="text-[13px] text-[#0ea5e9] dark:text-[#8ecdff] underline underline-offset-2 hover:opacity-80"
+                >
+                  {t('myType.takeTest')}
+                </Link>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3 mb-8">
