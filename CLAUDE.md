@@ -73,7 +73,9 @@ npm run build
 
 ### 환경변수
 
-클라이언트 (`.env.local`, gitignore): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_ADMIN_PATH`, `VITE_ADMIN_PASSWORD`, `VITE_SUPABASE_FUNCTIONS_URL`(선택)
+클라이언트 (`.env.local`, gitignore): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_ADMIN_PATH`, `VITE_SUPABASE_FUNCTIONS_URL`(선택)
+
+`VITE_ADMIN_PASSWORD` 는 제거됐다 (GNB PRD REQ-H). 운영자 판정은 Supabase Auth 세션 + `profiles.role` 이다.
 
 Edge Function (Supabase 대시보드): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SITE_URL`, `ALLOWED_ORIGINS`, `INVITE_CODE_PEPPER`
 
@@ -92,8 +94,10 @@ Edge Function (Supabase 대시보드): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KE
 - 관리자 판정은 `profile.role === 'admin'`, **서버에서 JWT로 재검증**됨 (`supabase/functions/admin-invites/index.ts`)
 - Context/hook 은 provider 파일과 분리돼 있다 (`useDeskAuth.ts`) — Fast Refresh 때문. 합치지 말 것
 
-**C. 운영자 대시보드 — 비밀 경로 + 비밀번호 게이트**
-`VITE_ADMIN_PATH` 로 경로를 숨기고, 진입 시 `VITE_ADMIN_PASSWORD` 와 문자열 비교, 성공하면 `localStorage['narsha-admin-authed']`. **두 값 모두 클라이언트 번들에 인라인된다** → §8-3 참조.
+**C. 운영자 대시보드 — Supabase Auth + 역할 판정** (B 와 동일 체계)
+`/{VITE_ADMIN_PATH}` 와 `/{VITE_ADMIN_PATH}/desk` 둘 다 같은 방식이다 — `useDeskAuth()` 로 세션을 확인하고, `profile.role === 'admin'` 이 아니면 진입을 막는다. 역할은 서버(`profiles`)에 있고 RLS 정책 함수 `public.is_admin()` 이 같은 기준을 쓴다.
+
+`VITE_ADMIN_PATH` 는 경로를 가리는 용도로만 남아 있다 — 보안 수단이 아니다 (§8-3).
 
 익명 사용자 데이터는 Desk 계정으로 이관되지 않는다.
 
@@ -178,7 +182,6 @@ Row → 뷰 모델 변환은 `rowToApp` / `rowToReview` 처럼 `rowToX` 로 명�
 | `narsha-return-app-id` | 후기 작성 후 돌아갈 앱 | `pages/ReviewWrite.tsx` |
 | `narsha-last-suggestion` | 서비스 제안 5분 중복 방지 | `data/suggestions.ts` |
 | `narsha-suggest-bubble-shown` | 플로팅 버튼 말풍선 첫 방문 | `components/FloatingSuggestButton.tsx` |
-| `narsha-admin-authed` | 운영자 게이트 통과 플래그 | `pages/AdminDashboard.tsx` |
 | `review-helpful` | 후기 도움됨 기록 (JSON) | ⚠️ 프리픽스 없는 **기존 예외** |
 | desk 임시 저장 (글별) | 에디터 드래프트 | `pages/desk/DeskWrite.tsx` |
 
@@ -243,7 +246,7 @@ type(scope): 한국어 요약
 
 2. **운영자 큐레이션 필드(`apps.차별점`)를 후기 집계로 자동 변경하지 말 것.** 임계값은 운영자 대시보드에 **검토 알림만** 띄우고(`data/adminAlerts.ts`, `lib/alertThresholds.ts`), 실제 반영은 운영자 클릭으로만 일어난다. 이유: 후기 조작 악용, 임계값 부정확성, 운영자 권한 보전. 앱 상세의 강점 표시는 두 구역(운영자 큐레이션 / 학습자 평가)으로 분리돼 있고, 학습자 평가 구역은 후기 3개 이상일 때만 노출한다.
 
-3. **`VITE_ADMIN_PATH` / `VITE_ADMIN_PASSWORD` 는 클라이언트 번들에 인라인된다.** 이건 인증이 아니라 은폐다. 실제 권한이 필요한 로직을 이 게이트 뒤에 두지 말고 RLS 또는 Edge Function 에서 검증할 것. **서버 전용 값에 `VITE_` 프리픽스를 붙이지 말 것.**
+3. **`VITE_ADMIN_PATH` 는 클라이언트 번들에 인라인된다.** 경로를 가리는 것은 인증이 아니라 은폐다. 실제 권한 판정은 Supabase Auth 세션 + `profiles.role`(화면) 과 RLS·Edge Function(서버) 에서 한다. 화면 통제만 믿고 권한이 필요한 동작을 추가하지 말 것. **서버 전용 값에 `VITE_` 프리픽스를 붙이지 말 것** — 붙이면 번들에 들어간다. (`VITE_ADMIN_PASSWORD` 가 이 이유로 제거됐다.)
 
 4. **PII·시크릿을 예시·시드·테스트에 실제 값으로 넣지 말 것.** DB 덤프에는 회원 이메일이 들어 있다(백업 워크플로가 gpg 로 암호화하는 이유). 저장소를 private 로 돌려도 이 규칙은 유지한다 — 백업 아티팩트·이슈·PR 로 흘러나갈 경로가 남는다. 더미는 명백히 가상인 값으로 — `홍길동`, `010-0000-0000`, `you@example.com`. API 키·비밀번호는 코드에 하드코딩하지 말고 환경변수 전제로 작성.
 

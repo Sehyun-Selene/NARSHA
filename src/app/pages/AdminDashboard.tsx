@@ -14,6 +14,8 @@ import {
 } from '../data/adminAlerts';
 import { STRENGTH_LABELS } from '../lib/tagLabels';
 import { ALERT_THRESHOLDS } from '../lib/alertThresholds';
+import { useDeskAuth } from '../../features/desk/auth/useDeskAuth';
+import { supabase } from '../../lib/supabase';
 
 function tagLabel(tag: string) {
   return STRENGTH_LABELS[tag] ?? tag;
@@ -179,23 +181,39 @@ function AccuracyCard({
   );
 }
 
-const ADMIN_AUTH_KEY = 'narsha-admin-authed';
-const EXPECTED_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined;
-
-function PasswordGate({ onAuthed }: { onAuthed: () => void }) {
-  const [input, setInput] = useState('');
+/**
+ * 운영자 로그인 (REQ-H).
+ *
+ * 이전 구현은 `VITE_ADMIN_PASSWORD` 를 브라우저에서 문자열 비교하고 통과 여부를
+ * localStorage 플래그로 유지했다. `VITE_` 값은 빌드 결과물에 인라인되어 배포된
+ * JS 에서 읽을 수 있고, 플래그는 콘솔에서 그냥 만들 수 있어 통제가 아니었다.
+ * `/desk` 운영 탭에서 이미 쓰던 방식(Supabase Auth 세션 + 서버에 저장된 역할)으로
+ * 통일한다. 경로를 숨기는 `VITE_ADMIN_PATH` 는 유지하되 보안 수단으로 보지 않는다.
+ */
+function AdminLogin() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (input === EXPECTED_PASSWORD) {
-      localStorage.setItem(ADMIN_AUTH_KEY, '1');
-      onAuthed();
-    } else {
+    setBusy(true);
+    setError(false);
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    setBusy(false);
+    if (authError) {
       setError(true);
-      setInput('');
+      setPassword('');
     }
+    // 성공 시 AuthProvider 가 세션 변경을 받아 화면을 다시 그린다.
   };
+
+  const inputClass =
+    'w-full bg-[#f8fafc] dark:bg-[#151c27] border rounded-[10px] px-4 py-3 text-[15px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]';
 
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex items-center justify-center px-4">
@@ -203,28 +221,43 @@ function PasswordGate({ onAuthed }: { onAuthed: () => void }) {
         <p className="text-center text-[11px] font-bold tracking-[0.1em] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-3">
           운영자 전용
         </p>
-        <h1 className="text-center font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px] mb-8">
+        <h1 className="text-center font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px] mb-2">
           NARSHA 대시보드
         </h1>
+        <p className="text-center text-[13px] text-[#94a3b8] mb-8">
+          운영자 계정으로 로그인하세요.
+        </p>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setError(false); }}
+            placeholder="이메일"
+            autoComplete="username"
+            autoFocus
+            className={`${inputClass} border-[#e2e8f0] dark:border-[#232a36]`}
+          />
           <div>
             <input
               type="password"
-              value={input}
-              onChange={e => { setInput(e.target.value); setError(false); }}
-              placeholder="비밀번호를 입력하세요"
-              autoFocus
-              className={`w-full bg-[#f8fafc] dark:bg-[#151c27] border rounded-[10px] px-4 py-3 text-[15px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] ${error ? 'border-[#ef4444] ring-1 ring-[#ef4444]/40' : 'border-[#e2e8f0] dark:border-[#232a36]'}`}
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError(false); }}
+              placeholder="비밀번호"
+              autoComplete="current-password"
+              className={`${inputClass} ${error ? 'border-[#ef4444] ring-1 ring-[#ef4444]/40' : 'border-[#e2e8f0] dark:border-[#232a36]'}`}
             />
             {error && (
-              <p className="mt-1.5 text-[13px] text-[#ef4444]">비밀번호가 틀렸어요.</p>
+              <p className="mt-1.5 text-[13px] text-[#ef4444]">
+                이메일 또는 비밀번호가 올바르지 않아요.
+              </p>
             )}
           </div>
           <button
             type="submit"
-            className="w-full bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[15px] py-3 rounded-[10px] hover:opacity-90 transition-opacity"
+            disabled={busy}
+            className="w-full bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[15px] py-3 rounded-[10px] hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            입장하기
+            {busy ? '확인 중…' : '로그인'}
           </button>
         </form>
       </div>
@@ -232,15 +265,36 @@ function PasswordGate({ onAuthed }: { onAuthed: () => void }) {
   );
 }
 
+/** 로그인은 됐지만 운영자 역할이 아닌 계정. */
+function NotAdmin({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex items-center justify-center px-4">
+      <div className="w-full max-w-[360px] text-center">
+        <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[22px] text-[#1e293b] dark:text-[#dce3f3] mb-2">
+          운영자 권한이 없습니다
+        </h1>
+        <p className="text-[14px] text-[#94a3b8] mb-6">
+          이 계정에는 대시보드 접근 권한이 없어요.
+        </p>
+        <button
+          onClick={onSignOut}
+          className="text-[14px] text-[#1b99dc] font-bold hover:underline"
+        >
+          다른 계정으로 로그인
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
-  const [authed, setAuthed] = useState(false);
+  // 권한 판정은 서버에 저장된 역할로 한다 — 화면 상태나 localStorage 로는 하지 않는다.
+  const { loading: authLoading, session, profile } = useDeskAuth();
+  const authed = Boolean(session) && profile?.role === 'admin';
+
   const [boostItems, setBoostItems] = useState<BoostSuggestion[]>([]);
   const [accuracyItems, setAccuracyItems] = useState<AccuracyCheck[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (localStorage.getItem(ADMIN_AUTH_KEY)) setAuthed(true);
-  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -260,12 +314,17 @@ export default function AdminDashboard() {
 
   useEffect(() => { if (authed) load(); }, [authed]);
 
-  const logout = () => {
-    localStorage.removeItem(ADMIN_AUTH_KEY);
-    setAuthed(false);
-  };
+  const logout = () => { void supabase.auth.signOut(); };
 
-  if (!authed) return <PasswordGate onAuthed={() => setAuthed(true)} />;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex items-center justify-center" aria-busy="true">
+        <div className="h-8 w-8 rounded-full border-2 border-[#8ecdff] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+  if (!session) return <AdminLogin />;
+  if (profile?.role !== 'admin') return <NotAdmin onSignOut={logout} />;
 
   const totalAlerts = boostItems.length + accuracyItems.length;
 
