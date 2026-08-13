@@ -6,9 +6,12 @@ import Footer from '../components/Footer';
 import { learnerTypes, LearnerType } from '../data/learnerTypes';
 import { LearnerTypeLogo } from '../components/LearnerTypeLogo';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { useT } from '../i18n';
+import { rich } from '../i18n/rich';
 
 export default function SurveyResult() {
   useDocumentTitle('title.survey');
+  const { t, lang } = useT();
   const navigate = useNavigate();
   const [learnerType, setLearnerType] = useState<LearnerType | null>(null);
   const [returnAppId, setReturnAppId] = useState<string | null>(null);
@@ -31,6 +34,9 @@ export default function SurveyResult() {
   }
 
   const typeInfo = learnerTypes[learnerType];
+  // 유형 이름·설명은 데이터에 양언어가 이미 있다 — 표시 시점에 고른다
+  const typeName = lang === 'ko' ? typeInfo.nameKo : typeInfo.name;
+  const typeDesc = lang === 'ko' ? typeInfo.descriptionKo : typeInfo.description;
 
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
@@ -41,11 +47,11 @@ export default function SurveyResult() {
           {/* Success Message */}
           <div className="text-center mb-8 sm:mb-10">
             <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[28px] sm:text-[36px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px] mb-2">
-              Your Learner Type
+              {t('survey.r.title')}
             </h1>
-            
+
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] sm:text-[18px] leading-[24px] text-[#64748b] dark:text-[#bec7d2]">
-              Assessment Complete
+              {t('survey.r.subtitle')}
             </p>
           </div>
 
@@ -58,34 +64,38 @@ export default function SurveyResult() {
               
               <div>
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-1">
-                  Detected Learner Type
+                  {t('survey.r.detected')}
                 </div>
                 <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[20px] sm:text-[24px] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px]">
-                  Type {learnerType}: {typeInfo.name}
+                  {t('survey.r.typeLine').replace('{t}', learnerType).replace('{name}', typeName)}
                 </h2>
               </div>
             </div>
 
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[15px] sm:text-[16px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] mb-4 sm:mb-5">
-              {typeInfo.description}
+              {typeDesc}
             </p>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="bg-[#ffffff] dark:bg-[#0c141f] rounded-[12px] p-4 sm:p-5 border border-[#e2e8f0] dark:border-[#232a36]">
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#64748b] dark:text-[#bec7d2] mb-2">
-                  Learning Pattern
+                  {t('survey.r.pattern')}
                 </div>
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] sm:text-[18px] text-[#1e293b] dark:text-[#dce3f3]">
-                  {typeInfo.sensory === 'visual' ? 'Visual' : typeInfo.sensory === 'auditory' ? 'Auditory' : 'Mixed (Visual + Auditory)'}
+                  {typeInfo.sensory === 'visual'
+                    ? t('survey.r.visual')
+                    : typeInfo.sensory === 'auditory'
+                    ? t('survey.r.auditory')
+                    : t('survey.r.mixed')}
                 </div>
               </div>
 
               <div className="bg-[#ffffff] dark:bg-[#0c141f] rounded-[12px] p-4 sm:p-5 border border-[#e2e8f0] dark:border-[#232a36]">
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#64748b] dark:text-[#bec7d2] mb-2">
-                  Learning Style
+                  {t('survey.r.style')}
                 </div>
                 <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] sm:text-[18px] text-[#1e293b] dark:text-[#dce3f3]">
-                  {typeInfo.style === 'exploratory' ? 'Exploratory' : 'Structured'}
+                  {typeInfo.style === 'exploratory' ? t('survey.r.exploratory') : t('survey.r.structured')}
                 </div>
               </div>
             </div>
@@ -100,10 +110,14 @@ export default function SurveyResult() {
               
               <div>
                 <h3 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#0c4a6e] dark:text-[#8ecdff] mb-3">
-                  Strategic Insight
+                  {t('survey.r.insight.title')}
                 </h3>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] leading-[24px] text-[#0c4a6e] dark:text-[#bec7d2]">
-                  Curriculum engagement is currently peaking highest among "{typeInfo.name}" due to the recent launch of highly integrated resources. Recommended: Boost auditory feedback for Type 라.
+                  {/* 이전 문구는 사용자 유형과 무관하게 항상 '라'형을 추천하는 하드코딩이었다.
+                      결과를 실제로 어떻게 쓰는지 안내하는 내용으로 교체. */}
+                  {rich(t('survey.r.insight.body').replace('{name}', typeName), {
+                    strong: 'font-bold text-[#0c4a6e] dark:text-[#8ecdff]',
+                  })}
                 </p>
               </div>
             </div>
@@ -119,7 +133,7 @@ export default function SurveyResult() {
                 }}
                 className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] px-12 py-4 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
               >
-                Write Your Review
+                {t('survey.r.writeReview')}
                 <ChevronRight className="w-5 h-5" />
               </button>
             ) : (
@@ -127,7 +141,7 @@ export default function SurveyResult() {
                 to="/"
                 className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] px-12 py-4 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
               >
-                Explore Resources
+                {t('survey.r.explore')}
                 <ChevronRight className="w-5 h-5" />
               </Link>
             )}

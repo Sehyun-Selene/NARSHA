@@ -12,69 +12,73 @@ import {
   usagePeriodLabels,
   type UsagePeriod,
 } from '../data/reviews';
+import { useT } from '../i18n';
+import type { StringKey } from '../i18n';
 
 // ── Tag data ──────────────────────────────────────────────────────────────────
+// 칩 라벨은 여기서 들고 있지 않는다 — 값(value)만 두고 표시 시점에 `tagLabel()` 로
+// 조회한다. 라벨을 여기에 복제하면 i18n/tags.ts 와 두 곳이 어긋난다.
 
 const STRENGTH_GROUPS = [
   {
-    label: 'Great for learning',
-    tags: [
-      { value: 'strength.grammar_explanation', label: 'Grammar Explanation' },
-      { value: 'strength.pronunciation',        label: 'Pronunciation Practice' },
-      { value: 'strength.vocabulary_volume',    label: 'Vocabulary Building' },
-      { value: 'strength.cultural_context',     label: 'Korean Culture' },
-      { value: 'strength.real_life_phrases',    label: 'Real-life Phrases' },
-      { value: 'strength.slang_trendy',         label: 'Slang & Trends' },
-      { value: 'strength.formal_language',      label: 'Honorifics & Formal' },
-      { value: 'strength.kpop_kdrama_context',  label: 'K-Pop / K-Drama' },
-      { value: 'strength.exam_focused',         label: 'TOPIK Prep' },
+    labelKey: 'review.tagGroup.learning',
+    values: [
+      'strength.grammar_explanation',
+      'strength.pronunciation',
+      'strength.vocabulary_volume',
+      'strength.cultural_context',
+      'strength.real_life_phrases',
+      'strength.slang_trendy',
+      'strength.formal_language',
+      'strength.kpop_kdrama_context',
+      'strength.exam_focused',
     ],
   },
   {
-    label: 'Content format',
-    tags: [
-      { value: 'format.flashcard',              label: 'Flashcards' },
-      { value: 'format.video_lecture',          label: 'Video Lectures' },
-      { value: 'format.native_speaker_clips',   label: 'Native Speaker Clips' },
-      { value: 'format.live_action_drama',      label: 'Live-action Drama' },
-      { value: 'format.whiteboard_explanation', label: 'Whiteboard Lessons' },
-      { value: 'format.downloadable_pdf',       label: 'Downloadable PDF' },
-      { value: 'format.subtitles_dual',         label: 'Dual Subtitles' },
+    labelKey: 'review.tagGroup.format',
+    values: [
+      'format.flashcard',
+      'format.video_lecture',
+      'format.native_speaker_clips',
+      'format.live_action_drama',
+      'format.whiteboard_explanation',
+      'format.downloadable_pdf',
+      'format.subtitles_dual',
     ],
   },
   {
-    label: 'Great for',
-    tags: [
-      { value: 'fit.needs_structure', label: 'Needs Structure' },
-      { value: 'fit.casual_learner',  label: 'Casual Learning' },
-      { value: 'fit.kpop_fan',        label: 'K-Pop / K-Culture Fans' },
-      { value: 'fit.career_focused',  label: 'Career / Exam Focus' },
-      { value: 'fit.shy_speaker',     label: 'Shy Speakers' },
+    labelKey: 'review.tagGroup.fit',
+    values: [
+      'fit.needs_structure',
+      'fit.casual_learner',
+      'fit.kpop_fan',
+      'fit.career_focused',
+      'fit.shy_speaker',
     ],
   },
   {
-    label: 'Nice to have',
-    tags: [
-      { value: 'ux.offline_available',          label: 'Offline Access' },
-      { value: 'ux.gamification',               label: 'Gamification' },
-      { value: 'ux.short_videos',               label: 'Short Videos (5–15 min)' },
-      { value: 'ux.multilingual_interface',     label: 'Multilingual UI' },
-      { value: 'social.live_class_option',      label: 'Live Classes' },
-      { value: 'social.community_forum',        label: 'Learning Community' },
+    labelKey: 'review.tagGroup.nice',
+    values: [
+      'ux.offline_available',
+      'ux.gamification',
+      'ux.short_videos',
+      'ux.multilingual_interface',
+      'social.live_class_option',
+      'social.community_forum',
     ],
   },
-];
+] as const;
 
 const LIMIT_TAGS = [
-  { value: 'limit.weak_in_speaking',              label: 'Weak in Speaking' },
-  { value: 'limit.weak_in_writing',               label: 'Weak in Writing' },
-  { value: 'limit.weak_in_advanced',              label: 'Lacks Advanced Content' },
-  { value: 'limit.weak_in_grammar',               label: 'Lacks Grammar Explanation' },
-  { value: 'limit.weak_in_reading',               label: 'Weak in Reading' },
-  { value: 'limit.no_human_feedback',             label: 'No Human Feedback' },
-  { value: 'limit.voice_recognition_unreliable',  label: 'Unreliable Voice Recognition' },
-  { value: 'limit.requires_supplementary',        label: 'Best with Supplements' },
-  { value: 'limit.no_certification',              label: 'No Certificate' },
+  'limit.weak_in_speaking',
+  'limit.weak_in_writing',
+  'limit.weak_in_advanced',
+  'limit.weak_in_grammar',
+  'limit.weak_in_reading',
+  'limit.no_human_feedback',
+  'limit.voice_recognition_unreliable',
+  'limit.requires_supplementary',
+  'limit.no_certification',
 ];
 
 const CHIP_OFF = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cursor-pointer font-medium bg-[#f1f5f9] dark:bg-[#232a36] text-[#64748b] dark:text-[#8a94a6] border-[#e2e8f0] dark:border-[#2e3541] hover:bg-[#e2e8f0] dark:hover:bg-[#2e3541]';
@@ -85,6 +89,7 @@ type ReviewFieldKey = 'nickname' | 'rating' | 'content';
 
 export default function ReviewWrite() {
   const { id } = useParams<{ id: string }>();
+  const { t, tag, lang } = useT();
   const navigate = useNavigate();
 
   const [app, setApp] = useState<App | null>(null);
@@ -155,7 +160,7 @@ export default function ReviewWrite() {
       setChosenStrengths(p => p.filter(t => t !== tag));
     } else {
       if (chosenStrengths.length >= 3) {
-        toast.info('Up to 3 strengths can be selected.');
+        toast.info(t('review.limitStrength'));
         return;
       }
       setChosenStrengths(p => [...p, tag]);
@@ -167,7 +172,7 @@ export default function ReviewWrite() {
       setChosenLimits(p => p.filter(t => t !== tag));
     } else {
       if (chosenLimits.length >= 2) {
-        toast.info('Up to 2 limitations can be selected.');
+        toast.info(t('review.limitLimit'));
         return;
       }
       setChosenLimits(p => [...p, tag]);
@@ -185,9 +190,9 @@ export default function ReviewWrite() {
     e.preventDefault();
 
     const errors: Partial<Record<ReviewFieldKey, string>> = {};
-    if (!nickname.trim()) errors.nickname = 'Please enter a nickname.';
-    if (rating < 1) errors.rating = 'Please select a star rating.';
-    if (!content.trim()) errors.content = 'Please enter your review.';
+    if (!nickname.trim()) errors.nickname = t('review.err.nickname');
+    if (rating < 1) errors.rating = t('review.err.rating');
+    if (!content.trim()) errors.content = t('review.err.content');
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -218,7 +223,7 @@ export default function ReviewWrite() {
       setTimeout(() => navigate(`/apps/${app.id}`), 2000);
     } catch (err) {
       console.error(err);
-      setFieldErrors({ content: 'Failed to submit review. Please try again.' });
+      setFieldErrors({ content: t('review.err.submit') });
     } finally {
       setSubmitting(false);
     }
@@ -232,10 +237,10 @@ export default function ReviewWrite() {
             <Check className="w-12 h-12 text-[#00344f]" />
           </div>
           <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[36px] text-[#1e293b] dark:text-[#dce3f3] mb-2">
-            Review Submitted!
+            {t('review.done')}
           </h2>
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] text-[#64748b] dark:text-[#bec7d2]">
-            Redirecting to app page...
+            {t('review.redirecting')}
           </p>
         </div>
       </div>
@@ -253,15 +258,15 @@ export default function ReviewWrite() {
               to={`/apps/${app.id}`}
               className="inline-flex items-center gap-2 font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] mb-4 transition-colors"
             >
-              ← Back to {app.name}
+              {t('review.back').replace('{name}', app.name)}
             </Link>
 
             <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[48px] leading-[56px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-1.2px] mb-4">
-              Share Your Journey
+              {t('review.pageTitle')}
             </h1>
 
             <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] leading-[28px] text-[#64748b] dark:text-[#bec7d2]">
-              Help others navigate their Korean learning path with an editorial perspective.
+              {t('review.pageLead')}
             </p>
           </div>
 
@@ -273,7 +278,7 @@ export default function ReviewWrite() {
                   <span className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#00344f]">1</span>
                 </div>
                 <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] text-[#1e293b] dark:text-[#dce3f3]">
-                  Identity Verification
+                  {t('review.step1')}
                 </h2>
               </div>
 
@@ -286,21 +291,24 @@ export default function ReviewWrite() {
                   </div>
                   <div>
                     <div className="font-['Manrope:Bold',sans-serif] font-bold text-[12px] tracking-[1.2px] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-1">
-                      Detected Learner Type
+                      {t('survey.r.detected')}
                     </div>
                     <h3 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[20px] text-[#1e293b] dark:text-[#dce3f3]">
-                      Type {learnerType}: {typeInfo.name}
+                      {t('survey.r.typeLine')
+                        .replace('{t}', learnerType)
+                        .replace('{name}', lang === 'ko' ? typeInfo.nameKo : typeInfo.name)}
                     </h3>
                   </div>
                 </div>
 
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[14px] leading-[20px] text-[#64748b] dark:text-[#bec7d2] mb-6">
-                  Your learning patterns suggest a high affinity for cinematic content and wisdom-based curriculum. This badge will appear next to your review.
+                  {/* 이전 문구는 유형과 무관한 일반 서술이었다 — 배지의 역할만 설명하도록 교체 */}
+                  {t('review.badgeNote')}
                 </p>
 
                 <div ref={nicknameBlockRef}>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    Nickname <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
+                    {t('review.nickname')} <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
                   </label>
                   <input
                     ref={nicknameInputRef}
@@ -312,7 +320,7 @@ export default function ReviewWrite() {
                         setFieldErrors((prev) => { const n = { ...prev }; delete n.nickname; return n; });
                       }
                     }}
-                    placeholder="Enter your display name"
+                    placeholder={t('review.nicknamePh')}
                     aria-invalid={Boolean(fieldErrors.nickname)}
                     aria-describedby={fieldErrors.nickname ? 'review-nickname-error' : undefined}
                     className={`w-full bg-[#ffffff] dark:bg-[#151c27] border rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] dark:placeholder:text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff] ${
@@ -337,30 +345,30 @@ export default function ReviewWrite() {
                   <span className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#00344f]">2</span>
                 </div>
                 <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] text-[#1e293b] dark:text-[#dce3f3]">
-                  Learning Context
+                  {t('review.step2')}
                 </h2>
               </div>
 
               <div className="space-y-6">
                 <div>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    Learning Level
+                    {t('review.level')}
                   </label>
                   <select
                     value={level}
                     onChange={(e) => setLevel(e.target.value as typeof level)}
                     className="w-full bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff]"
                   >
-                    <option value="beginner">Beginner (TOPIK I)</option>
-                    <option value="elementary">Elementary (TOPIK II)</option>
-                    <option value="intermediate">Intermediate (TOPIK III-IV)</option>
-                    <option value="advanced">Advanced (TOPIK V-VI)</option>
+                    <option value="beginner">{t('review.level.beginner')}</option>
+                    <option value="elementary">{t('review.level.elementary')}</option>
+                    <option value="intermediate">{t('review.level.intermediate')}</option>
+                    <option value="advanced">{t('review.level.advanced')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    Usage Period
+                    {t('review.usage')}
                   </label>
                   <select
                     value={usagePeriod}
@@ -368,22 +376,20 @@ export default function ReviewWrite() {
                     className="w-full bg-[#ffffff] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-4 py-3 font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] dark:focus:ring-[#8ecdff]"
                   >
                     {(Object.keys(usagePeriodLabels) as UsagePeriod[]).map((key) => (
-                      <option key={key} value={key}>{usagePeriodLabels[key]}</option>
+                      <option key={key} value={key}>{t(`review.usage.${key}` as StringKey)}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    Learning Purpose
+                    {t('review.purpose')}
                   </label>
                   <div className="flex flex-wrap gap-3">
-                    {[
-                      { value: 'entertainment', label: 'Entertainment' },
-                      { value: 'business', label: 'Business Proficiency' },
-                      { value: 'academic', label: 'Academic Research' },
-                      { value: 'topik', label: 'TOPIK Preparation' },
-                    ].map((option) => (
+                    {(['entertainment', 'business', 'academic', 'topik'] as const).map((value) => ({
+                      value,
+                      label: t(`review.purpose.${value}` as StringKey),
+                    })).map((option) => (
                       <button
                         key={option.value}
                         type="button"
@@ -409,14 +415,14 @@ export default function ReviewWrite() {
                   <span className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#00344f]">3</span>
                 </div>
                 <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] text-[#1e293b] dark:text-[#dce3f3]">
-                  The Critique
+                  {t('review.step3')}
                 </h2>
               </div>
 
               <div className="space-y-6">
                 <div ref={ratingBlockRef} className="mb-6">
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3 text-center">
-                    Overall Rating <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
+                    {t('review.rating')} <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
                   </label>
                   <div
                     className={`flex items-center justify-center gap-4 rounded-[12px] py-2 px-2 ${
@@ -456,64 +462,81 @@ export default function ReviewWrite() {
                 <div className="space-y-3">
                   <div>
                     <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3]">
-                      What are this service's strengths?{' '}
+                      {t('review.strengths.q')}{' '}
                       <span className="font-normal text-[#64748b] dark:text-[#bec7d2]">
-                        (up to 3{chosenStrengths.length > 0 ? ` · ${chosenStrengths.length} selected` : ''}, optional)
+                        {t('review.pickHint')
+                          .replace('{max}', '3')
+                          .replace(
+                            '{sel}',
+                            chosenStrengths.length > 0
+                              ? t('review.pickHint.sel').replace('{n}', String(chosenStrengths.length))
+                              : '',
+                          )}
                       </span>
                     </p>
                   </div>
-                  {STRENGTH_GROUPS.map((group, idx) => (
-                    <div key={group.label} className="border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => toggleGroup(idx)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-left bg-[#f8fafc] dark:bg-[#1e293b] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36] transition-colors"
-                      >
-                        <span className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3]">
-                          {group.label}
-                          {group.tags.filter(t => chosenStrengths.includes(t.value)).length > 0 && (
-                            <span className="ml-2 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                              {group.tags.filter(t => chosenStrengths.includes(t.value)).length}
-                            </span>
-                          )}
-                        </span>
-                        <ChevronDown className={`w-4 h-4 text-[#64748b] dark:text-[#8a94a6] transition-transform ${openGroups.has(idx) ? 'rotate-180' : ''}`} />
-                      </button>
-                      {openGroups.has(idx) && (
-                        <div className="px-4 py-3 flex flex-wrap gap-1.5">
-                          {group.tags.map(tag => (
-                            <button
-                              key={tag.value}
-                              type="button"
-                              onClick={() => toggleStrength(tag.value)}
-                              className={chosenStrengths.includes(tag.value) ? CHIP_ON : CHIP_OFF}
-                            >
-                              {tag.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {STRENGTH_GROUPS.map((group, idx) => {
+                    const chosenInGroup = group.values.filter(v => chosenStrengths.includes(v)).length;
+                    return (
+                      <div key={group.labelKey} className="border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => toggleGroup(idx)}
+                          className="w-full flex items-center justify-between px-4 py-3 text-left bg-[#f8fafc] dark:bg-[#1e293b] hover:bg-[#f1f5f9] dark:hover:bg-[#232a36] transition-colors"
+                        >
+                          <span className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3]">
+                            {t(group.labelKey)}
+                            {chosenInGroup > 0 && (
+                              <span className="ml-2 bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                {chosenInGroup}
+                              </span>
+                            )}
+                          </span>
+                          <ChevronDown className={`w-4 h-4 text-[#64748b] dark:text-[#8a94a6] transition-transform ${openGroups.has(idx) ? 'rotate-180' : ''}`} />
+                        </button>
+                        {openGroups.has(idx) && (
+                          <div className="px-4 py-3 flex flex-wrap gap-1.5">
+                            {group.values.map(value => (
+                              <button
+                                key={value}
+                                type="button"
+                                onClick={() => toggleStrength(value)}
+                                className={chosenStrengths.includes(value) ? CHIP_ON : CHIP_OFF}
+                              >
+                                {tag(value)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Limit tags */}
                 <div>
                   <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    What could be improved?{' '}
+                    {t('review.limits.q')}{' '}
                     <span className="font-normal text-[#64748b] dark:text-[#bec7d2]">
-                      (up to 2{chosenLimits.length > 0 ? ` · ${chosenLimits.length} selected` : ''}, optional)
+                      {t('review.pickHint')
+                        .replace('{max}', '2')
+                        .replace(
+                          '{sel}',
+                          chosenLimits.length > 0
+                            ? t('review.pickHint.sel').replace('{n}', String(chosenLimits.length))
+                            : '',
+                        )}
                     </span>
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {LIMIT_TAGS.map(tag => (
+                    {LIMIT_TAGS.map(value => (
                       <button
-                        key={tag.value}
+                        key={value}
                         type="button"
-                        onClick={() => toggleLimit(tag.value)}
-                        className={chosenLimits.includes(tag.value) ? CHIP_LIMIT_ON : CHIP_OFF}
+                        onClick={() => toggleLimit(value)}
+                        className={chosenLimits.includes(value) ? CHIP_LIMIT_ON : CHIP_OFF}
                       >
-                        {tag.label}
+                        {tag(value)}
                       </button>
                     ))}
                   </div>
@@ -521,7 +544,7 @@ export default function ReviewWrite() {
 
                 <div ref={contentBlockRef}>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
-                    Your Review <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
+                    {t('review.content')} <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
                   </label>
                   <textarea
                     ref={contentTextareaRef}
@@ -532,7 +555,7 @@ export default function ReviewWrite() {
                         setFieldErrors((prev) => { const n = { ...prev }; delete n.content; return n; });
                       }
                     }}
-                    placeholder="Describe the curriculum's depth, cultural nuances, and pedagogical effectiveness..."
+                    placeholder={t('review.contentPh')}
                     rows={6}
                     aria-invalid={Boolean(fieldErrors.content)}
                     aria-describedby={fieldErrors.content ? 'review-content-error' : undefined}
@@ -580,7 +603,7 @@ export default function ReviewWrite() {
                 disabled={submitting}
                 className="w-full bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] px-8 py-5 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] disabled:opacity-60"
               >
-                {submitting ? 'Submitting…' : 'Submit Review'}
+                {submitting ? t('review.submitting') : t('review.submit')}
               </button>
 
               <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] text-[#64748b] dark:text-[#bec7d2] text-center mt-4">

@@ -325,6 +325,129 @@ export const DICT = {
 
   'faq.cta.head':    { ko: '원하는 답을 찾지 못하셨나요?', en: "Didn't find what you were looking for?" },
   'faq.cta.contact': { ko: '문의하기', en: 'Contact Us' },
+
+  // ── 학습 유형 검사 안내 (SurveyIntro) ────────────────────────────────────
+  // 후기 작성 화면도 유형 미검사 시 이 화면을 렌더하므로 문자열을 공유한다.
+  'survey.eyebrow':   { ko: '학습 유형 검사', en: 'Learning type assessment' },
+  'survey.intro.title': { ko: '시작하기 전에', en: 'Before you start' },
+  'survey.intro.lead': {
+    ko: '나르샤는 후기에 작성자의 **학습 유형**을 함께 표시합니다. 나와 비슷한 방식으로 공부하는 사람의 후기를 찾을 수 있게 하기 위해서예요. 이 짧은 검사로 후기를 쓰거나 읽기 전에 내 유형을 정해 둡니다.',
+    en: 'NARSHA tags reviews by **learner type** so readers can find voices that match how they study. This quick check sets your type before you write or browse reviews.',
+  },
+  'survey.intro.why.title': { ko: '왜 묻나요', en: 'Why we ask' },
+  'survey.intro.why.body': {
+    ko: '여섯 가지 유형이 있어요. 후기에 유형을 붙여 비슷한 학습자끼리 경험을 비교할 수 있게 합니다.',
+    en: 'Six profiles; we label your reviews so similar learners can compare notes.',
+  },
+  'survey.intro.expect.title': { ko: '무엇을 하나요', en: 'What to expect' },
+  // {n} 은 문항 수로 치환된다
+  'survey.intro.expect.body': {
+    ko: '짧은 문항 {n}개, 5점 동의 척도예요. 정답은 없습니다.',
+    en: '{n} short items, five-point agree scale — no wrong answers.',
+  },
+  'survey.intro.time.title': { ko: '소요 시간', en: 'Time' },
+  'survey.intro.time.body': {
+    ko: '대부분 **2분 이내**에 끝냅니다.',
+    en: 'Most finish in **under two minutes**.',
+  },
+  'survey.intro.start': { ko: '시작하기', en: 'START' },
+  'survey.intro.back':  { ko: '홈으로 돌아가기', en: 'Back to home' },
+
+  // ── 검사 문항 화면 (Survey) ──────────────────────────────────────────────
+  'survey.q.title':    { ko: '학습 유형 검사', en: 'Learning Type Test' },
+  'survey.q.phase':    { ko: '검사 진행 중', en: 'Assessment Phase' },
+  // {i} 현재 문항 번호, {n} 전체 문항 수
+  'survey.q.counter':  { ko: '{n}문항 중 {i}번', en: 'Question {i} of {n}' },
+  'survey.q.percent':  { ko: '{p}% 완료', en: '{p}% Complete' },
+  'survey.q.disagree': { ko: '전혀 아니다', en: 'Strongly Disagree' },
+  'survey.q.agree':    { ko: '매우 그렇다', en: 'Strongly Agree' },
+  'survey.q.backIntro': { ko: '안내로 돌아가기', en: 'Back to intro' },
+  'survey.q.prev':     { ko: '이전', en: 'Previous' },
+  'survey.q.next':     { ko: '다음', en: 'Continue' },
+  'survey.q.done':     { ko: '완료', en: 'Complete' },
+
+  // ── 검사 결과 (SurveyResult) ─────────────────────────────────────────────
+  'survey.r.title':    { ko: '나의 학습 유형', en: 'Your Learner Type' },
+  'survey.r.subtitle': { ko: '검사가 끝났어요', en: 'Assessment Complete' },
+  'survey.r.detected': { ko: '판정된 학습 유형', en: 'Detected Learner Type' },
+  // {t} 유형 코드(가~바), {name} 유형 이름
+  'survey.r.typeLine': { ko: '{t}형 · {name}', en: 'Type {t}: {name}' },
+  'survey.r.pattern':  { ko: '감각 선호', en: 'Learning Pattern' },
+  'survey.r.style':    { ko: '접근 방식', en: 'Learning Style' },
+  'survey.r.visual':   { ko: '시각', en: 'Visual' },
+  'survey.r.auditory': { ko: '청각', en: 'Auditory' },
+  'survey.r.mixed':    { ko: '복합 (시각 + 청각)', en: 'Mixed (Visual + Auditory)' },
+  'survey.r.exploratory': { ko: '탐색형', en: 'Exploratory' },
+  'survey.r.structured':  { ko: '구조형', en: 'Structured' },
+  'survey.r.insight.title': { ko: '이 결과를 어떻게 쓰나요', en: 'How to use this result' },
+  // 이름 뒤에 조사를 붙이지 않는다 — 받침 유무에 따라 '이/가'가 달라져 깨진다.
+  'survey.r.insight.body': {
+    ko: '메인 화면의 ‘유형’ 필터가 **{name}** 기준으로 설정됐어요. 나와 같은 유형의 학습자가 남긴 후기를 먼저 확인해 보세요. 결과는 브라우저에 저장되며 언제든 다시 검사할 수 있어요.',
+    en: 'The “type” filter on the home screen is now set to **{name}**. Start with reviews left by learners of the same type. Your result is saved in this browser, and you can retake the test any time.',
+  },
+  'survey.r.writeReview': { ko: '후기 작성하기', en: 'Write Your Review' },
+  'survey.r.explore':     { ko: '서비스 둘러보기', en: 'Explore Resources' },
+
+  // ── 후기 작성 (ReviewWrite) ──────────────────────────────────────────────
+  'review.redirecting': { ko: '앱 페이지로 이동 중…', en: 'Redirecting to app page…' },
+  'review.badgeNote': {
+    ko: '이 유형 배지가 후기 옆에 함께 표시됩니다. 같은 방식으로 공부하는 학습자가 후기를 찾는 데 도움이 돼요.',
+    en: 'This type badge appears next to your review, helping learners who study the same way find it.',
+  },
+  'review.nickname':    { ko: '닉네임', en: 'Nickname' },
+  'review.nicknamePh':  { ko: '표시할 이름을 입력하세요', en: 'Enter your display name' },
+  'review.context':     { ko: '학습 상황', en: 'Learning Context' },
+  'review.level':       { ko: '학습 수준', en: 'Learning Level' },
+  'review.level.beginner':     { ko: '입문 (TOPIK I)', en: 'Beginner (TOPIK I)' },
+  'review.level.elementary':   { ko: '초급 (TOPIK II)', en: 'Elementary (TOPIK II)' },
+  'review.level.intermediate': { ko: '중급 (TOPIK III–IV)', en: 'Intermediate (TOPIK III-IV)' },
+  'review.level.advanced':     { ko: '고급 (TOPIK V–VI)', en: 'Advanced (TOPIK V-VI)' },
+  'review.usage':       { ko: '사용 기간', en: 'Usage Period' },
+  'review.usage.lt1w':     { ko: '1주 미만', en: 'Less than 1 week' },
+  'review.usage.1w-lt1m':  { ko: '1주~1개월 미만', en: '1 week to less than 1 month' },
+  'review.usage.1m-lt3m':  { ko: '1~3개월 미만', en: '1 month to less than 3 months' },
+  'review.usage.3m-lt6m':  { ko: '3~6개월 미만', en: '3 months to less than 6 months' },
+  'review.usage.6m-lt1y':  { ko: '6개월~1년 미만', en: '6 months to less than 1 year' },
+  'review.usage.1y+':      { ko: '1년 이상', en: '1 year or more' },
+  'review.purpose':     { ko: '학습 목적', en: 'Learning Purpose' },
+  'review.purpose.entertainment': { ko: '취미·콘텐츠', en: 'Entertainment' },
+  'review.purpose.business':      { ko: '비즈니스', en: 'Business Proficiency' },
+  'review.purpose.academic':      { ko: '학업·연구', en: 'Academic Research' },
+  'review.purpose.topik':         { ko: 'TOPIK 대비', en: 'TOPIK Preparation' },
+  'review.strengths.q':  { ko: '이 서비스의 강점은 무엇인가요?', en: "What are this service's strengths?" },
+  'review.limits.q':     { ko: '아쉬운 점은 무엇인가요?', en: 'What could be improved?' },
+  // {max} 최대 선택 수, {sel} 현재 선택 수(0이면 표시하지 않는다)
+  'review.pickHint':     { ko: '(최대 {max}개{sel}, 선택)', en: '(up to {max}{sel}, optional)' },
+  'review.pickHint.sel': { ko: ' · {n}개 선택', en: ' · {n} selected' },
+  'review.tagGroup.learning': { ko: '학습에 좋은 점', en: 'Great for learning' },
+  'review.tagGroup.format':   { ko: '콘텐츠 형식', en: 'Content format' },
+  'review.tagGroup.fit':      { ko: '이런 학습자에게', en: 'Great for' },
+  'review.tagGroup.nice':     { ko: '있으면 좋은 점', en: 'Nice to have' },
+  'review.contentPh': {
+    ko: '커리큘럼의 깊이, 문화적 맥락, 실제로 도움이 된 점을 적어 주세요…',
+    en: "Describe the curriculum's depth, cultural nuances, and pedagogical effectiveness…",
+  },
+  'review.submit':      { ko: '후기 등록', en: 'Submit Review' },
+  'review.submitting':  { ko: '등록 중…', en: 'Submitting…' },
+  'review.err.nickname': { ko: '닉네임을 입력해 주세요.', en: 'Please enter a nickname.' },
+  'review.err.rating':   { ko: '별점을 선택해 주세요.', en: 'Please select a star rating.' },
+  'review.err.content':  { ko: '후기 내용을 입력해 주세요.', en: 'Please enter your review.' },
+  'review.err.submit':   { ko: '등록에 실패했어요. 잠시 후 다시 시도해 주세요.', en: 'Failed to submit review. Please try again.' },
+  'review.limitStrength': { ko: '강점은 최대 3개까지 선택할 수 있어요.', en: 'Up to 3 strengths can be selected.' },
+  'review.limitLimit':    { ko: '아쉬운 점은 최대 2개까지 선택할 수 있어요.', en: 'Up to 2 limitations can be selected.' },
+
+  'review.done':      { ko: '후기가 등록됐어요!', en: 'Review Submitted!' },
+  'review.back':      { ko: '← {name}(으)로 돌아가기', en: '← Back to {name}' },
+  'review.pageTitle': { ko: '내 경험을 나눠 주세요', en: 'Share Your Journey' },
+  'review.pageLead': {
+    ko: '내가 겪은 것을 적어 두면, 같은 길을 고민하는 학습자가 선택하기 쉬워집니다.',
+    en: 'Help others navigate their Korean learning path with an editorial perspective.',
+  },
+  'review.step1': { ko: '작성자 정보', en: 'Identity Verification' },
+  'review.step2': { ko: '학습 상황', en: 'Learning Context' },
+  'review.step3': { ko: '후기 작성', en: 'The Critique' },
+  'review.rating':  { ko: '별점', en: 'Your Rating' },
+  'review.content': { ko: '후기 내용', en: 'Your Review' },
 } satisfies Record<string, Entry | Entry[]>;
 
 export type StringKey = keyof typeof DICT;

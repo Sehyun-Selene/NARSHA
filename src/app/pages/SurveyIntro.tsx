@@ -4,11 +4,17 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { surveyQuestions } from '../data/learnerTypes';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { useT } from '../i18n';
+import { rich } from '../i18n/rich';
 
 const questionCount = surveyQuestions.length;
 
+// 본문 강조는 그라디언트가 아니라 본문색 굵게 — 카드 안 짧은 문장이라 색을 더하면 산만해진다.
+const STRONG_BODY = 'text-[#1e293b] dark:text-[#dce3f3] font-medium';
+
 export default function SurveyIntro() {
   useDocumentTitle('title.survey');
+  const { t } = useT();
   return (
     <div className="min-h-dvh bg-[#ffffff] dark:bg-[#0c141f] flex flex-col relative">
       <Header />
@@ -16,14 +22,13 @@ export default function SurveyIntro() {
       <main className="flex-1 flex flex-col pt-16 relative min-h-0">
         <div className="flex-1 flex flex-col justify-center min-h-0 w-full max-w-[720px] mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="font-['Manrope:Bold',sans-serif] font-bold text-[10px] sm:text-[11px] tracking-[1.2px] uppercase text-[#0ea5e9] dark:text-[#8ecdff] mb-1">
-            Learning type assessment
+            {t('survey.eyebrow')}
           </div>
           <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[clamp(1.25rem,3.2vw,1.625rem)] leading-tight text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.04em] mb-2">
-            Before you start
+            {t('survey.intro.title')}
           </h1>
           <p className="font-['Inter:Regular',sans-serif] font-normal text-[13px] sm:text-[14px] leading-snug text-[#64748b] dark:text-[#bec7d2] mb-4 sm:mb-5">
-            NARSHA tags reviews by <span className="text-[#1e293b] dark:text-[#dce3f3] font-medium">learner type</span> so readers can find voices
-            that match how they study. This quick check sets your type before you write or browse reviews.
+            {rich(t('survey.intro.lead'), { strong: STRONG_BODY })}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-5">
@@ -33,10 +38,10 @@ export default function SurveyIntro() {
               </div>
               <div className="min-w-0">
                 <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3] mb-0.5">
-                  Why we ask
+                  {t('survey.intro.why.title')}
                 </h2>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] leading-snug text-[#64748b] dark:text-[#bec7d2]">
-                  Six profiles; we label your reviews so similar learners can compare notes.
+                  {t('survey.intro.why.body')}
                 </p>
               </div>
             </div>
@@ -47,10 +52,10 @@ export default function SurveyIntro() {
               </div>
               <div className="min-w-0">
                 <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3] mb-0.5">
-                  What to expect
+                  {t('survey.intro.expect.title')}
                 </h2>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] leading-snug text-[#64748b] dark:text-[#bec7d2]">
-                  {questionCount} short items, five-point agree scale—no wrong answers.
+                  {t('survey.intro.expect.body').replace('{n}', String(questionCount))}
                 </p>
               </div>
             </div>
@@ -61,10 +66,10 @@ export default function SurveyIntro() {
               </div>
               <div className="min-w-0">
                 <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3] mb-0.5">
-                  Time
+                  {t('survey.intro.time.title')}
                 </h2>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[12px] leading-snug text-[#64748b] dark:text-[#bec7d2]">
-                  Most finish in <span className="text-[#1e293b] dark:text-[#dce3f3] font-medium">under two minutes</span>.
+                  {rich(t('survey.intro.time.body'), { strong: STRONG_BODY })}
                 </p>
               </div>
             </div>
@@ -75,14 +80,14 @@ export default function SurveyIntro() {
               to="/survey/questions"
               className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[15px] px-6 py-2.5 sm:px-8 sm:py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
             >
-              START
+              {t('survey.intro.start')}
               <ChevronRight className="w-5 h-5" />
             </Link>
             <Link
               to="/"
               className="inline-flex items-center justify-center font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#64748b] dark:text-[#bec7d2] hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] transition-colors py-1"
             >
-              Back to home
+              {t('survey.intro.back')}
             </Link>
           </div>
         </div>
