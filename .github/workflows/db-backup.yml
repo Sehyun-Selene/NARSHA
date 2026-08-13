@@ -1,0 +1,89 @@
+# NARSHA — Supabase DB 주간 자동 백업
+#
+# 저장 위치: 이 파일을 저장소의 .github/workflows/db-backup.yml 로 커밋한다.
+#
+# 하는 일
+#   1. 매주 월요일 새벽 3시(KST)에 Supabase DB 전체를 덤프한다
+#   2. 덤프 파일을 AES256으로 암호화한다 (저장소가 public이므로 필수)
+#   3. 암호화된 파일을 워크플로 아티팩트로 올린다 (90일 보관)
+#
+# 사전 준비 — GitHub 저장소 Settings > Secrets and variables > Actions 에 등록
+#   SUPABASE_DB_URL     : Supabase 대시보드 > Project Settings > Database > Connection string (URI)
+#                         postgresql://postgres:[비밀번호]@db.xxxx.supabase.co:5432/postgres
+#   BACKUP_PASSPHRASE   : 백업 파일을 여는 암호. 길고 무작위한 값으로 직접 정한다.
+#                         이 값을 잃어버리면 백업을 영원히 못 연다. 비밀번호 관리자에 따로 보관할 것.
+#
+# 복구 방법 (아티팩트를 내려받은 뒤)
+#   gpg --decrypt --passphrase "<BACKUP_PASSPHRASE>" backup_20260809.sql.gpg > backup.sql
+#   psql "<SUPABASE_DB_URL>" -f backup.sql
+#
+# 주의 — 백업은 복구를 해봐야 백업이다. 처음 한 번은 반드시 복구를 시연해 볼 것.
+
+name: DB Backup
+
+on:
+  schedule:
+    # UTC 기준. 월요일 18:00 UTC = 화요일 03:00 KST
+    - cron: '0 18 * * 1'
+  # 필요할 때 수동 실행 (Actions 탭 > DB Backup > Run workflow)
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Supabase CLI 설치
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: 날짜 스탬프 생성
+        id: stamp
+        run: echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
+      - name: DB 덤프
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL 시크릿이 설정되지 않았습니다."
+            exit 1
+          fi
+          # 스키마와 데이터를 각각 받는다. 스키마만 되돌리고 싶은 경우가 종종 있다.
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only -f data.sql
+          tar -czf "backup_${{ steps.stamp.outputs.date }}.tar.gz" schema.sql data.sql
+          rm -f schema.sql data.sql
+
+      - name: 암호화
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::BACKUP_PASSPHRASE 시크릿이 설정되지 않았습니다."
+            exit 1
+          fi
+          gpg --batch --yes --symmetric --cipher-algo AES256 \
+              --passphrase "$BACKUP_PASSPHRASE" \
+              "backup_${{ steps.stamp.outputs.date }}.tar.gz"
+          # 평문 원본은 즉시 삭제 — 아티팩트에 올라가면 안 된다
+          rm -f "backup_${{ steps.stamp.outputs.date }}.tar.gz"
+
+      - name: 결과 확인
+        run: |
+          ls -lh backup_*.tar.gz.gpg
+          # 평문 파일이 남아 있으면 실패시킨다
+          if ls backup_*.tar.gz 2>/dev/null | grep -qv '\.gpg$'; then
+            echo "::error::암호화되지 않은 백업 파일이 남아 있습니다."
+            exit 1
+          fi
+
+      - name: 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ steps.stamp.outputs.date }}
+          path: backup_*.tar.gz.gpg
+          retention-days: 90
+          if-no-files-found: error

@@ -459,6 +459,7 @@ export const DICT = {
   'rbt.type':     { ko: '{t}형', en: 'Type {t}' },
   'rbt.empty':    { ko: '이 조건에 맞는 후기가 없어요.', en: 'No reviews found for this filter.' },
   'rbt.helpful':  { ko: '유용해요', en: 'Helpful' },
+  'rbt.helpfulFailed': { ko: '반영에 실패했어요. 잠시 후 다시 시도해 주세요.', en: 'Could not record that. Please try again shortly.' },
   'rbt.level':    { ko: '수준: {v}', en: 'Level: {v}' },
   // 필터 계승 안내 (D11). {n} 조건을 만족하는 앱 수
   'rbt.filterNotice':  { ko: '현재 필터 조건에 해당하는 앱 {n}개의 후기만 보고 있어요', en: 'Showing reviews from {n} apps matching your filters' },

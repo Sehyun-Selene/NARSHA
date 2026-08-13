@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router';
 import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare, BookMarked, Users } from 'lucide-react';
+import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
@@ -12,6 +13,9 @@ import {
   addReviewReply,
   sortReviews,
   isReviewSort,
+  fetchMyHelpful,
+  toggleHelpful,
+  migrateLocalHelpful,
   type Review,
   type ReviewReply,
   type ReviewSort,
@@ -59,7 +63,10 @@ export default function AppDetail() {
     setSearchParams(params, { replace: true });
   };
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const [helpfulReviews, setHelpfulReviews] = useState<Record<string, { count: number; userMarked: boolean }>>({});
+  // '유용해요'는 서버에 기록한다 (REQ-F / F-1). 카운트는 reviews.helpful_count 에서
+  // 오고, '내가 눌렀는지'는 서버가 IP 로 만든 키로만 알 수 있어 따로 조회한다.
+  const [helpfulMarked, setHelpfulMarked] = useState<Set<string>>(new Set());
+  const [helpfulCounts, setHelpfulCounts] = useState<Record<string, number>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
@@ -109,25 +116,34 @@ export default function AppDetail() {
     load().catch(console.error).finally(() => setLoading(false));
   }, [id]);
 
+  // 서버 카운트를 채우고, 이 IP 가 누른 항목을 조회한다.
+  // 구 방식(브라우저 전용) 기록이 남아 있으면 1회 이관한다 (D14).
   useEffect(() => {
-    const saved = localStorage.getItem('review-helpful');
-    if (saved) setHelpfulReviews(JSON.parse(saved));
-  }, []);
+    if (appReviews.length === 0) return;
+    let active = true;
+    setHelpfulCounts(Object.fromEntries(appReviews.map(r => [r.id, r.helpfulCount ?? 0])));
+    (async () => {
+      await migrateLocalHelpful();
+      try {
+        const mine = await fetchMyHelpful(appReviews.map(r => r.id));
+        if (active) setHelpfulMarked(new Set(mine));
+      } catch { /* 서버 함수 미설정·실패 — 카운트는 그대로 보여준다 */ }
+    })();
+    return () => { active = false; };
+  }, [appReviews]);
 
-  const saveHelpfulData = (data: Record<string, { count: number; userMarked: boolean }>) => {
-    localStorage.setItem('review-helpful', JSON.stringify(data));
-    setHelpfulReviews(data);
-  };
-
-  const toggleHelpful = (reviewId: string) => {
-    const current = helpfulReviews[reviewId] ?? { count: 0, userMarked: false };
-    saveHelpfulData({
-      ...helpfulReviews,
-      [reviewId]: {
-        count: current.userMarked ? current.count - 1 : current.count + 1,
-        userMarked: !current.userMarked,
-      },
-    });
+  const onHelpfulClick = async (reviewId: string) => {
+    try {
+      const r = await toggleHelpful(reviewId);
+      setHelpfulCounts(prev => ({ ...prev, [reviewId]: r.count }));
+      setHelpfulMarked(prev => {
+        const next = new Set(prev);
+        if (r.marked) next.add(reviewId); else next.delete(reviewId);
+        return next;
+      });
+    } catch {
+      toast.error(t('rbt.helpfulFailed'));
+    }
   };
 
   const submitReply = async (reviewId: string) => {
@@ -555,7 +571,8 @@ export default function AppDetail() {
             <div className="space-y-6">
               {filteredReviews.map((review) => {
                 const typeInfo = learnerTypes[review.learnerType];
-                const helpfulData = helpfulReviews[review.id] ?? { count: 0, userMarked: false };
+                const helpfulMarkedHere = helpfulMarked.has(review.id);
+                const helpfulCountHere = helpfulCounts[review.id] ?? review.helpfulCount ?? 0;
                 const replies = repliesMap[review.id] ?? [];
 
                 return (
@@ -628,15 +645,15 @@ export default function AppDetail() {
 
                         <div className="flex items-center gap-6 text-[14px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#bec7d2]">
                           <button
-                            onClick={() => toggleHelpful(review.id)}
+                            onClick={() => { void onHelpfulClick(review.id); }}
                             className={`flex items-center gap-1 transition-colors ${
-                              helpfulData.userMarked
+                              helpfulMarkedHere
                                 ? 'text-[#0ea5e9] dark:text-[#8ecdff]'
                                 : 'hover:text-[#0ea5e9] dark:hover:text-[#8ecdff]'
                             }`}
                           >
                             <ThumbsUp className="w-5 h-5" />
-                            <span>Helpful ({helpfulData.count})</span>
+                            <span>{t('rbt.helpful')} ({helpfulCountHere})</span>
                           </button>
                           <button
                             onClick={() => setReplyingTo(review.id)}

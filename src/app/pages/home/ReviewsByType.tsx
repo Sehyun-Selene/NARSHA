@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Star, ThumbsUp } from 'lucide-react';
-import { getAllReviews, sortReviews, isReviewSort, type Review, type ReviewSort } from '../../data/reviews';
+import { toast } from 'sonner';
+import {
+  getAllReviews, sortReviews, isReviewSort,
+  fetchMyHelpful, toggleHelpful, migrateLocalHelpful,
+  type Review, type ReviewSort,
+} from '../../data/reviews';
 import ReviewSortSelect from '../../components/ReviewSortSelect';
 import { fetchApps, appName, type App } from '../../data/apps';
 import { learnerTypes, type LearnerType } from '../../data/learnerTypes';
@@ -31,8 +36,6 @@ const TYPE_COLORS: Record<LearnerType, { bg: string; text: string }> = {
   '바': { bg: 'bg-gradient-to-br from-[#34d399] to-[#10b981]', text: 'text-[#064e3b]' },
 };
 
-const HELPFUL_KEY = 'review-helpful';
-
 type ReviewWithAppName = Review & { appLabel: string };
 
 export default function ReviewsByType({
@@ -52,14 +55,10 @@ export default function ReviewsByType({
   const [allReviews, setAllReviews] = useState<ReviewWithAppName[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<LearnerType | null>(null);
-  const [helpful, setHelpful] = useState<Record<string, { count: number; userMarked: boolean }>>({});
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(HELPFUL_KEY);
-      if (saved) setHelpful(JSON.parse(saved));
-    } catch { /* ignore */ }
-  }, []);
+  // 카운트는 서버(reviews.helpful_count)에서 오고, '내가 눌렀는지'만 따로 조회한다.
+  // 투표자키를 서버가 IP 로 만들기 때문에 클라이언트가 알 수 없다.
+  const [marked, setMarked] = useState<Set<string>>(new Set());
+  const [counts, setCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let active = true;
@@ -84,22 +83,38 @@ export default function ReviewsByType({
     // 언어가 바뀌면 앱 표시명을 다시 고른다
   }, [lang]);
 
-  const saveHelpful = (data: typeof helpful) => {
-    try { localStorage.setItem(HELPFUL_KEY, JSON.stringify(data)); } catch { /* quota */ }
-    setHelpful(data);
-  };
+  // 목록이 준비되면 서버 카운트를 채우고, 이 IP 가 누른 항목을 조회한다.
+  // 구 방식(브라우저 전용) 기록이 남아 있으면 1회 이관한다 (D14).
+  useEffect(() => {
+    if (allReviews.length === 0) return;
+    let active = true;
+    setCounts(Object.fromEntries(allReviews.map(r => [r.id, r.helpfulCount ?? 0])));
+    (async () => {
+      await migrateLocalHelpful();
+      try {
+        const mine = await fetchMyHelpful(allReviews.map(r => r.id));
+        if (active) setMarked(new Set(mine));
+      } catch {
+        // 서버 함수가 아직 설정되지 않았거나 실패한 경우 — 카운트는 그대로 보여준다
+      }
+    })();
+    return () => { active = false; };
+  }, [allReviews]);
 
-  const toggleHelpful = (reviewId: string, e: React.MouseEvent) => {
+  const onHelpfulClick = async (reviewId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const cur = helpful[reviewId] ?? { count: 0, userMarked: false };
-    saveHelpful({
-      ...helpful,
-      [reviewId]: {
-        count: cur.userMarked ? cur.count - 1 : cur.count + 1,
-        userMarked: !cur.userMarked,
-      },
-    });
+    try {
+      const r = await toggleHelpful(reviewId);
+      setCounts(prev => ({ ...prev, [reviewId]: r.count }));
+      setMarked(prev => {
+        const next = new Set(prev);
+        if (r.marked) next.add(reviewId); else next.delete(reviewId);
+        return next;
+      });
+    } catch {
+      toast.error(t('rbt.helpfulFailed'));
+    }
   };
 
   // Home 의 검색어·필터를 계승한다 (D11)
@@ -237,16 +252,16 @@ export default function ReviewsByType({
                     </div>
 
                     <button
-                      onClick={e => toggleHelpful(review.id, e)}
+                      onClick={e => { void onHelpfulClick(review.id, e); }}
                       className={`flex items-center gap-2 px-4 py-2 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[13px] transition-all whitespace-nowrap ${
-                        helpful[review.id]?.userMarked
+                        marked.has(review.id)
                           ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] shadow-lg'
                           : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
                       }`}
                     >
                       <ThumbsUp className="w-4 h-4" />
                       <span>{t('rbt.helpful')}</span>
-                      <span className="opacity-60">({helpful[review.id]?.count ?? 0})</span>
+                      <span className="opacity-60">({counts[review.id] ?? review.helpfulCount ?? 0})</span>
                     </button>
                   </div>
                 </div>

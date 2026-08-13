@@ -260,3 +260,55 @@ export async function hasDuplicateReview(appId: string, content: string): Promis
   if (error) throw error;
   return (data?.length ?? 0) > 0;
 }
+
+// ── '유용해요' 서버 연동 (GNB PRD REQ-F / F-1) ──────────────────────────────
+// 투표자키는 서버가 요청 IP 로 만든다. 클라이언트가 키를 만들면 임의로 찍어
+// 숫자를 부풀릴 수 있으므로, 모든 쓰기는 api/review-helpful 을 경유한다.
+
+const HELPFUL_ENDPOINT = '/api/review-helpful';
+const HELPFUL_LOCAL_KEY = 'review-helpful';            // 구 방식(브라우저 전용) 기록
+const HELPFUL_MIGRATED_KEY = 'review-helpful-migrated'; // 이관 완료 표시
+
+async function callHelpful<T>(payload: Record<string, unknown>): Promise<T> {
+  const res = await fetch(HELPFUL_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json().catch(() => ({ ok: false }));
+  if (!res.ok || !json?.ok) throw new Error(json?.error ?? 'HELPFUL_FAILED');
+  return json as T;
+}
+
+/** 이 브라우저(=IP)가 누른 후기 id 목록. */
+export async function fetchMyHelpful(reviewIds: string[]): Promise<string[]> {
+  if (reviewIds.length === 0) return [];
+  const r = await callHelpful<{ marked: string[] }>({ action: 'mine', reviewIds });
+  return r.marked;
+}
+
+/** 토글하고 갱신된 카운트를 돌려준다. */
+export async function toggleHelpful(reviewId: string): Promise<{ marked: boolean; count: number }> {
+  return callHelpful<{ marked: boolean; count: number }>({ action: 'toggle', reviewId });
+}
+
+/**
+ * 브라우저에만 있던 기존 '유용해요' 기록을 서버로 1회 이관한다 (D14).
+ *
+ * 살릴 수 있는 만큼만 살린다 — 다시 방문하지 않는 사용자의 기록은 그 브라우저
+ * 안에만 있어 회수할 방법이 없다. 지금은 각자 자기가 누른 숫자만 보이는 구조라
+ * 사용자가 체감하는 손실은 사실상 없다.
+ */
+export async function migrateLocalHelpful(): Promise<void> {
+  try {
+    if (localStorage.getItem(HELPFUL_MIGRATED_KEY)) return;
+    const raw = localStorage.getItem(HELPFUL_LOCAL_KEY);
+    if (!raw) { localStorage.setItem(HELPFUL_MIGRATED_KEY, '1'); return; }
+    const parsed = JSON.parse(raw) as Record<string, { userMarked?: boolean }>;
+    const ids = Object.entries(parsed).filter(([, v]) => v?.userMarked).map(([id]) => id);
+    if (ids.length > 0) await callHelpful({ action: 'migrate', reviewIds: ids });
+    localStorage.setItem(HELPFUL_MIGRATED_KEY, '1');
+  } catch {
+    // 실패하면 다음 방문에 다시 시도한다 — 플래그를 남기지 않는다
+  }
+}
