@@ -107,7 +107,9 @@ export default async function handler(req: Req, res: Res) {
     .maybeSingle();
 
   if (existing.error) {
-    res.status(500).json({ ok: false, error: 'LOOKUP_FAILED' });
+    // 코드값만 돌려주면 원인을 좁힐 수 없다 (키 오류·권한·스키마가 모두 같은 코드로 보인다).
+    // Postgres 가 준 메시지를 그대로 실어 보낸다 — 비밀값은 담기지 않는다.
+    res.status(500).json({ ok: false, error: 'LOOKUP_FAILED', detail: existing.error.message, code: existing.error.code });
     return;
   }
 
@@ -122,7 +124,7 @@ export default async function handler(req: Req, res: Res) {
     const ins = await supabase.from('review_helpful').insert({ review_id: reviewId, voter_key: voterKey });
     // 동시 요청으로 이미 들어간 경우(기본키 충돌)는 성공으로 본다
     if (ins.error && ins.error.code !== '23505') {
-      res.status(500).json({ ok: false, error: 'INSERT_FAILED' });
+      res.status(500).json({ ok: false, error: 'INSERT_FAILED', detail: ins.error.message, code: ins.error.code });
       return;
     }
   }

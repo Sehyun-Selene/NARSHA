@@ -133,11 +133,27 @@ function AdminPanel({ lang }: { lang: 'ko' | 'en' }) {
         {created && (
           <div className="mt-4 rounded-[12px] border-2 border-[#8ecdff] bg-[#e0f2fe] dark:bg-[#1b5a7a]/30 p-4">
             <p className="text-[12px] font-bold text-[#dc2626] mb-2">⚠️ {lang === 'ko' ? '이 코드는 지금 한 번만 보입니다. 반드시 복사해 두세요.' : 'This code is shown only once. Copy it now.'}</p>
-            <CopyRow label={lang === 'ko' ? '코드' : 'Code'} value={created.code} onCopy={copy} mono />
-            <CopyRow label={lang === 'ko' ? '가입 링크' : 'Join link'} value={created.join_url} onCopy={copy} />
-            <CopyRow label={lang === 'ko' ? '전달 문안 (한)' : 'Message (KO)'} value={created.message_ko} onCopy={copy} />
-            <CopyRow label={lang === 'ko' ? '전달 문안 (영)' : 'Message (EN)'} value={created.message_en} onCopy={copy} />
-            <button onClick={() => setCreated(null)} className="mt-2 text-[12px] text-[#64748b]">{lang === 'ko' ? '닫기' : 'Close'}</button>
+
+            {/* 코드는 링크 안에 이미 들어 있다. 확인용으로만 보여주고 복사는 문안 하나로 통일한다. */}
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="text-[11px] text-[#64748b] dark:text-[#8ecdff] shrink-0">{lang === 'ko' ? '코드' : 'Code'}</span>
+              <span className="font-mono text-[13px] font-bold text-[#1e293b] dark:text-[#dce3f3] break-all select-all">{created.code}</span>
+            </div>
+
+            {/* 한국어 문단 → 빈 줄 → 영어 문단. 이 블록 전체가 복사 대상이다. */}
+            <div className="rounded-[10px] bg-white dark:bg-[#0c141f] border border-[#8ecdff]/60 dark:border-[#232a36] p-3 text-[12px] leading-[1.6] text-[#1e293b] dark:text-[#dce3f3] whitespace-pre-wrap break-words">
+              {inviteMessage(created)}
+            </div>
+
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                onClick={() => copy(inviteMessage(created))}
+                className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-extrabold text-[13px] px-4 py-2 rounded-[10px]"
+              >
+                {lang === 'ko' ? '전달 문안 복사 (한 + 영)' : 'Copy message (KO + EN)'}
+              </button>
+              <button onClick={() => setCreated(null)} className="text-[12px] text-[#64748b]">{lang === 'ko' ? '닫기' : 'Close'}</button>
+            </div>
           </div>
         )}
 
@@ -174,12 +190,10 @@ function AdminPanel({ lang }: { lang: 'ko' | 'en' }) {
   );
 }
 
-function CopyRow({ label, value, onCopy, mono }: { label: string; value: string; onCopy: (v: string) => void; mono?: boolean }) {
-  return (
-    <div className="flex items-start gap-2 mb-1.5">
-      <span className="text-[11px] text-[#64748b] dark:text-[#8ecdff] w-24 shrink-0 pt-1">{label}</span>
-      <span className={`flex-1 min-w-0 text-[12px] text-[#1e293b] dark:text-[#dce3f3] whitespace-pre-wrap break-all ${mono ? 'font-mono' : ''}`}>{value}</span>
-      <button onClick={() => onCopy(value)} className="shrink-0 text-[12px] text-[#1b99dc] hover:underline pt-1">copy</button>
-    </div>
-  );
+/**
+ * 저자에게 그대로 붙여 보낼 안내 문안 — 한국어 문단, 빈 줄, 영어 문단.
+ * 링크에 코드가 들어 있어 코드·링크를 따로 복사할 필요가 없다.
+ */
+function inviteMessage(created: { message_ko: string; message_en: string }): string {
+  return `${created.message_ko}\n\n${created.message_en}`;
 }
