@@ -491,6 +491,19 @@ export const DICT = {
   'myType.evalBasisAll':  { ko: '전체 후기 {n}건 기준', en: 'Based on {n} reviews' },
   'myType.evalLimits':    { ko: ' · 아쉬운 점 응답 {n}건', en: ' · {n} noted weak points' },
   'myType.learnerReviews': { ko: '학습자 평가', en: 'Learner Reviews' },
+
+  // ── 앱 상세 (i18n PRD §7 Phase 2 잔여) ───────────────────────────────────
+  'app.officialSite':  { ko: '공식 사이트', en: 'Official Website' },
+  'app.ratingByType':  { ko: '학습유형별 평점', en: 'Rating by Learner Type' },
+  'app.ratingByTypeSub': {
+    ko: '유형에 따라 이 서비스를 어떻게 평가했는지 보여줍니다.',
+    en: 'How different archetypes perceive this resource.',
+  },
+  'app.viewChart':     { ko: '분석 차트 보기', en: 'View Analysis Chart' },
+  'app.curatedBy':     { ko: 'NARSHA 큐레이션', en: 'Curated by NARSHA' },
+  'app.filterReviews': { ko: '후기 필터', en: 'Filter Reviews' },
+  'app.writeReview':   { ko: '후기 쓰기', en: 'Write Review' },
+  'app.allTypes':      { ko: '전체 유형', en: 'All Types' },
 } satisfies Record<string, Entry | Entry[]>;
 
 export type StringKey = keyof typeof DICT;

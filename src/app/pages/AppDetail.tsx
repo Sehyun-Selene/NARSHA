@@ -4,7 +4,7 @@ import { Star, ExternalLink, ChevronRight, BarChart3, ThumbsUp, MessageSquare, B
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { AppLogoMark } from '../components/AppLogoMark';
-import { fetchAppById, getAppLevelDisplayTags, enrichAppWithStaticContent, type App } from '../data/apps';
+import { fetchAppById, getAppLevelDisplayTags, enrichAppWithStaticContent, appDescription, type App } from '../data/apps';
 import {
   getReviewsForApp,
   getAverageRatingByType,
@@ -205,7 +205,10 @@ export default function AppDetail() {
   const curatorTags = new Set(app?.differentiators ?? []);
 
   const radarData = LEARNER_TYPES.map((t) => ({
-    type: `Type ${t}\n${learnerTypes[t].name}`,
+    // 차트 축 라벨도 언어를 따른다 — 유형 코드(가~바)는 그대로 두고 이름만 바꾼다
+    type: lang === 'ko'
+      ? `${t}형\n${learnerTypes[t].nameKo}`
+      : `Type ${t}\n${learnerTypes[t].name}`,
     rating: typeRatings[t],
     id: `type-${t}`,
   }));
@@ -255,7 +258,7 @@ export default function AppDetail() {
                     </ul>
                   ) : (
                     <p className="font-['Inter:Regular',sans-serif] font-normal text-[13px] sm:text-[14px] leading-snug text-[#64748b] dark:text-[#bec7d2] mb-3 max-w-[42rem]">
-                      {app.description}
+                      {appDescription(app, lang)}
                     </p>
                   )}
 
@@ -266,7 +269,7 @@ export default function AppDetail() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 bg-transparent border-2 border-[#1e293b] dark:border-[#8ecdff] text-[#1e293b] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[13px] sm:text-[14px] px-4 py-2 rounded-lg hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b] transition-colors"
                     >
-                      Official Website
+                      {t('app.officialSite')}
                       <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                     </a>
                   )}
@@ -304,10 +307,10 @@ export default function AppDetail() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[32px] leading-[40px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px] mb-2">
-                  Rating by Learner Type
+                  {t('app.ratingByType')}
                 </h2>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] leading-[24px] text-[#64748b] dark:text-[#bec7d2]">
-                  How different archetypes perceive this resource.
+                  {t('app.ratingByTypeSub')}
                 </p>
               </div>
 
@@ -316,7 +319,7 @@ export default function AppDetail() {
                 className="inline-flex items-center gap-2 bg-[#ffffff] dark:bg-[#151c27] border-2 border-[#0ea5e9] dark:border-[#8ecdff] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[16px] px-6 py-3 rounded-[8px] hover:bg-[#e0f2fe] dark:hover:bg-[#1e293b] transition-colors shadow-[0px_4px_12px_-2px_rgba(0,0,0,0.1)]"
               >
                 <BarChart3 className="w-5 h-5" />
-                View Analysis Chart
+                {t('app.viewChart')}
               </button>
             </div>
 
@@ -355,7 +358,7 @@ export default function AppDetail() {
                 <div className="flex items-center gap-2 mb-3">
                   <BookMarked className="w-4 h-4 text-[#0ea5e9] dark:text-[#8ecdff]" />
                   <span className="text-[11px] font-bold tracking-[0.08em] uppercase text-[#0ea5e9] dark:text-[#8ecdff]">
-                    Curated by NARSHA
+                    {t('app.curatedBy')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -466,13 +469,13 @@ export default function AppDetail() {
           <div className="mb-12">
             <div className="flex items-center justify-between mb-8">
               <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[32px] leading-[40px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px]">
-                Filter Reviews
+                {t('app.filterReviews')}
               </h2>
               <Link
                 to={`/apps/${app.id}/review/new`}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] px-8 py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
               >
-                Write Review
+                {t('app.writeReview')}
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -522,7 +525,7 @@ export default function AppDetail() {
                     : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#bec7d2] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
                 }`}
               >
-                All Types
+                {t('app.allTypes')}
               </button>
               {LEARNER_TYPES.map((type) => {
                 const typeInfo = learnerTypes[type];
@@ -574,7 +577,7 @@ export default function AppDetail() {
                               {review.nickname}
                             </div>
                             <div className="font-['Inter:Regular',sans-serif] font-normal text-[14px] text-[#64748b] dark:text-[#bec7d2]">
-                              {typeInfo.name} •{' '}
+                              {lang === 'ko' ? typeInfo.nameKo : typeInfo.name} •{' '}
                               {new Date(review.createdAt).toLocaleDateString()}
                             </div>
                           </div>
@@ -758,7 +761,7 @@ export default function AppDetail() {
                         </div>
                       </div>
                       <div className="text-[11px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#bec7d2] mb-1">
-                        {typeInfo.name}
+                        {lang === 'ko' ? typeInfo.nameKo : typeInfo.name}
                       </div>
                       <div className="text-[10px] font-['Inter:Regular',sans-serif] font-normal text-[#94a3b8] dark:text-[#8b96a3]">
                         {reviewCount} review{reviewCount !== 1 ? 's' : ''}
