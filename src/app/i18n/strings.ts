@@ -501,6 +501,10 @@ export const DICT = {
   'review.err.contentMin':  { ko: '후기는 20자 이상 적어 주세요.', en: 'Please write at least 20 characters.' },
   'review.err.contentMax':  { ko: '후기는 2,000자까지 쓸 수 있어요.', en: 'Reviews can be up to 2,000 characters.' },
   'review.err.duplicate':   { ko: '이 서비스에 같은 내용의 후기가 이미 있어요.', en: 'A review with the same text already exists for this service.' },
+  // 빈도 제한 (REQ-E / E-1). 몇 건까지인지 알려 줘야 사용자가 다시 시도할 시점을 안다
+  'review.err.rateHour':    { ko: '후기는 한 시간에 3건까지 쓸 수 있어요. 잠시 후 다시 시도해 주세요.', en: 'You can post up to 3 reviews per hour. Please try again later.' },
+  'review.err.rateSameApp': { ko: '같은 서비스에는 24시간에 한 번만 후기를 쓸 수 있어요.', en: 'You can review the same service once per 24 hours.' },
+  'review.err.serverConfig': { ko: '후기 저장 기능이 아직 준비되지 않았어요. 운영자에게 알려 주세요.', en: 'Review submission is not configured yet. Please let us know.' },
   // {n} 현재 글자 수, {max} 상한
   'review.counter': { ko: '{n} / {max}자', en: '{n} / {max}' },
 

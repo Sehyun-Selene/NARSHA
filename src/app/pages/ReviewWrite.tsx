@@ -8,6 +8,7 @@ import { fetchAppById, type App } from '../data/apps';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import {
   saveUserReview,
+  reviewSubmitErrorKey,
   mapFormGoalToReviewGoal,
   hasDuplicateReview,
   usagePeriodLabels,
@@ -249,7 +250,11 @@ export default function ReviewWrite() {
       setTimeout(() => navigate(`/apps/${app.id}`), 2000);
     } catch (err) {
       console.error(err);
-      setFieldErrors({ content: t('review.err.submit') });
+      // 서버가 코드값을 돌려준다 (빈도 제한·중복·검증). 코드마다 다른 문구를 띄워야
+      // 사용자가 무엇을 고쳐야 할지 안다 (REQ-E / E-1).
+      const code = err instanceof Error ? err.message : 'UNKNOWN';
+      setFieldErrors({ content: t(reviewSubmitErrorKey(code) as StringKey) });
+      setScrollToField('content');
     } finally {
       setSubmitting(false);
     }

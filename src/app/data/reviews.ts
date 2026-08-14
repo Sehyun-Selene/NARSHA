@@ -158,32 +158,53 @@ export function mapFormGoalToReviewGoal(form: string): Review['goal'] {
   }
 }
 
+/**
+ * 후기 저장 (GNB PRD REQ-E / E-1).
+ *
+ * 익명 작성은 서버 함수(`/api/review-submit`)를 경유한다. 마이그레이션
+ * 20260814030000 이 anon 의 직접 INSERT 권한을 회수했기 때문에 다른 경로가 없다.
+ * 빈도 제한을 요청 IP 로 판정해야 하는데 브라우저는 자기 IP 를 모른다.
+ *
+ * 서버가 돌려주는 `error` 는 코드값이다. 화면은 `reviewSubmitMessage()` 로 문구를
+ * 얻는다 — 코드를 그대로 보여주면 사용자가 무엇을 고쳐야 할지 알 수 없다.
+ */
 export async function saveUserReview(
   input: Omit<Review, 'id' | 'createdAt' | 'helpfulCount'>
-): Promise<Review> {
-  const payload = {
-    app_id: input.appId,
-    nickname: input.nickname,
-    learner_type: input.learnerType,
-    level: input.level,
-    goal: input.goal,
-    usage_period: input.usagePeriod,
-    rating: input.rating,
-    content: input.content || null,
-    content_ko: input.contentKo || null,
-    image_urls: input.imageUrls ?? [],
-    chosen_strengths: input.chosenStrengths ?? [],
-    chosen_limits: input.chosenLimits ?? [],
-  };
+): Promise<{ id: string }> {
+  const res = await fetch('/api/review-submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      appId: input.appId,
+      nickname: input.nickname,
+      learnerType: input.learnerType,
+      level: input.level,
+      goal: input.goal,
+      usagePeriod: input.usagePeriod,
+      rating: input.rating,
+      content: input.content,
+      chosenStrengths: input.chosenStrengths ?? [],
+      chosenLimits: input.chosenLimits ?? [],
+    }),
+  });
 
-  const { data, error } = await supabase
-    .from('reviews')
-    .insert(payload)
-    .select()
-    .single();
+  const json = await res.json().catch(() => ({ ok: false }));
+  if (!res.ok || !json?.ok) throw new Error(json?.error ?? 'REVIEW_SUBMIT_FAILED');
+  return { id: json.id as string };
+}
 
-  if (error) throw error;
-  return rowToReview(data as ReviewRow);
+/** 서버 함수가 돌려준 코드 → 사용자에게 보일 문구 키. */
+export function reviewSubmitErrorKey(code: string): string {
+  switch (code) {
+    case 'RATE_LIMITED_HOURLY':   return 'review.err.rateHour';
+    case 'RATE_LIMITED_SAME_APP': return 'review.err.rateSameApp';
+    case 'DUPLICATE_CONTENT':     return 'review.err.duplicate';
+    case 'CONTENT_TOO_SHORT':     return 'review.err.contentMin';
+    case 'CONTENT_TOO_LONG':      return 'review.err.contentMax';
+    case 'NICKNAME_INVALID':      return 'review.err.nicknameLen';
+    case 'SERVER_NOT_CONFIGURED': return 'review.err.serverConfig';
+    default:                      return 'review.err.submit';
+  }
 }
 
 // ── Replies ──────────────────────────────────────────────────────────────────
