@@ -122,6 +122,8 @@ export default function ReviewsByType({
   const shown = sortReviews(
     filterType ? inScope.filter(r => r.learnerType === filterType) : inScope,
     sort,
+    // 토글 직후 순서가 튀지 않도록 화면이 들고 있는 최신 카운트로 정렬한다
+    (r) => counts[r.id] ?? r.helpfulCount,
   );
 
   const chipClass = (on: boolean) =>

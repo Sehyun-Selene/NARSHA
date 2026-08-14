@@ -220,21 +220,30 @@ export async function addReviewReply(
 // ── 후기 정렬 (GNB PRD REQ-F / F-2) ─────────────────────────────────────────
 // 앱 상세와 Discover 유형별 보기가 같은 기준을 써야 하므로 데이터 계층에 둔다.
 
-export type ReviewSort = 'recent' | 'ratingHigh' | 'ratingLow';
+export type ReviewSort = 'recent' | 'helpful' | 'ratingHigh' | 'ratingLow';
 
-export const REVIEW_SORTS: ReviewSort[] = ['recent', 'ratingHigh', 'ratingLow'];
+export const REVIEW_SORTS: ReviewSort[] = ['recent', 'helpful', 'ratingHigh', 'ratingLow'];
 
 export function isReviewSort(v: string | null): v is ReviewSort {
-  return v === 'recent' || v === 'ratingHigh' || v === 'ratingLow';
+  return v === 'recent' || v === 'helpful' || v === 'ratingHigh' || v === 'ratingLow';
 }
 
-/** 원본 배열을 건드리지 않고 정렬된 새 배열을 돌려준다. */
-export function sortReviews<T extends { rating: number; createdAt: Date }>(
+/**
+ * 원본 배열을 건드리지 않고 정렬된 새 배열을 돌려준다.
+ *
+ * `helpfulOf` — '유용해요' 카운트를 화면이 따로 들고 있을 때 쓴다. 토글 직후에는
+ * 서버가 준 최신 값이 페이지 state 에 있고 `review.helpfulCount` 는 조회 시점
+ * 값이라 어긋난다. 넘기지 않으면 조회 시점 값으로 정렬한다.
+ */
+export function sortReviews<T extends { rating: number; createdAt: Date; helpfulCount: number }>(
   list: T[],
   sort: ReviewSort,
+  helpfulOf?: (item: T) => number,
 ): T[] {
   const byRecent = (a: T, b: T) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  const helpful = (item: T) => helpfulOf?.(item) ?? item.helpfulCount;
   return list.slice().sort((a, b) => {
+    if (sort === 'helpful') return helpful(b) - helpful(a) || byRecent(a, b);
     if (sort === 'ratingHigh') return b.rating - a.rating || byRecent(a, b);
     if (sort === 'ratingLow') return a.rating - b.rating || byRecent(a, b);
     return byRecent(a, b);

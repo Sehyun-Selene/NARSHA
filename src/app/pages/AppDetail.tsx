@@ -193,6 +193,8 @@ export default function AppDetail() {
       ? appReviews
       : appReviews.filter((r) => r.learnerType === selectedFilter),
     reviewSort,
+    // 토글 직후 순서가 튀지 않도록 화면이 들고 있는 최신 카운트로 정렬한다
+    (r) => helpfulCounts[r.id] ?? r.helpfulCount,
   );
 
   // Reviews for learner-eval section (optionally filtered to user's type)

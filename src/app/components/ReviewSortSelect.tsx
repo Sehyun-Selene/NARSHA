@@ -1,8 +1,9 @@
 import { useT } from '../i18n';
 import { REVIEW_SORTS, type ReviewSort } from '../data/reviews';
 
-const LABEL_KEY: Record<ReviewSort, 'sort.recent' | 'sort.ratingHigh' | 'sort.ratingLow'> = {
+const LABEL_KEY: Record<ReviewSort, 'sort.recent' | 'sort.helpful' | 'sort.ratingHigh' | 'sort.ratingLow'> = {
   recent: 'sort.recent',
+  helpful: 'sort.helpful',
   ratingHigh: 'sort.ratingHigh',
   ratingLow: 'sort.ratingLow',
 };

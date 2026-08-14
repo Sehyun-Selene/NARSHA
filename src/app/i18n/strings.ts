@@ -471,6 +471,7 @@ export const DICT = {
   // 지금 넣으면 값이 항상 0 이라 아무 일도 하지 않는 선택지가 된다.
   'sort.label':     { ko: '정렬', en: 'Sort' },
   'sort.recent':    { ko: '최신순', en: 'Latest' },
+  'sort.helpful':   { ko: '유용해요순', en: 'Most helpful' },
   'sort.ratingHigh': { ko: '평점 높은순', en: 'Highest rated' },
   'sort.ratingLow':  { ko: '평점 낮은순', en: 'Lowest rated' },
 
