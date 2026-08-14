@@ -8,6 +8,8 @@ import { AppLogoMark } from '../components/AppLogoMark';
 import { fetchAppById, getAppLevelDisplayTags, enrichAppWithStaticContent, appDescription, type App } from '../data/apps';
 import {
   getReviewsForApp,
+  getReviewTagStats,
+  getReviewCount,
   getAverageRatingByType,
   getRepliesForReview,
   addReviewReply,
@@ -19,9 +21,12 @@ import {
   type Review,
   type ReviewReply,
   type ReviewSort,
+  type ReviewTagStat,
 } from '../data/reviews';
 import ReviewSortSelect from '../components/ReviewSortSelect';
 import ReviewReportMenu from '../components/ReviewReportMenu';
+import { useMemberAuth } from '../../features/auth/useMemberAuth';
+import MemberAuthModal from '../../features/auth/MemberAuthModal';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { tagLabel, tagLongLabel, useT } from '../i18n';
@@ -39,6 +44,12 @@ const LEARNER_TYPES: LearnerType[] = ['가', '나', '다', '라', '마', '바'];
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
+/**
+ * 비로그인 상태에서 전체 내용으로 보여 주는 후기 수 (REQ-C / C-1, 결정 D3).
+ * 실제 가치를 먼저 보여줘야 이탈이 적다 — 0건부터 막지 않는다.
+ */
+const GATE_FREE_REVIEWS = 3;
+
 export default function AppDetail() {
   const { id } = useParams<{ id: string }>();
   // 페이지 전체 i18n 은 Phase 2 — 여기서는 레벨 배지 라벨만 언어에 맞춘다.
@@ -46,6 +57,16 @@ export default function AppDetail() {
   const { t } = useT();
   const [app, setApp] = useState<App | null>(null);
   const [appReviews, setAppReviews] = useState<Review[]>([]);
+  // 집계 전용 경량 데이터 (본문 없음). 게이팅과 무관하게 항상 전건이다.
+  const [tagStats, setTagStats] = useState<ReviewTagStat[]>([]);
+  // 이 앱의 실제 후기 총 개수 — 잠금 오버레이의 "N개 더 있어요" 에 쓴다
+  const [totalReviewCount, setTotalReviewCount] = useState(0);
+
+  // 열람 게이팅 (REQ-C / C-1). 로그인 여부만 본다 — desk 저자든 일반회원이든
+  // 로그인 상태면 전문을 볼 수 있다.
+  const { loading: authLoading, session } = useMemberAuth();
+  const gated = !session;
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
   const [typeRatings, setTypeRatings] = useState<Record<LearnerType, number>>({
     가: 0, 나: 0, 다: 0, 라: 0, 마: 0, 바: 0,
   });
@@ -86,16 +107,22 @@ export default function AppDetail() {
 
   useEffect(() => {
     if (!id) return;
+    // 세션 판정 전에 조회하면 로그인 상태인데도 3건만 받아 두 번 조회하게 된다
+    if (authLoading) return;
     setLoading(true);
 
     const load = async () => {
-      const [fetchedApp, reviews] = await Promise.all([
+      const [fetchedApp, reviews, stats, total] = await Promise.all([
         fetchAppById(id),
-        getReviewsForApp(id),
+        getReviewsForApp(id, gated ? GATE_FREE_REVIEWS : undefined),
+        getReviewTagStats(id),
+        getReviewCount(id),
       ]);
 
       setApp(fetchedApp ? enrichAppWithStaticContent(fetchedApp) : null);
       setAppReviews(reviews);
+      setTagStats(stats);
+      setTotalReviewCount(total);
 
       const ratingValues = await Promise.all(
         LEARNER_TYPES.map((t) => getAverageRatingByType(id, t))
@@ -115,7 +142,8 @@ export default function AppDetail() {
     };
 
     load().catch(console.error).finally(() => setLoading(false));
-  }, [id]);
+    // gated 가 바뀌면(로그인·로그아웃) 후기 목록을 다시 받아야 한다
+  }, [id, authLoading, gated]);
 
   // 서버 카운트를 채우고, 이 IP 가 누른 항목을 조회한다.
   // 구 방식(브라우저 전용) 기록이 남아 있으면 1회 이관한다 (D14).
@@ -184,9 +212,10 @@ export default function AppDetail() {
   }
 
   const levelTags = getAppLevelDisplayTags(app);
+  // 전체 평점도 전건 기준이어야 한다 — 게이팅된 3건 평균은 앱의 평점이 아니다
   const overallRating =
-    appReviews.length > 0
-      ? appReviews.reduce((sum, r) => sum + r.rating, 0) / appReviews.length
+    tagStats.length > 0
+      ? tagStats.reduce((sum, r) => sum + r.rating, 0) / tagStats.length
       : 0;
 
   const filteredReviews = sortReviews(
@@ -198,10 +227,11 @@ export default function AppDetail() {
     (r) => helpfulCounts[r.id] ?? r.helpfulCount,
   );
 
-  // Reviews for learner-eval section (optionally filtered to user's type)
+  // 학습자 평가 집계는 본문 없는 경량 조회(tagStats)를 쓴다. 게이팅으로 목록이
+  // 3건만 내려오는 비로그인 상태에서도 "후기 N개 기준"이 사실과 맞아야 한다.
   const reviewsForEval = filterByType && userLearnerType
-    ? appReviews.filter(r => r.learnerType === userLearnerType)
-    : appReviews;
+    ? tagStats.filter(r => r.learnerType === userLearnerType)
+    : tagStats;
   const reviewsWithStrengths = reviewsForEval.filter(r => (r.chosenStrengths ?? []).length > 0);
   const reviewsWithLimits   = reviewsForEval.filter(r => (r.chosenLimits   ?? []).length > 0);
 
@@ -693,6 +723,53 @@ export default function AppDetail() {
                 );
               })}
 
+              {/* 잠금 오버레이 (REQ-C / C-1).
+                  후기가 3건 이하인 앱에서는 렌더하지 않는다 — 막을 것이 없는데
+                  자물쇠를 보여주면 빈약한 앱이 더 빈약해 보인다.
+                  형태(별점·태그·본문 줄)는 남겨 두어 "뭔가 더 있다"는 인상을 준다. */}
+              {gated && totalReviewCount > GATE_FREE_REVIEWS && (
+                <div className="relative mt-6 rounded-[16px] overflow-hidden border border-[#e2e8f0] dark:border-[#232a36]">
+                  <div className="p-6 blur-[6px] pointer-events-none select-none" aria-hidden="true">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-[#e2e8f0] dark:bg-[#232a36]" />
+                      <div className="space-y-1.5">
+                        <div className="h-3 w-24 rounded bg-[#e2e8f0] dark:bg-[#232a36]" />
+                        <div className="h-3 w-16 rounded bg-[#e2e8f0] dark:bg-[#232a36]" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-3 w-full rounded bg-[#e2e8f0] dark:bg-[#232a36]" />
+                      <div className="h-3 w-11/12 rounded bg-[#e2e8f0] dark:bg-[#232a36]" />
+                      <div className="h-3 w-3/4 rounded bg-[#e2e8f0] dark:bg-[#232a36]" />
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <div className="h-6 w-20 rounded-full bg-[#e2e8f0] dark:bg-[#232a36]" />
+                      <div className="h-6 w-24 rounded-full bg-[#e2e8f0] dark:bg-[#232a36]" />
+                    </div>
+                  </div>
+
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/70 dark:bg-[#0c141f]/70 px-6 text-center">
+                    <p className="font-['Manrope:Bold',sans-serif] font-bold text-[15px] text-[#1e293b] dark:text-[#dce3f3]">
+                      {t('gate.moreReviews').replace('{n}', String(totalReviewCount - GATE_FREE_REVIEWS))}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode('login')}
+                      className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-extrabold text-[14px] px-6 py-2.5 rounded-[10px]"
+                    >
+                      {t('gate.loginToRead')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode('signup')}
+                      className="text-[12px] text-[#1b99dc] hover:underline"
+                    >
+                      {t('gate.noAccount')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {filteredReviews.length === 0 && (
                 <div className="text-center py-16">
                   <p className="font-['Inter:Regular',sans-serif] font-normal text-[18px] text-[#64748b] dark:text-[#bec7d2]">
@@ -807,6 +884,13 @@ export default function AppDetail() {
           </div>
         </div>
       )}
+
+      {/* 잠금 오버레이에서 여는 로그인·가입 모달 (REQ-C / C-1) */}
+      <MemberAuthModal
+        open={authMode !== null}
+        mode={authMode ?? 'login'}
+        onClose={() => setAuthMode(null)}
+      />
     </div>
   );
 }

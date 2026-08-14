@@ -6,11 +6,15 @@ import Footer from '../components/Footer';
 import { surveyQuestions, calculateLearnerType } from '../data/learnerTypes';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { useT } from '../i18n';
+import { useMemberAuth } from '../../features/auth/useMemberAuth';
+import { recordLearnerType } from '../../features/auth/learnerTypeSync';
 
 export default function Survey() {
   useDocumentTitle('title.survey');
   const { t, lang } = useT();
   const navigate = useNavigate();
+  // 로그인 상태면 검사 결과를 계정에도 저장한다 (REQ-G)
+  const { session } = useMemberAuth();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [responses, setResponses] = useState<number[]>(Array(10).fill(0));
 
@@ -27,12 +31,13 @@ export default function Survey() {
     if (currentQuestion < surveyQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // Calculate learner type and save to localStorage
+      // 유형은 localStorage 에 저장하고, 로그인 상태면 계정에도 올린다 (REQ-G).
+      // 계정 저장 실패는 결과를 잃는 문제가 아니므로 결과 화면 이동을 막지 않는다.
       const learnerType = calculateLearnerType(responses);
-      localStorage.setItem('narsha-learner-type', learnerType);
+      void recordLearnerType(learnerType, session?.user.id ?? null);
       localStorage.setItem('narsha-survey-responses', JSON.stringify(responses));
       localStorage.setItem('narsha-survey-date', new Date().toISOString());
-      
+
       // Navigate to result page
       navigate('/survey/result');
     }

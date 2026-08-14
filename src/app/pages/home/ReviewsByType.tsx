@@ -9,6 +9,8 @@ import {
 } from '../../data/reviews';
 import ReviewSortSelect from '../../components/ReviewSortSelect';
 import ReviewReportMenu from '../../components/ReviewReportMenu';
+import { useMemberAuth } from '../../../features/auth/useMemberAuth';
+import MemberAuthModal from '../../../features/auth/MemberAuthModal';
 import { fetchApps, appName, type App } from '../../data/apps';
 import { learnerTypes, type LearnerType } from '../../data/learnerTypes';
 import { useT } from '../../i18n';
@@ -60,6 +62,13 @@ export default function ReviewsByType({
   // 투표자키를 서버가 IP 로 만들기 때문에 클라이언트가 알 수 없다.
   const [marked, setMarked] = useState<Set<string>>(new Set());
   const [counts, setCounts] = useState<Record<string, number>>({});
+
+  // 열람 게이팅 (REQ-C / C-1 (b)). 목록 자체는 막지 않는다 — 이 화면은 "어떤 유형이
+  // 어떤 앱을 쓰는지" 훑는 용도다. 전문을 읽으려면 앱 상세로 가고, 거기서 3건 제한을
+  // 만난다. 여기서는 본문을 2줄로 잘라 그 흐름을 만든다.
+  const { session } = useMemberAuth();
+  const gated = !session;
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -240,9 +249,18 @@ export default function ReviewsByType({
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-[14px] leading-[22px] text-[#64748b] dark:text-[#bec7d2] line-clamp-3">
-                    {review.content}
-                  </p>
+                  {/* 비로그인은 2줄 + 페이드아웃, 로그인은 현행 3줄 (REQ-C / C-1 (b)) */}
+                  <div className="relative">
+                    <p className={`text-[14px] leading-[22px] text-[#64748b] dark:text-[#bec7d2] ${gated ? 'line-clamp-2' : 'line-clamp-3'}`}>
+                      {review.content}
+                    </p>
+                    {gated && (
+                      <div
+                        className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white dark:from-[#151c27] to-transparent"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
 
                   <div className="flex items-center justify-between gap-4 pt-2 flex-wrap">
                     <div className="flex flex-wrap gap-2">
@@ -275,8 +293,33 @@ export default function ReviewsByType({
               </Link>
             );
           })}
+
+          {/* 목록 하단 안내 1회 (REQ-C / C-1 (b)). 비로그인 · 실제로 잘린 게 있을 때만 */}
+          {gated && shown.length > 0 && (
+            <div className="rounded-[16px] border border-dashed border-[#8ecdff] dark:border-[#1b5a7a] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[14px] text-[#1e293b] dark:text-[#dce3f3]">{t('gate.typeBanner')}</p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('login')}
+                  className="bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-extrabold text-[13px] px-4 py-2 rounded-[10px]"
+                >
+                  {t('member.login')}
+                </button>
+                <button type="button" onClick={() => setAuthMode('signup')} className="text-[12px] text-[#1b99dc] hover:underline">
+                  {t('gate.noAccount')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      <MemberAuthModal
+        open={authMode !== null}
+        mode={authMode ?? 'login'}
+        onClose={() => setAuthMode(null)}
+      />
     </div>
   );
 }

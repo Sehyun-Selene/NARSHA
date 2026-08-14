@@ -12,6 +12,7 @@ export type Database = {
       reviews: { Row: ReviewRow };
       review_replies: { Row: ReviewReplyRow };
       review_reports: { Row: ReviewReportRow };
+      members: { Row: MemberRow };
       profiles: { Row: ProfileRow };
       desk_posts: { Row: DeskPostRow };
       desk_post_revisions: { Row: DeskPostRevisionRow };
@@ -68,6 +69,15 @@ export interface ReviewRow {
   is_hidden: boolean;
   hidden_reason: string | null;
   hidden_at: string | null;
+  created_at: string;
+}
+
+/** 일반회원 프로필 (REQ-C / C-3). desk 저자는 `profiles` 쪽이다 */
+export interface MemberRow {
+  id: string;
+  display_name: string;
+  learner_type: string | null;
+  learner_type_updated_at: string | null;
   created_at: string;
 }
 

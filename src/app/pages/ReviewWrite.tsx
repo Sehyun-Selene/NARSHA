@@ -8,6 +8,7 @@ import { fetchAppById, type App } from '../data/apps';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import {
   saveUserReview,
+  saveMemberReview,
   reviewSubmitErrorKey,
   mapFormGoalToReviewGoal,
   hasDuplicateReview,
@@ -15,6 +16,8 @@ import {
   type UsagePeriod,
 } from '../data/reviews';
 import { useT } from '../i18n';
+import { useMemberAuth } from '../../features/auth/useMemberAuth';
+import MemberAuthModal from '../../features/auth/MemberAuthModal';
 import type { StringKey } from '../i18n';
 
 // ── Tag data ──────────────────────────────────────────────────────────────────
@@ -103,6 +106,14 @@ export default function ReviewWrite() {
   const [app, setApp] = useState<App | null>(null);
   const [learnerType, setLearnerType] = useState<LearnerType | null>(null);
   const [nickname, setNickname] = useState('');
+
+  // 작성자 신원 (REQ-C / C-2). 로그인 상태면 회원 작성이 기본값이고, 익명으로
+  // 바꿀 수도 있다. `postingAsMember` 가 실제 적용 여부다 — 세션이 없으면 회원
+  // 작성을 선택했더라도 익명으로 떨어진다.
+  const { session, member } = useMemberAuth();
+  const [asMember, setAsMember] = useState(true);
+  const [authOpen, setAuthOpen] = useState(false);
+  const postingAsMember = Boolean(session) && asMember;
   const [level, setLevel] = useState<'beginner' | 'elementary' | 'intermediate' | 'advanced'>('beginner');
   const [goal, setGoal] = useState<'topik' | 'daily' | 'business' | 'culture'>('daily');
   const [usagePeriod, setUsagePeriod] = useState<UsagePeriod>('lt1w');
@@ -136,6 +147,19 @@ export default function ReviewWrite() {
     if (!id) return;
     fetchAppById(id).then(setApp).catch(console.error);
   }, [id]);
+
+  // 회원 작성으로 전환하면 표시명을 자동 입력한다 (REQ-C / C-2).
+  // 익명으로 되돌리면 회원 이름을 남겨 두지 않는다 — 익명 후기에 실명이 붙으면
+  // 사용자가 의도한 것과 다른 결과가 된다.
+  useEffect(() => {
+    if (postingAsMember && member?.display_name) {
+      setNickname(member.display_name);
+    } else if (!postingAsMember && member?.display_name && nickname === member.display_name) {
+      setNickname('');
+    }
+    // nickname 을 의존성에 넣으면 사용자가 지우는 즉시 다시 채워져 입력이 막힌다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postingAsMember, member?.display_name]);
 
   useEffect(() => {
     if (!scrollToField) return;
@@ -233,7 +257,7 @@ export default function ReviewWrite() {
     } catch { /* 조회 실패는 무시하고 진행 */ }
 
     try {
-      await saveUserReview({
+      const payload = {
         appId: app.id,
         nickname: nickname.trim(),
         learnerType,
@@ -245,7 +269,15 @@ export default function ReviewWrite() {
         contentKo: '',
         chosenStrengths,
         chosenLimits,
-      });
+      };
+
+      // 회원 작성은 클라이언트에서 직접 INSERT 하고 트리거가 앱당 1건을 검사한다.
+      // 익명 작성은 IP 판정이 필요해 서버 함수를 경유한다 (결정 D15).
+      if (postingAsMember && session) {
+        await saveMemberReview({ ...payload, authorId: session.user.id });
+      } else {
+        await saveUserReview(payload);
+      }
       setSubmitted(true);
       setTimeout(() => navigate(`/apps/${app.id}`), 2000);
     } catch (err) {
@@ -337,6 +369,42 @@ export default function ReviewWrite() {
                   {t('review.badgeNote')}
                 </p>
 
+                {/* 작성자 신원 선택 (REQ-C / C-2).
+                    로그인 상태면 회원 작성이 기본이고, 익명 전환도 허용한다. */}
+                <div className="mb-6">
+                  <p className="font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
+                    {t('write.identity')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!session) { setAuthOpen(true); return; }
+                        setAsMember(true);
+                      }}
+                      className={`text-[13px] px-4 py-2 rounded-full border transition-all ${
+                        asMember && session
+                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] border-transparent font-bold'
+                          : 'bg-white dark:bg-[#0c141f] text-[#64748b] dark:text-[#bec7d2] border-[#e2e8f0] dark:border-[#232a36]'
+                      }`}
+                    >
+                      {session ? t('write.asMember') : t('write.loginFirst')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAsMember(false)}
+                      className={`text-[13px] px-4 py-2 rounded-full border transition-all ${
+                        !asMember || !session
+                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] border-transparent font-bold'
+                          : 'bg-white dark:bg-[#0c141f] text-[#64748b] dark:text-[#bec7d2] border-[#e2e8f0] dark:border-[#232a36]'
+                      }`}
+                    >
+                      {t('write.asAnon')}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-[12px] text-[#64748b] dark:text-[#8a94a6]">{t('write.memberBenefit')}</p>
+                </div>
+
                 <div ref={nicknameBlockRef}>
                   <label className="block font-['Manrope:Bold',sans-serif] font-bold text-[14px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
                     {t('review.nickname')} <span className="text-[#0ea5e9] dark:text-[#8ecdff]">*</span>
@@ -345,6 +413,8 @@ export default function ReviewWrite() {
                     ref={nicknameInputRef}
                     type="text"
                     value={nickname}
+                    // 회원 작성 시에는 표시명이 자동 입력되고 수정할 수 없다 (C-2)
+                    readOnly={postingAsMember}
                     onChange={(e) => {
                       setNickname(e.target.value);
                       if (fieldErrors.nickname) {
@@ -658,6 +728,15 @@ export default function ReviewWrite() {
       </main>
 
       <Footer />
+
+      {/* '로그인하고 작성' 을 눌렀을 때 여는 모달 (REQ-C / C-2).
+          로그인이 끝나면 이 화면에 그대로 머문다 — 작성 중이던 내용이 살아 있어야 한다. */}
+      <MemberAuthModal
+        open={authOpen}
+        mode="login"
+        onClose={() => setAuthOpen(false)}
+        onDone={() => setAsMember(true)}
+      />
     </div>
   );
 }

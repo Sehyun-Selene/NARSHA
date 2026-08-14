@@ -28,7 +28,27 @@ export default function RequireAuthor({ children }: { children: ReactNode }) {
     return <Navigate to={`/desk/login?next=${next}`} replace />;
   }
 
-  if (profile && profile.is_active === false) {
+  // 세션은 있는데 profiles 행이 없는 계정 = 일반회원이다 (REQ-C / C-3).
+  // auth.users 를 desk 저자와 공유하므로, 로그인만으로 통과시키면 일반회원이
+  // 글쓰기 화면까지 들어온다. 저자 여부는 profiles 행 존재로 판별한다.
+  if (!profile) {
+    return (
+      <DeskShell width="narrow">
+        <div className="py-20 text-center">
+          <h1 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[24px] text-[#1e293b] dark:text-[#dce3f3] mb-3">
+            초대받은 저자만 글을 쓸 수 있어요 · Invited authors only
+          </h1>
+          <p className="font-['Inter:Regular',sans-serif] text-[15px] leading-[1.7] text-[#64748b] dark:text-[#bec7d2]">
+            「나의 한국어 책상」은 초대코드로 참여하는 공간입니다. 글은 누구나 읽을 수 있어요.
+            <br />
+            Korean Desks of the World is invite-only for writing. Anyone can read the posts.
+          </p>
+        </div>
+      </DeskShell>
+    );
+  }
+
+  if (profile.is_active === false) {
     return (
       <DeskShell width="narrow">
         <div className="py-20 text-center">

@@ -91,16 +91,57 @@ export async function getAllReviews(): Promise<Review[]> {
   return (data as ReviewRow[]).map(rowToReview);
 }
 
-export async function getReviewsForApp(appId: string): Promise<Review[]> {
-  const { data, error } = await supabase
+/**
+ * 앱의 후기 목록.
+ *
+ * `limit` — 비로그인 열람 게이팅에서 3건만 요청하기 위한 것이다 (REQ-C / C-1).
+ * 전건을 받아 화면에서만 흐리게 하면 데이터는 이미 브라우저에 도착해 있고
+ * egress 도 그만큼 나간다. 요청 자체를 줄인다.
+ */
+export async function getReviewsForApp(appId: string, limit?: number): Promise<Review[]> {
+  let q = supabase
     .from('reviews')
     .select('*')
     .eq('app_id', appId)
     .eq('is_hidden', false)
     .order('created_at', { ascending: false });
 
+  if (limit !== undefined) q = q.limit(limit);
+
+  const { data, error } = await q;
   if (error) throw error;
   return (data as ReviewRow[]).map(rowToReview);
+}
+
+/** 집계에만 쓰는 경량 행 — 본문을 담지 않는다. */
+export interface ReviewTagStat {
+  learnerType: LearnerType;
+  rating: number;
+  chosenStrengths: string[];
+  chosenLimits: string[];
+}
+
+/**
+ * 평점·강점·한계 집계용 조회 (REQ-C / C-1 게이팅과 함께 도입).
+ *
+ * 게이팅으로 후기 목록을 3건만 받으면 "후기 N개 기준" 같은 집계가 3건 기준이 되어
+ * 사실과 어긋난다. 집계에 필요한 것은 태그와 별점뿐이므로 본문을 뺀 전건을 따로
+ * 받는다 — 게이팅 대상(본문)은 여전히 내려가지 않고, 전송량도 작다.
+ */
+export async function getReviewTagStats(appId: string): Promise<ReviewTagStat[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('learner_type, rating, chosen_strengths, chosen_limits')
+    .eq('app_id', appId)
+    .eq('is_hidden', false);
+
+  if (error) throw error;
+  return (data ?? []).map((r: Record<string, unknown>) => ({
+    learnerType: r.learner_type as LearnerType,
+    rating: r.rating as number,
+    chosenStrengths: (r.chosen_strengths as string[]) ?? [],
+    chosenLimits: (r.chosen_limits as string[]) ?? [],
+  }));
 }
 
 export async function getAverageRatingByType(
@@ -193,6 +234,75 @@ export async function saveUserReview(
   return { id: json.id as string };
 }
 
+/**
+ * 로그인 회원의 후기 저장 (REQ-C / C-2).
+ *
+ * 서버 함수를 거치지 않고 직접 INSERT 한다 — `author_id` 가 있으므로 `auth.uid()`
+ * 로 작성자를 확실히 식별할 수 있고, 앱당 1건 제한은 `reviews_one_per_app`
+ * 트리거가 DB 안에서 검사한다 (결정 D15). IP 를 볼 필요가 없다.
+ */
+export async function saveMemberReview(
+  input: Omit<Review, 'id' | 'createdAt' | 'helpfulCount'> & { authorId: string },
+): Promise<{ id: string }> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .insert({
+      app_id: input.appId,
+      author_id: input.authorId,
+      nickname: input.nickname,
+      learner_type: input.learnerType,
+      level: input.level,
+      goal: input.goal,
+      usage_period: input.usagePeriod,
+      rating: input.rating,
+      content: input.content || null,
+      content_ko: input.contentKo || null,
+      image_urls: [],
+      chosen_strengths: input.chosenStrengths ?? [],
+      chosen_limits: input.chosenLimits ?? [],
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    // 트리거가 올리는 예외 메시지를 코드값으로 전달한다
+    if (error.message.includes('REVIEW_ALREADY_EXISTS')) throw new Error('REVIEW_ALREADY_EXISTS');
+    throw error;
+  }
+  return { id: (data as { id: string }).id };
+}
+
+// ── 내 후기 (REQ-C / C-4) ───────────────────────────────────────────────────
+// 익명 후기(author_id IS NULL)는 소유자를 증명할 수 없어 대상이 아니다.
+
+export async function getMyReviews(userId: string): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('author_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ReviewRow[]).map(rowToReview);
+}
+
+export async function updateMyReview(
+  reviewId: string,
+  patch: { content: string; rating: number },
+): Promise<void> {
+  const { error } = await supabase
+    .from('reviews')
+    .update({ content: patch.content, rating: patch.rating })
+    .eq('id', reviewId);
+
+  if (error) throw error;
+}
+
+export async function deleteMyReview(reviewId: string): Promise<void> {
+  const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
+  if (error) throw error;
+}
+
 /** 서버 함수가 돌려준 코드 → 사용자에게 보일 문구 키. */
 export function reviewSubmitErrorKey(code: string): string {
   switch (code) {
@@ -203,6 +313,8 @@ export function reviewSubmitErrorKey(code: string): string {
     case 'CONTENT_TOO_LONG':      return 'review.err.contentMax';
     case 'NICKNAME_INVALID':      return 'review.err.nicknameLen';
     case 'SERVER_NOT_CONFIGURED': return 'review.err.serverConfig';
+    // 회원이 같은 앱에 두 번째 후기를 쓰려 한 경우 — 수정으로 안내한다 (REQ-E / E-1)
+    case 'REVIEW_ALREADY_EXISTS': return 'review.err.alreadyReviewed';
     default:                      return 'review.err.submit';
   }
 }

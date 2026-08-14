@@ -475,6 +475,79 @@ export const DICT = {
   'sort.ratingHigh': { ko: '평점 높은순', en: 'Highest rated' },
   'sort.ratingLow':  { ko: '평점 낮은순', en: 'Lowest rated' },
 
+  // ── 일반회원 로그인·가입 (GNB PRD REQ-C / C-3) ───────────────────────────
+  'member.login':          { ko: '로그인', en: 'Log in' },
+  'member.logout':         { ko: '로그아웃', en: 'Log out' },
+  'member.signup':         { ko: '가입하기', en: 'Sign up' },
+  'member.loginTitle':     { ko: '로그인', en: 'Log in' },
+  'member.signupTitle':    { ko: '회원 가입', en: 'Create an account' },
+  'member.google':         { ko: 'Google로 계속하기', en: 'Continue with Google' },
+  'member.or':             { ko: '또는', en: 'or' },
+  'member.email':          { ko: '이메일', en: 'Email' },
+  'member.password':       { ko: '비밀번호', en: 'Password' },
+  'member.passwordHint':   { ko: '8자 이상', en: 'At least 8 characters' },
+  'member.displayName':    { ko: '표시할 이름', en: 'Display name' },
+  'member.displayNameHint': { ko: '후기에 이 이름이 표시돼요.', en: 'This name appears on your reviews.' },
+  // 링크 두 개를 문장 사이에 끼워 넣어야 해서 앞·중간·뒤 세 조각으로 나눈다.
+  // 문자열에 HTML 을 넣지 않는 규칙(§4)을 지키면서 링크를 살리기 위한 분할이다.
+  'member.consentPre':  { ko: '', en: 'I agree to the ' },
+  'member.consentMid':  { ko: '과 ', en: ' and ' },
+  'member.consentPost': { ko: '에 동의합니다.', en: '.' },
+  'member.toSignup':       { ko: '계정이 없으신가요? 가입하기', en: "Don't have an account? Sign up" },
+  'member.toLogin':        { ko: '이미 계정이 있으신가요? 로그인', en: 'Already have an account? Log in' },
+  'member.forgot':         { ko: '비밀번호를 잊으셨나요?', en: 'Forgot your password?' },
+  'member.resetSent':      { ko: '비밀번호 재설정 메일을 보냈어요.', en: 'Password reset email sent.' },
+  'member.welcome':        { ko: '로그인했어요.', en: 'You are logged in.' },
+  'member.signedUp':       { ko: '가입이 완료됐어요.', en: 'Your account is ready.' },
+  'member.confirmEmail':   { ko: '메일로 보낸 확인 링크를 눌러 주세요.', en: 'Please click the confirmation link we emailed you.' },
+  'member.myReviews':      { ko: '내 후기', en: 'My reviews' },
+
+  // 오류 문구 — 서버·SDK 가 주는 코드값을 사람이 읽을 문장으로 바꾼다
+  'member.err.EMAIL_INVALID':            { ko: '이메일 주소를 확인해 주세요.', en: 'Please check your email address.' },
+  'member.err.PASSWORD_TOO_SHORT':       { ko: '비밀번호는 8자 이상이어야 해요.', en: 'Password must be at least 8 characters.' },
+  'member.err.DISPLAY_NAME_REQUIRED':    { ko: '표시할 이름을 입력해 주세요.', en: 'Please enter a display name.' },
+  'member.err.EMAIL_ALREADY_REGISTERED': { ko: '이미 가입된 이메일이에요. 로그인해 주세요.', en: 'This email is already registered. Please log in.' },
+  'member.err.INVALID_CREDENTIALS':      { ko: '이메일 또는 비밀번호가 맞지 않아요.', en: 'Email or password is incorrect.' },
+  'member.err.EMAIL_NOT_CONFIRMED':      { ko: '메일로 보낸 확인 링크를 먼저 눌러 주세요.', en: 'Please confirm your email first.' },
+  'member.err.CONSENT_REQUIRED':         { ko: '약관과 개인정보처리방침에 동의해 주세요.', en: 'Please agree to the Terms and Privacy Policy.' },
+  'member.err.SIGNUP_FAILED':            { ko: '가입에 실패했어요. 잠시 후 다시 시도해 주세요.', en: 'Sign-up failed. Please try again.' },
+  'member.err.SIGNIN_FAILED':            { ko: '로그인에 실패했어요. 잠시 후 다시 시도해 주세요.', en: 'Log-in failed. Please try again.' },
+  'member.err.OAUTH_FAILED':             { ko: 'Google 로그인을 시작할 수 없었어요.', en: 'Could not start Google sign-in.' },
+  'member.err.UNKNOWN':                  { ko: '문제가 생겼어요. 잠시 후 다시 시도해 주세요.', en: 'Something went wrong. Please try again.' },
+
+  // ── 학습유형 계정 동기화 (GNB PRD REQ-G) ─────────────────────────────────
+  // 유형이 조용히 바뀌면 사용자가 "왜 다른 유형이 뜨지" 하고 혼란스러워한다
+  'ltype.pulled': { ko: '계정에 저장된 학습유형({t})을 적용했어요.', en: 'Applied the learner type saved to your account ({t}).' },
+  'ltype.pushed': { ko: '학습유형({t})을 계정에 저장했어요.', en: 'Saved your learner type ({t}) to your account.' },
+
+  // ── 열람 게이팅 (GNB PRD REQ-C / C-1) ────────────────────────────────────
+  'gate.moreReviews':  { ko: '이 앱의 후기 {n}개가 더 있어요', en: '{n} more reviews for this app' },
+  'gate.loginToRead':  { ko: '로그인하고 모두 보기', en: 'Log in to read all' },
+  'gate.noAccount':    { ko: '계정이 없으신가요? 가입하기', en: "Don't have an account? Sign up" },
+  'gate.typeBanner':   { ko: '로그인하면 후기 전문을 볼 수 있어요', en: 'Log in to read full reviews' },
+
+  // ── 후기 작성자 신원 (GNB PRD REQ-C / C-2) ───────────────────────────────
+  'write.identity':      { ko: '작성자', en: 'Posting as' },
+  'write.asMember':      { ko: '로그인하고 작성', en: 'Post with my account' },
+  'write.asAnon':        { ko: '닉네임으로 작성', en: 'Post with a nickname' },
+  'write.memberBenefit': { ko: '내가 쓴 후기를 한곳에서 모아 보고, 수정·삭제할 수 있어요.', en: 'See all your reviews in one place, and edit or delete them.' },
+  'write.loginFirst':    { ko: '로그인이 필요해요', en: 'Log in to continue' },
+
+  // ── 내 후기 (GNB PRD REQ-C / C-4) ────────────────────────────────────────
+  'my.title':        { ko: '내 후기', en: 'My reviews' },
+  'my.empty':        { ko: '아직 작성한 후기가 없어요.', en: 'You have not written any reviews yet.' },
+  'my.emptyHint':    { ko: '서비스를 찾아 첫 후기를 남겨 보세요.', en: 'Find a service and write your first review.' },
+  'my.browse':       { ko: '서비스 찾아보기', en: 'Browse services' },
+  'my.edit':         { ko: '수정', en: 'Edit' },
+  'my.delete':       { ko: '삭제', en: 'Delete' },
+  'my.save':         { ko: '저장', en: 'Save' },
+  'my.cancel':       { ko: '취소', en: 'Cancel' },
+  'my.deleteConfirm': { ko: '이 후기를 삭제할까요? 되돌릴 수 없어요.', en: 'Delete this review? This cannot be undone.' },
+  'my.deleted':      { ko: '후기를 삭제했어요.', en: 'Review deleted.' },
+  'my.saved':        { ko: '후기를 수정했어요.', en: 'Review updated.' },
+  'my.loginNeeded':  { ko: '내 후기를 보려면 로그인해 주세요.', en: 'Please log in to see your reviews.' },
+  'my.anonNote':     { ko: '닉네임으로 쓴 후기는 여기에 나오지 않아요. 작성자를 확인할 방법이 없기 때문이에요.', en: 'Reviews posted with a nickname do not appear here — there is no way to verify who wrote them.' },
+
   // ── 후기 신고 (GNB PRD REQ-E / E-3) ──────────────────────────────────────
   'report.open':          { ko: '신고하기', en: 'Report' },
   'report.menu':          { ko: '더보기', en: 'More' },
@@ -505,6 +578,7 @@ export const DICT = {
   'review.err.rateHour':    { ko: '후기는 한 시간에 3건까지 쓸 수 있어요. 잠시 후 다시 시도해 주세요.', en: 'You can post up to 3 reviews per hour. Please try again later.' },
   'review.err.rateSameApp': { ko: '같은 서비스에는 24시간에 한 번만 후기를 쓸 수 있어요.', en: 'You can review the same service once per 24 hours.' },
   'review.err.serverConfig': { ko: '후기 저장 기능이 아직 준비되지 않았어요. 운영자에게 알려 주세요.', en: 'Review submission is not configured yet. Please let us know.' },
+  'review.err.alreadyReviewed': { ko: '이 서비스에는 이미 후기를 남겼어요. 「내 후기」에서 수정할 수 있어요.', en: 'You already reviewed this service. You can edit it in My reviews.' },
   // {n} 현재 글자 수, {max} 상한
   'review.counter': { ko: '{n} / {max}자', en: '{n} / {max}' },
 

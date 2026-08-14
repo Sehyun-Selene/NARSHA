@@ -12,6 +12,7 @@ import Faq from './pages/Faq';
 import Methodology from './pages/Methodology';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
+import MyReviews from './pages/MyReviews';
 import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
 
@@ -54,6 +55,9 @@ export const router = createBrowserRouter([
       { path: 'survey/questions', Component: Survey },
       { path: 'survey/result', Component: SurveyResult },
       { path: 'survey', Component: SurveyIntro },
+      // 내 후기 (REQ-C / C-4). 로그인 판정은 페이지 안에서 한다 — 가드로 리다이렉트하면
+      // 비로그인 사용자가 왜 튕겼는지 알 수 없다.
+      { path: 'my/reviews', Component: MyReviews },
       { path: 'about', Component: About },
       { path: 'faq', Component: Faq },
       { path: 'methodology', Component: Methodology },

@@ -5,6 +5,8 @@ import { Moon, Sun, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { type Lang } from '../lib/useLang';
 import { useT } from '../i18n';
+import { useMemberAuth } from '../../features/auth/useMemberAuth';
+import MemberAuthModal from '../../features/auth/MemberAuthModal';
 
 const LOGO_SRC = '/narsha-logo.png';
 
@@ -69,10 +71,56 @@ function ThemeToggle({ theme, toggleTheme, label }: { theme: string; toggleTheme
   );
 }
 
+/**
+ * 일반회원 진입점 (GNB PRD REQ-C / C-3).
+ * desk 저자 로그인(`/desk/login`)과 별개다 — 초대코드 화면을 일반 학습자에게
+ * 보여주면 "코드가 없으면 못 쓰는 사이트"로 읽힌다.
+ */
+function MemberNav({ onRequestAuth }: { onRequestAuth: (mode: 'login' | 'signup') => void }) {
+  const { t } = useT();
+  const { session, signOut } = useMemberAuth();
+
+  if (session) {
+    return (
+      <div className="flex items-center gap-3 shrink-0">
+        <NavLink to="/my/reviews" className={navLinkClass}>{t('member.myReviews')}</NavLink>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="text-[13px] text-[#94a3b8] hover:text-[#64748b] dark:hover:text-[#8a94a6] whitespace-nowrap"
+        >
+          {t('member.logout')}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 shrink-0">
+      <button
+        type="button"
+        onClick={() => onRequestAuth('login')}
+        className="text-[13px] font-medium text-[#64748b] dark:text-[#bec7d2] hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] whitespace-nowrap"
+      >
+        {t('member.login')}
+      </button>
+      <button
+        type="button"
+        onClick={() => onRequestAuth('signup')}
+        className="text-[13px] font-bold px-3 py-1.5 rounded-full bg-[#e0f2fe] dark:bg-[#1b5a7a]/40 text-[#0369a1] dark:text-[#8ecdff] whitespace-nowrap"
+      >
+        {t('member.signup')}
+      </button>
+    </div>
+  );
+}
+
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { t, lang, setLang } = useT();
   const [open, setOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
+  const { session, signOut } = useMemberAuth();
   const location = useLocation();
 
   // 페이지 이동 시 드로어 닫기
@@ -116,6 +164,8 @@ export default function Header() {
           </nav>
           <LangToggle lang={lang} setLang={setLang} />
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} label={t('nav.toggleTheme')} />
+          {/* 일반회원 진입점 (REQ-C / C-3). desk 로그인과 구분해 별도로 둔다 */}
+          <MemberNav onRequestAuth={setAuthMode} />
         </div>
 
         {/* 모바일 — 햄버거 */}
@@ -171,6 +221,23 @@ export default function Header() {
             <NavLink to="/survey" end className={drawerLinkClass} onClick={clearReturnApp}>
               {t('nav.survey')}
             </NavLink>
+            {session ? (
+              <>
+                <NavLink to="/my/reviews" className={drawerLinkClass}>{t('member.myReviews')}</NavLink>
+                <button type="button" onClick={() => void signOut()} className={`${drawerLinkClass({ isActive: false })} w-full text-left`}>
+                  {t('member.logout')}
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => setAuthMode('login')} className={`${drawerLinkClass({ isActive: false })} w-full text-left`}>
+                  {t('member.login')}
+                </button>
+                <button type="button" onClick={() => setAuthMode('signup')} className={`${drawerLinkClass({ isActive: false })} w-full text-left`}>
+                  {t('member.signup')}
+                </button>
+              </>
+            )}
           </nav>
 
           <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0] dark:border-[#232a36]">
@@ -181,6 +248,13 @@ export default function Header() {
       </div>,
       document.body,
       )}
+
+      {/* 로그인·가입 모달은 헤더가 소유한다 — 어느 페이지에서든 같은 진입점이 필요하다 */}
+      <MemberAuthModal
+        open={authMode !== null}
+        mode={authMode ?? 'login'}
+        onClose={() => setAuthMode(null)}
+      />
     </header>
   );
 }
