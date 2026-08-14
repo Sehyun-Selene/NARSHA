@@ -12,10 +12,25 @@ import {
   type BoostSuggestion,
   type AccuracyCheck,
 } from '../data/adminAlerts';
+import {
+  fetchReportedReviews,
+  setReviewHidden,
+  resolveReports,
+  type ReportedReview,
+} from '../data/reports';
 import { STRENGTH_LABELS } from '../lib/tagLabels';
 import { ALERT_THRESHOLDS } from '../lib/alertThresholds';
 import { useDeskAuth } from '../../features/desk/auth/useDeskAuth';
 import { supabase } from '../../lib/supabase';
+
+/** 신고 사유 코드 → 운영자 화면 라벨. DB 에 저장되는 값은 코드 쪽이다. */
+const REPORT_REASON_KO: Record<string, string> = {
+  spam: '스팸·광고',
+  abuse: '욕설·비방',
+  false_info: '허위 정보',
+  privacy: '개인정보 노출',
+  other: '기타',
+};
 
 function tagLabel(tag: string) {
   return STRENGTH_LABELS[tag] ?? tag;
@@ -190,6 +205,108 @@ function AccuracyCard({
  * `/desk` 운영 탭에서 이미 쓰던 방식(Supabase Auth 세션 + 서버에 저장된 역할)으로
  * 통일한다. 경로를 숨기는 `VITE_ADMIN_PATH` 는 유지하되 보안 수단으로 보지 않는다.
  */
+/**
+ * 신고된 후기 카드 (GNB PRD REQ-E / E-3, 결정 D10).
+ *
+ * 숨김과 검토완료를 나눠 둔 이유 — 신고가 타당하지 않은 경우가 대부분일 수 있다.
+ * 그때 "숨기지 않고 목록에서 내리는" 수단이 없으면 같은 신고를 계속 다시 보게 된다.
+ *
+ * 문자열은 이 파일 관례대로 한국어 리터럴로 둔다. 운영자 전용 화면이라 언어 전환
+ * 대상이 아니고, 이 페이지 전체가 아직 DICT 를 쓰지 않아 한 섹션만 옮기면
+ * 영어 모드에서 절반만 번역된 화면이 된다.
+ */
+function ReportCard({ item, onAction }: { item: ReportedReview; onAction: () => void }) {
+  const [busy, setBusy] = useState(false);
+
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await fn();
+      onAction();
+    } catch (e) {
+      const code = e instanceof Error ? e.message : 'UNKNOWN';
+      toast.error(`처리 실패 (${code})`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const hide = () => {
+    const reason = window.prompt('숨김 사유 (기록용, 선택)') ?? undefined;
+    void run(async () => {
+      await setReviewHidden(item.reviewId, true, reason);
+      await resolveReports(item.reviewId);
+      toast.success('후기를 숨겼습니다.');
+    });
+  };
+
+  const unhide = () => void run(async () => {
+    await setReviewHidden(item.reviewId, false);
+    toast.success('후기를 복구했습니다.');
+  });
+
+  const keep = () => void run(async () => {
+    await resolveReports(item.reviewId);
+    toast.success('검토 완료로 표시했습니다.');
+  });
+
+  return (
+    <div className="rounded-[12px] border border-[#e2e8f0] dark:border-[#232a36] p-4">
+      <div className="flex items-center gap-2 flex-wrap mb-2">
+        <span className="text-[12px] font-bold text-[#dc2626]">신고 {item.reportCount}건</span>
+        {Object.entries(item.reasons).map(([reason, n]) => (
+          <span key={reason} className="text-[11px] px-2 py-0.5 rounded-full bg-[#fef2f2] dark:bg-[#3f1d1d] text-[#dc2626]">
+            {REPORT_REASON_KO[reason] ?? reason} {n}
+          </span>
+        ))}
+        {item.isHidden && (
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#1e293b] text-white">숨김 상태</span>
+        )}
+        <Link to={`/apps/${item.appId}`} className="ml-auto text-[12px] text-[#1b99dc] hover:underline">
+          {item.appId} →
+        </Link>
+      </div>
+
+      <p className="text-[12px] text-[#94a3b8] mb-1">
+        {item.nickname} · {item.createdAt.toLocaleDateString('ko-KR')}
+      </p>
+      {/* 원문을 보여준다 — 숨김 판단은 사유 라벨만으로는 할 수 없다 */}
+      <p className="text-[13px] leading-[1.6] text-[#1e293b] dark:text-[#dce3f3] whitespace-pre-wrap break-words mb-2">
+        {item.content || '(본문 없음)'}
+      </p>
+
+      {item.details.length > 0 && (
+        <ul className="mb-3 space-y-1">
+          {item.details.map((d, i) => (
+            <li key={i} className="text-[12px] text-[#64748b] dark:text-[#8a94a6] pl-3 border-l-2 border-[#e2e8f0] dark:border-[#232a36]">
+              {d}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {item.hiddenReason && (
+        <p className="text-[12px] text-[#94a3b8] mb-3">숨김 사유: {item.hiddenReason}</p>
+      )}
+
+      <div className="flex items-center gap-3">
+        {item.isHidden ? (
+          <button onClick={unhide} disabled={busy} className="text-[13px] text-[#1b99dc] hover:underline disabled:opacity-50">
+            숨김 해제
+          </button>
+        ) : (
+          <button onClick={hide} disabled={busy} className="text-[13px] font-bold text-[#dc2626] hover:underline disabled:opacity-50">
+            숨기기
+          </button>
+        )}
+        <button onClick={keep} disabled={busy} className="text-[13px] text-[#64748b] hover:underline disabled:opacity-50">
+          문제 없음 (검토 완료)
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -294,11 +411,14 @@ export default function AdminDashboard() {
 
   const [boostItems, setBoostItems] = useState<BoostSuggestion[]>([]);
   const [accuracyItems, setAccuracyItems] = useState<AccuracyCheck[]>([]);
+  const [reports, setReports] = useState<ReportedReview[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
+      // 신고 조회는 RLS 의 is_admin() 을 타므로 실패해도 태그 알림은 보여야 한다.
+      // Promise.all 로 묶으면 한쪽 실패가 화면 전체를 비운다.
       const [boost, accuracy] = await Promise.all([
         getBoostSuggestions(),
         getAccuracyChecks(),
@@ -309,6 +429,13 @@ export default function AdminDashboard() {
       toast.error('Failed to load alerts.');
     } finally {
       setLoading(false);
+    }
+
+    try {
+      setReports(await fetchReportedReviews());
+    } catch (e) {
+      const code = e instanceof Error ? e.message : 'UNKNOWN';
+      toast.error(`신고 목록을 불러오지 못했습니다 (${code})`);
     }
   };
 
@@ -361,6 +488,24 @@ export default function AdminDashboard() {
               정확성 검토: 리뷰 {ALERT_THRESHOLDS.accuracyCheck.minReviews}개↑ &amp; {ALERT_THRESHOLDS.accuracyCheck.maxSupporterPct}%↓
             </p>
           </div>
+
+          {/* 신고된 후기 (REQ-E / E-3) — 태그 알림과 성격이 달라 위쪽에 따로 둔다.
+              스팸·개인정보 노출은 태그 검토보다 급하다. */}
+          {reports.length > 0 && (
+            <section className="mb-12">
+              <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] text-[#1e293b] dark:text-[#dce3f3] mb-1">
+                🚩 신고된 후기 <span className="text-[#dc2626]">{reports.length}</span>
+              </h2>
+              <p className="text-[13px] text-[#64748b] dark:text-[#bec7d2] mb-4">
+                신고만으로는 후기가 내려가지 않습니다. 원문을 보고 직접 판단해 주세요.
+              </p>
+              <div className="space-y-3">
+                {reports.map(item => (
+                  <ReportCard key={item.reviewId} item={item} onAction={load} />
+                ))}
+              </div>
+            </section>
+          )}
 
           {loading ? (
             <div className="flex justify-center py-24">

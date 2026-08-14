@@ -21,6 +21,7 @@ import {
   type ReviewSort,
 } from '../data/reviews';
 import ReviewSortSelect from '../components/ReviewSortSelect';
+import ReviewReportMenu from '../components/ReviewReportMenu';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { tagLabel, tagLongLabel, useT } from '../i18n';
@@ -664,6 +665,10 @@ export default function AppDetail() {
                             <MessageSquare className="w-5 h-5" />
                             <span>Reply</span>
                           </button>
+                          {/* 신고 진입점은 우측 하단에 눈에 띄지 않게 둔다 (REQ-E / E-3) */}
+                          <div className="ml-auto">
+                            <ReviewReportMenu reviewId={review.id} />
+                          </div>
                         </div>
 
                         {replyingTo === review.id && (

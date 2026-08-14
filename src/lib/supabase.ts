@@ -11,6 +11,7 @@ export type Database = {
       apps: { Row: AppRow };
       reviews: { Row: ReviewRow };
       review_replies: { Row: ReviewReplyRow };
+      review_reports: { Row: ReviewReportRow };
       profiles: { Row: ProfileRow };
       desk_posts: { Row: DeskPostRow };
       desk_post_revisions: { Row: DeskPostRevisionRow };
@@ -63,6 +64,21 @@ export interface ReviewRow {
   helpful_count: number;
   chosen_strengths: string[];
   chosen_limits: string[];
+  /** 운영자 숨김 (REQ-E / E-3). 공개 조회는 RLS 와 쿼리 양쪽에서 걸러진다 */
+  is_hidden: boolean;
+  hidden_reason: string | null;
+  hidden_at: string | null;
+  created_at: string;
+}
+
+export interface ReviewReportRow {
+  id: string;
+  review_id: string;
+  reporter_id: string | null;
+  reporter_key: string | null;
+  reason: string;
+  detail: string | null;
+  resolved_at: string | null;
   created_at: string;
 }
 

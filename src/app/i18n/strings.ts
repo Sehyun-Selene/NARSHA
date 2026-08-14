@@ -475,6 +475,27 @@ export const DICT = {
   'sort.ratingHigh': { ko: '평점 높은순', en: 'Highest rated' },
   'sort.ratingLow':  { ko: '평점 낮은순', en: 'Lowest rated' },
 
+  // ── 후기 신고 (GNB PRD REQ-E / E-3) ──────────────────────────────────────
+  'report.open':          { ko: '신고하기', en: 'Report' },
+  'report.menu':          { ko: '더보기', en: 'More' },
+  'report.title':         { ko: '이 후기를 신고합니다', en: 'Report this review' },
+  'report.lead':          { ko: '접수된 신고는 운영자가 직접 확인합니다. 신고만으로 후기가 바로 내려가지는 않습니다.', en: 'Reports are reviewed by our team. A report alone does not remove a review.' },
+  'report.reasonLabel':   { ko: '사유', en: 'Reason' },
+  'report.reason.spam':       { ko: '스팸·광고', en: 'Spam or advertising' },
+  'report.reason.abuse':      { ko: '욕설·비방', en: 'Abusive language' },
+  'report.reason.false_info': { ko: '허위 정보', en: 'False information' },
+  'report.reason.privacy':    { ko: '개인정보 노출', en: 'Personal information exposed' },
+  'report.reason.other':      { ko: '기타', en: 'Other' },
+  'report.detailLabel':   { ko: '자세한 내용 (선택)', en: 'Details (optional)' },
+  'report.detailPh':      { ko: '어떤 점이 문제인지 적어 주세요.', en: 'Tell us what the problem is.' },
+  'report.submit':        { ko: '신고 접수', en: 'Submit report' },
+  'report.cancel':        { ko: '취소', en: 'Cancel' },
+  'report.done':          { ko: '신고가 접수됐습니다. 확인 후 처리하겠습니다.', en: 'Report received. We will review it.' },
+  'report.already':       { ko: '이미 신고한 후기예요.', en: 'You already reported this review.' },
+  'report.rateLimited':   { ko: '신고가 너무 잦습니다. 잠시 후 다시 시도해 주세요.', en: 'Too many reports. Please try again later.' },
+  'report.failed':        { ko: '신고 접수에 실패했어요.', en: 'Could not submit the report.' },
+  'report.reasonRequired': { ko: '사유를 선택해 주세요.', en: 'Please choose a reason.' },
+
   // ── 후기 입력 검증 (GNB PRD REQ-E / E-2) ─────────────────────────────────
   'review.err.nicknameLen': { ko: '닉네임은 2~20자로 입력해 주세요.', en: 'Nickname must be 2–20 characters.' },
   'review.err.contentMin':  { ko: '후기는 20자 이상 적어 주세요.', en: 'Please write at least 20 characters.' },

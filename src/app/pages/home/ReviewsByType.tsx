@@ -8,6 +8,7 @@ import {
   type Review, type ReviewSort,
 } from '../../data/reviews';
 import ReviewSortSelect from '../../components/ReviewSortSelect';
+import ReviewReportMenu from '../../components/ReviewReportMenu';
 import { fetchApps, appName, type App } from '../../data/apps';
 import { learnerTypes, type LearnerType } from '../../data/learnerTypes';
 import { useT } from '../../i18n';
@@ -253,18 +254,22 @@ export default function ReviewsByType({
                       </span>
                     </div>
 
-                    <button
-                      onClick={e => { void onHelpfulClick(review.id, e); }}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[13px] transition-all whitespace-nowrap ${
-                        marked.has(review.id)
-                          ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] shadow-lg'
-                          : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
-                      }`}
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                      <span>{t('rbt.helpful')}</span>
-                      <span className="opacity-60">({counts[review.id] ?? review.helpfulCount ?? 0})</span>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={e => { void onHelpfulClick(review.id, e); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[13px] transition-all whitespace-nowrap ${
+                          marked.has(review.id)
+                            ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] shadow-lg'
+                            : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
+                        }`}
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        <span>{t('rbt.helpful')}</span>
+                        <span className="opacity-60">({counts[review.id] ?? review.helpfulCount ?? 0})</span>
+                      </button>
+                      {/* 신고 진입점 (REQ-E / E-3). 카드가 Link 라서 컴포넌트가 클릭을 끊는다 */}
+                      <ReviewReportMenu reviewId={review.id} />
+                    </div>
                   </div>
                 </div>
               </Link>

@@ -78,10 +78,13 @@ function rowToReview(row: ReviewRow): Review {
 
 // ── Fetch ────────────────────────────────────────────────────────────────────
 
+// 숨김 후기는 목록·집계 어디에도 넣지 않는다 (REQ-E / E-3). RLS 에서도 잘리지만
+// 관리자 세션에서는 통과하므로, 공개 화면 쿼리는 여기서도 명시적으로 건다.
 export async function getAllReviews(): Promise<Review[]> {
   const { data, error } = await supabase
     .from('reviews')
     .select('*')
+    .eq('is_hidden', false)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -93,6 +96,7 @@ export async function getReviewsForApp(appId: string): Promise<Review[]> {
     .from('reviews')
     .select('*')
     .eq('app_id', appId)
+    .eq('is_hidden', false)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -107,7 +111,8 @@ export async function getAverageRatingByType(
     .from('reviews')
     .select('rating')
     .eq('app_id', appId)
-    .eq('learner_type', learnerType);
+    .eq('learner_type', learnerType)
+    .eq('is_hidden', false);
 
   if (error) throw error;
   if (!data || data.length === 0) return 0;
@@ -119,7 +124,8 @@ export async function getOverallRating(appId: string): Promise<number> {
   const { data, error } = await supabase
     .from('reviews')
     .select('rating')
-    .eq('app_id', appId);
+    .eq('app_id', appId)
+    .eq('is_hidden', false);
 
   if (error) throw error;
   if (!data || data.length === 0) return 0;
@@ -131,7 +137,8 @@ export async function getReviewCount(appId: string): Promise<number> {
   const { count, error } = await supabase
     .from('reviews')
     .select('id', { count: 'exact', head: true })
-    .eq('app_id', appId);
+    .eq('app_id', appId)
+    .eq('is_hidden', false);
 
   if (error) throw error;
   return count ?? 0;
