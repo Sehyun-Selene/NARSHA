@@ -41,7 +41,21 @@ const KO = () => (
 
     <section>
       <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">제4조 (이용 자격)</h2>
-      <p>별도의 회원가입 없이 모든 이용자가 서비스를 이용할 수 있습니다. 다만 만 14세 미만은 보호자 동의 후 이용을 권장합니다.</p>
+      <p>회원가입 없이도 서비스를 이용할 수 있습니다. 다만 만 14세 미만은 보호자 동의 후 이용을 권장합니다.</p>
+    </section>
+
+    {/* 일반회원 계정 신설 (GNB PRD REQ-C) */}
+    <section>
+      <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">제4조의2 (회원 계정)</h2>
+      <ol className="list-decimal pl-5 space-y-2 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
+        <li>회원가입은 선택입니다. 가입하지 않아도 서비스 탐색과 닉네임 후기 작성은 그대로 이용할 수 있습니다.</li>
+        <li>계정을 만들면 후기 전문 열람, 「내 후기」에서의 수정·삭제, 학습 유형 검사 결과의 기기 간 동기화를 이용할 수 있습니다.</li>
+        <li>계정은 이메일·비밀번호 또는 Google 계정으로 만들 수 있습니다. 가입 시 이용약관과 개인정보처리방침에 동의해야 합니다.</li>
+        <li>계정 정보(이메일·비밀번호)의 관리 책임은 이용자에게 있습니다. 계정을 타인과 공유하거나 양도할 수 없습니다.</li>
+        <li>같은 서비스에 대해 회원은 후기를 1건만 작성할 수 있습니다. 추가로 남기고 싶은 내용은 기존 후기를 수정해 주세요.</li>
+        <li>탈퇴는 문의 연락처로 요청할 수 있습니다. 탈퇴 시 계정과 계정에 저장된 정보는 삭제되며, 이미 발행한 후기의 처리는 개인정보처리방침 제3조를 따릅니다.</li>
+        <li>「나의 한국어 책상」의 글쓰기는 초대받은 저자만 이용할 수 있고, 일반 회원 계정으로는 이용할 수 없습니다. 글 읽기는 누구나 가능합니다.</li>
+      </ol>
     </section>
 
     <section>
@@ -83,6 +97,16 @@ const KO = () => (
         <li>명백한 허위·악의적 콘텐츠로 판단되는 경우</li>
         <li>법령 위반</li>
       </ol>
+      {/* 신고 처리 방식을 밝힌다 — 자동 숨김이 아니라는 점이 중요하다 (REQ-E / E-3, 결정 D10) */}
+      <p className="mt-3 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
+        이용자는 후기를 신고할 수 있습니다. 신고가 접수되어도 후기는 그대로 노출되며, 운영자가 원문을
+        확인한 뒤에만 숨김 처리합니다. 신고 자체로 콘텐츠가 삭제되거나 내려가지는 않습니다.
+        숨김 처리된 후기는 삭제되지 않고 보관되며, 판단이 잘못된 경우 복구할 수 있습니다.
+      </p>
+      <p className="mt-2 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
+        서비스는 어뷰징을 막기 위해 후기 작성과 신고에 빈도 제한을 둡니다. 익명 작성은 동일 접속
+        환경에서 시간당 3건, 같은 서비스에는 24시간에 1건으로 제한됩니다.
+      </p>
     </section>
 
     <section>
@@ -124,7 +148,20 @@ const EN = () => (
 
     <section>
       <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">Article 4 — Eligibility</h2>
-      <p>All users may access the Service without registration. Users under 14 years of age are encouraged to obtain parental consent before use.</p>
+      <p>You may use the Service without registering. Users under 14 years of age are encouraged to obtain parental consent before use.</p>
+    </section>
+
+    <section>
+      <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">Article 4-2 — Member Accounts</h2>
+      <ol className="list-decimal pl-5 space-y-2 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
+        <li>Registration is optional. Without an account you can still browse services and post reviews under a nickname.</li>
+        <li>With an account you can read full reviews, edit and delete your own reviews in “My reviews”, and carry your learner type across devices.</li>
+        <li>Accounts can be created with an email and password, or with a Google account. You must agree to these Terms and the Privacy Policy to register.</li>
+        <li>You are responsible for keeping your credentials secure. Accounts may not be shared or transferred.</li>
+        <li>Members may post one review per service. To add more, edit your existing review.</li>
+        <li>To close your account, contact us at the address below. Your account and the information stored with it will be deleted; published reviews are handled as described in Article 3 of the Privacy Policy.</li>
+        <li>Writing in Korean Desks of the World is limited to invited authors and is not available with a member account. Anyone may read the posts.</li>
+      </ol>
     </section>
 
     <section>
@@ -162,10 +199,19 @@ const EN = () => (
       <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">Article 8 — Content Removal</h2>
       <p className="mb-2">The Service may remove user content without prior notice in the following cases:</p>
       <ol className="list-decimal pl-5 space-y-1 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
-        <li>Violation of Article 5</li>
+        <li>Violation of Article 5 of these Terms</li>
         <li>Content judged to be clearly false or malicious</li>
         <li>Violation of applicable law</li>
       </ol>
+      <p className="mt-3 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
+        Users may report a review. A report does not hide or remove anything on its own — the review stays
+        visible until a member of our team has read it and decided. Hidden reviews are retained rather than
+        deleted, so a wrong decision can be reversed.
+      </p>
+      <p className="mt-2 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
+        To prevent abuse, review submissions and reports are rate-limited. Anonymous submissions are limited
+        to 3 per hour from the same connection, and one per service per 24 hours.
+      </p>
     </section>
 
     <section>
