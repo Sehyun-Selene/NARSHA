@@ -344,7 +344,8 @@ export default function AppDetail() {
                     ))}
                   </div>
                   <div className="text-[11px] font-['Inter:Regular',sans-serif] font-normal text-[#64748b] dark:text-[#94a3b8] leading-tight">
-                    {appReviews.length} review{appReviews.length === 1 ? '' : 's'}
+                    {/* 게이팅 상태에서는 appReviews 가 3건뿐이다 — 총 개수를 써야 한다 */}
+                    {totalReviewCount} review{totalReviewCount === 1 ? '' : 's'}
                   </div>
                 </div>
               </div>
@@ -844,7 +845,9 @@ export default function AppDetail() {
                 {LEARNER_TYPES.map((type) => {
                   const typeInfo = learnerTypes[type];
                   const rating = typeRatings[type];
-                  const reviewCount = appReviews.filter((r) => r.learnerType === type).length;
+                  // 평점(typeRatings)은 서버 집계라 전건 기준인데 여기만 게이팅된
+                  // 목록을 세면 "3개 기준 4.5" 같이 앞뒤가 어긋난다. 같은 소스를 쓴다.
+                  const reviewCount = tagStats.filter((r) => r.learnerType === type).length;
 
                   return (
                     <div
