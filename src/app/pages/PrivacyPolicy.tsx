@@ -262,12 +262,6 @@ export default function PrivacyPolicy() {
           </div>
 
           {lang === 'ko' ? <KO /> : <EN />}
-
-          <p className="mt-12 text-[12px] text-[#94a3b8] dark:text-[#3f4850] leading-relaxed border-t border-[#e2e8f0] dark:border-[#232a36] pt-6">
-            {lang === 'ko'
-              ? '본 방침은 일반적인 가이드이며, 정확한 법적 효력을 위해서는 전문 변호사의 검토가 필요할 수 있습니다.'
-              : 'This policy serves as a general guide. For precise legal effect, professional legal review is recommended.'}
-          </p>
         </div>
       </main>
       <Footer />

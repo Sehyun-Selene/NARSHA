@@ -75,7 +75,23 @@ export async function fetchReportedReviews(includeResolved = false): Promise<Rep
   const { data, error } = await q;
   if (error) throw error;
 
-  const rows = (data ?? []) as ReportRow[];
+  let rows = (data ?? []) as ReportRow[];
+
+  // 숨김 처리된 후기는 검토 완료로 표시되어 목록에서 빠진다. 그러면 되돌릴
+  // 진입점이 사라져 오판을 복구할 수 없다. 현재 숨겨져 있는 후기는 처리 여부와
+  // 무관하게 항상 목록에 남긴다.
+  const { data: hiddenRows, error: hiddenError } = await supabase
+    .from('review_reports')
+    .select('id, review_id, reason, detail, created_at, resolved_at, reviews!inner(is_hidden)')
+    .eq('reviews.is_hidden', true);
+
+  if (hiddenError) throw hiddenError;
+
+  const seen = new Set(rows.map((r) => r.id));
+  for (const r of (hiddenRows ?? []) as ReportRow[]) {
+    if (!seen.has(r.id)) rows = [...rows, r];
+  }
+
   if (rows.length === 0) return [];
 
   const reviewIds = [...new Set(rows.map((r) => r.review_id))];

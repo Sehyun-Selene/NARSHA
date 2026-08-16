@@ -72,7 +72,7 @@ export const DICT = {
     { ko: '학습 유형 검사부터 학습 서비스 검색까지', en: 'From learning-type test to the right service' },
   ],
   'home.hero.linkAbout':  { ko: 'NARSHA는 어떤 팀인가요 →', en: 'Who we are →' },
-  'home.hero.linkMethod': { ko: '학습유형은 어떻게 만들었나요 →', en: 'How we built the test →' },
+  'home.hero.linkMethod': { ko: '학습유형은 어떻게 구분하나요 →', en: 'How we built the test →' },
 
   // ── 메인 검색창 회전 플레이스홀더 ─────────────────────────────────────────
   'home.placeholders': [
@@ -425,8 +425,8 @@ export const DICT = {
   'review.tagGroup.fit':      { ko: '이런 학습자에게', en: 'Great for' },
   'review.tagGroup.nice':     { ko: '있으면 좋은 점', en: 'Nice to have' },
   'review.contentPh': {
-    ko: '커리큘럼의 깊이, 문화적 맥락, 실제로 도움이 된 점을 적어 주세요…',
-    en: "Describe the curriculum's depth, cultural nuances, and pedagogical effectiveness…",
+    ko: '실제 사용하며 본인의 학습 방식과 잘 맞았던 점, 맞지 않았던 점 등을 적어 주세요…',
+    en: 'Tell us what fit your way of learning, and what did not…',
   },
   'review.submit':      { ko: '후기 등록', en: 'Submit Review' },
   'review.submitting':  { ko: '등록 중…', en: 'Submitting…' },
@@ -603,7 +603,11 @@ export const DICT = {
   'app.viewChart':     { ko: '분석 차트 보기', en: 'View Analysis Chart' },
   'app.curatedBy':     { ko: 'NARSHA 큐레이션', en: 'Curated by NARSHA' },
   'app.filterReviews': { ko: '후기 필터', en: 'Filter Reviews' },
-  'app.writeReview':   { ko: '후기 쓰기', en: 'Write Review' },
+  'app.writeReview':   { ko: '후기 작성하기', en: 'Write Review' },
+  // 이미 후기를 남긴 회원에게는 버튼 자체를 바꿔 보여준다 — 다 쓰고 나서
+  // 거절당하는 것보다 쓰기 전에 알려주는 편이 낫다 (사용자 요청)
+  'app.editMyReview':  { ko: '내 후기 수정하기', en: 'Edit my review' },
+  'app.alreadyReviewed': { ko: '이 서비스에는 이미 후기를 남겼어요.', en: 'You already reviewed this service.' },
   'app.allTypes':      { ko: '전체 유형', en: 'All Types' },
 } satisfies Record<string, Entry | Entry[]>;
 

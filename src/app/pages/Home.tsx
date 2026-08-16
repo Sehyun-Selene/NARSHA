@@ -383,6 +383,8 @@ export default function Home() {
   // 유형별 보기에 조건을 물려줄지 판단한다 (D11). 검색어도 조건에 포함된다.
   // activeFilterChips 보다 뒤에 두어야 한다 — const 는 호이스팅되지 않는다.
   const hasActiveConditions = activeFilterChips.length > 0 || searchQuery.trim().length > 0;
+  // 검색 중이면 히어로를 접고 결과를 검색창 바로 아래로 올린다
+  const searching = searchQuery.trim().length > 0;
 
   // ── JSX ─────────────────────────────────────────────────────────────────────
 
@@ -393,13 +395,27 @@ export default function Home() {
       <main className="flex-1 pt-16">
         {/* Hero — 좌: 문구 / 우: 검색+필터. 둘을 나란히 두면 헤딩 줄 수가
             언어마다 달라져도 검색바 위치가 밀리지 않는다. */}
-        <div className="max-w-[1280px] mx-auto px-6 py-14 lg:min-h-[calc(100vh-4rem)] flex items-center">
+        {/*
+          검색을 시작하면 히어로를 접는다 (사용자 요청).
+          히어로가 화면을 꽉 채우고 있어서, 검색어를 쳐도 결과가 스크롤 아래에
+          있어 "검색이 되는지 안 되는지" 를 알 수 없었다. 검색 중에는 문구를
+          걷어내고 검색창을 위로 올려 결과가 바로 이어 보이게 한다.
+        */}
+        <div
+          className={`max-w-[1280px] mx-auto px-6 flex items-center transition-all duration-500 ease-out ${
+            searching ? 'py-6 lg:min-h-0' : 'py-14 lg:min-h-[calc(100vh-4rem)]'
+          }`}
+        >
           {/* 2열 분할은 lg 부터. 이 폭에서는 영어 칩이 두 줄로 흐르지만,
               칩은 기본이 접힌 상태라 펼쳤을 때만 보인다. 패널 자리를 두 줄
               기준으로 미리 비워 둬서 줄 수가 변해도 위쪽은 안 움직인다. */}
-          <div className="w-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-10 lg:gap-14 items-center">
+          <div
+            className={`w-full grid grid-cols-1 gap-10 lg:gap-14 items-center transition-all duration-500 ease-out ${
+              searching ? 'lg:grid-cols-1' : 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]'
+            }`}
+          >
 
-          <div className="flex flex-col items-center lg:items-start gap-6 w-full text-center lg:text-left lg:pl-6">
+          <div className={`flex-col items-center lg:items-start gap-6 w-full text-center lg:text-left lg:pl-6 ${searching ? 'hidden' : 'flex'}`}>
             <h1 className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold ${heroSize} leading-[1.08] tracking-[-0.042em] bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible`}>
               {tLines('home.hero.title').map((line, i) => (
                 <span key={i} className="block">{line}</span>
@@ -454,7 +470,15 @@ export default function Home() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
+                    onChange={e => {
+                      const wasEmpty = searchQuery.trim().length === 0;
+                      setSearchQuery(e.target.value);
+                      // 첫 글자를 칠 때 한 번만 위로 올린다. 매 입력마다 스크롤하면
+                      // 타이핑 중 화면이 계속 흔들린다.
+                      if (wasEmpty && e.target.value.trim().length > 0) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }}
                     aria-label={t('home.searchLabel')}
                     className="w-full bg-transparent font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] outline-none"
                   />

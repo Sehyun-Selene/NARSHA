@@ -79,15 +79,24 @@ function ThemeToggle({ theme, toggleTheme, label }: { theme: string; toggleTheme
 function MemberNav({ onRequestAuth }: { onRequestAuth: (mode: 'login' | 'signup') => void }) {
   const { t } = useT();
   const { session, signOut } = useMemberAuth();
+  const navigate = useNavigate();
+
+  // 로그아웃 후 보던 화면에 그대로 남으면, 로그인해야 보이는 화면이었을 때
+  // 빈 페이지나 로그인 안내만 남는다. 홈으로 보낸다.
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   if (session) {
     return (
       <div className="flex items-center gap-3 shrink-0">
         <NavLink to="/my/reviews" className={navLinkClass}>{t('member.myReviews')}</NavLink>
+        {/* 글자 크기를 '내 후기'(navLinkClass)와 맞춘다 */}
         <button
           type="button"
-          onClick={() => void signOut()}
-          className="text-[13px] text-[#94a3b8] hover:text-[#64748b] dark:hover:text-[#8a94a6] whitespace-nowrap"
+          onClick={() => void handleSignOut()}
+          className="font-['Manrope:Medium',sans-serif] font-medium text-[14px] sm:text-[15px] tracking-[-0.4px] text-[#94a3b8] hover:text-[#8ecdff] dark:hover:text-[#8ecdff] whitespace-nowrap transition-colors"
         >
           {t('member.logout')}
         </button>

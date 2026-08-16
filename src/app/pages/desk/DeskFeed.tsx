@@ -20,7 +20,7 @@ import { COUNTRY_LABEL } from '../../../features/desk/types';
 const T = {
   ko: {
     all: '전체',
-    authors: '저자',
+    authors: '전체 저자',
     latest: '최신순',
     popular: '인기순',
     readMore: '더 보기',
@@ -31,7 +31,7 @@ const T = {
   },
   en: {
     all: 'All',
-    authors: 'Authors',
+    authors: 'All authors',
     latest: 'Latest',
     popular: 'Popular',
     readMore: 'Load more',
@@ -202,18 +202,29 @@ export default function DeskFeed() {
           </FilterChip>
         ))}
 
-        <span className="mx-1 w-px h-5 bg-[#e2e8f0] dark:bg-[#232a36]" />
+        {/*
+          저자별로 모아 보기. 저자가 한 명뿐이면 고를 것이 없어 '저자' 칩만 덩그러니
+          남는다 — 그때는 줄 자체를 감춘다. 저자가 확정돼 여러 명이 되면 자동으로
+          나타난다.
+        */}
+        {authors.length >= 2 && (
+          <>
+            <span className="mx-1 w-px h-5 bg-[#e2e8f0] dark:bg-[#232a36]" />
 
-        <FilterChip active={authorHandle === null} onClick={() => setAuthorHandle(null)}>{t.authors}</FilterChip>
-        {authors.map((a) => (
-          <FilterChip
-            key={a.id}
-            active={authorHandle === a.handle}
-            onClick={() => setAuthorHandle(authorHandle === a.handle ? null : a.handle)}
-          >
-            {lang === 'en' && a.display_name_en ? a.display_name_en : a.display_name}
-          </FilterChip>
-        ))}
+            <FilterChip active={authorHandle === null} onClick={() => setAuthorHandle(null)}>
+              {t.authors}
+            </FilterChip>
+            {authors.map((a) => (
+              <FilterChip
+                key={a.id}
+                active={authorHandle === a.handle}
+                onClick={() => setAuthorHandle(authorHandle === a.handle ? null : a.handle)}
+              >
+                {lang === 'en' && a.display_name_en ? a.display_name_en : a.display_name}
+              </FilterChip>
+            ))}
+          </>
+        )}
 
         <span className="ml-auto flex gap-1">
           {(['latest', 'popular'] as const).map((s) => (

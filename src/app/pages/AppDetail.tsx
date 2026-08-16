@@ -10,6 +10,7 @@ import {
   getReviewsForApp,
   getReviewTagStats,
   getReviewCount,
+  hasMyReviewForApp,
   getAverageRatingByType,
   getRepliesForReview,
   addReviewReply,
@@ -67,6 +68,8 @@ export default function AppDetail() {
   const { loading: authLoading, session } = useMemberAuth();
   const gated = !session;
   const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
+  // 이 회원이 이 앱에 이미 남긴 후기 — 있으면 작성 버튼을 수정으로 바꾼다
+  const [myReviewHere, setMyReviewHere] = useState(false);
   const [typeRatings, setTypeRatings] = useState<Record<LearnerType, number>>({
     가: 0, 나: 0, 다: 0, 라: 0, 마: 0, 바: 0,
   });
@@ -160,6 +163,17 @@ export default function AppDetail() {
     })();
     return () => { active = false; };
   }, [appReviews]);
+
+  // 회원이 이 앱에 이미 후기를 남겼는지 확인한다 (앱당 1건 — REQ-E / E-1).
+  // 작성 화면 끝에서 거절하지 않고 진입 전에 알려주기 위한 조회다.
+  useEffect(() => {
+    if (!id || !session) { setMyReviewHere(false); return; }
+    let active = true;
+    hasMyReviewForApp(id, session.user.id)
+      .then(v => { if (active) setMyReviewHere(v); })
+      .catch(() => { if (active) setMyReviewHere(false); });
+    return () => { active = false; };
+  }, [id, session]);
 
   const onHelpfulClick = async (reviewId: string) => {
     try {
@@ -521,13 +535,28 @@ export default function AppDetail() {
               <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[32px] leading-[40px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px]">
                 {t('app.filterReviews')}
               </h2>
-              <Link
-                to={`/apps/${app.id}/review/new`}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] px-8 py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
-              >
-                {t('app.writeReview')}
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+              {/* 이미 후기를 남긴 회원에게는 작성 대신 수정으로 보낸다.
+                  다 쓰고 제출한 뒤에 거절하면 작성한 내용을 잃는다 (사용자 요청) */}
+              {myReviewHere ? (
+                <div className="text-right">
+                  <Link
+                    to="/my/reviews"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] px-8 py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                  >
+                    {t('app.editMyReview')}
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                  <p className="mt-2 text-[12px] text-[#64748b] dark:text-[#8a94a6]">{t('app.alreadyReviewed')}</p>
+                </div>
+              ) : (
+                <Link
+                  to={`/apps/${app.id}/review/new`}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[16px] px-8 py-3 rounded-[8px] hover:opacity-90 transition-opacity shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)]"
+                >
+                  {t('app.writeReview')}
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              )}
             </div>
 
             {/*
@@ -566,10 +595,21 @@ export default function AppDetail() {
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 mb-8">
+            {/* 정렬은 칩과 성격이 다르다 (필터가 아니라 순서) — 칩 줄에 끼워 넣으면
+                줄바꿈에 따라 위치가 떠다닌다. 별도 줄 오른쪽에 고정한다. */}
+            <div className="flex justify-end mb-3">
+              <ReviewSortSelect value={reviewSort} onChange={setReviewSort} />
+            </div>
+
+            {/*
+              유형 칩은 라벨 길이가 제각각이라("Visual Exploratory" vs "Mixed
+              Structured") 한 줄에 담기지 않고 들쭉날쭉했다. 폭이 같은 2줄 칩으로
+              바꾸고 그리드에 넣어 데스크톱에서 한 줄에 들어오게 한다.
+            */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-8">
               <button
                 onClick={() => setSelectedFilter('all')}
-                className={`px-4 py-2 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[14px] transition-colors ${
+                className={`h-[52px] px-2 rounded-[12px] font-['Manrope:Medium',sans-serif] font-medium text-[13px] leading-tight transition-colors ${
                   selectedFilter === 'all'
                     ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
                     : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#bec7d2] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
@@ -579,27 +619,28 @@ export default function AppDetail() {
               </button>
               {LEARNER_TYPES.map((type) => {
                 const typeInfo = learnerTypes[type];
+                const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
                 return (
                   <button
                     key={type}
                     onClick={() => setSelectedFilter(type)}
-                    className={`px-4 py-2 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[14px] transition-colors ${
+                    className={`h-[52px] px-2 rounded-[12px] font-['Manrope:Medium',sans-serif] font-medium leading-tight transition-colors flex flex-col items-center justify-center gap-0.5 ${
                       selectedFilter === type
                         ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff]'
                         : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#bec7d2] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
                     }`}
                   >
-                    Type {type}:{' '}
-                    {typeInfo.sensory.charAt(0).toUpperCase() + typeInfo.sensory.slice(1)}{' '}
-                    {typeInfo.style.charAt(0).toUpperCase() + typeInfo.style.slice(1)}
+                    <span className="font-bold text-[13px]">
+                      {lang === 'ko' ? `${type}형` : `Type ${type}`}
+                    </span>
+                    <span className="text-[11px] opacity-80 whitespace-nowrap">
+                      {lang === 'ko'
+                        ? typeInfo.nameKo.replace(' 학습자', '')
+                        : `${cap(typeInfo.sensory)} ${cap(typeInfo.style)}`}
+                    </span>
                   </button>
                 );
               })}
-
-              {/* 정렬 (REQ-F / F-2) — 칩 줄 오른쪽 끝 */}
-              <div className="ml-auto">
-                <ReviewSortSelect value={reviewSort} onChange={setReviewSort} />
-              </div>
             </div>
 
             <div className="space-y-6">

@@ -66,8 +66,14 @@ export default function ReviewReportMenu({ reviewId }: { reviewId: string }) {
   };
 
   return (
-    // Discover 유형별 보기에서는 후기 카드 전체가 <Link> 다. 메뉴·모달 클릭이
-    // 카드로 새어 나가면 앱 상세로 이동해 버리므로 여기서 끊는다.
+    // Discover 유형별 보기에서는 후기 카드 전체가 <Link> 다. 메뉴 클릭이 카드로
+    // 새어 나가면 앱 상세로 이동해 버리므로 여기서 끊는다.
+    //   · stopPropagation 만으로는 부족하다 — Link 의 onClick 이 실행되지 않으면
+    //     preventDefault 도 안 되어 브라우저가 <a href> 로 통째 이동해 버린다.
+    //   · 그래서 preventDefault 도 함께 건다.
+    // 대신 **모달은 자기 루트에서 이벤트를 끊어** 여기까지 올라오지 않게 한다.
+    // 그러지 않으면 preventDefault 가 라디오·label 의 기본 동작까지 막아
+    // 신고 사유가 선택되지 않는다 (실제로 겪은 버그).
     <div
       ref={wrapRef}
       className="relative"
@@ -97,7 +103,11 @@ export default function ReviewReportMenu({ reviewId }: { reviewId: string }) {
       {/* 모달도 body 로 portal 한다 — 후기 카드는 <Link> 안이고, 조상에 filter·
           transform 이 걸리면 fixed 가 그 박스에 갇혀 잘린다 (헤더에서 실제로 겪었다) */}
       {modalOpen && createPortal(
-        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div
+          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          // 여기서 끊어야 위 래퍼의 preventDefault 가 모달 내부 입력에 걸리지 않는다
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="absolute inset-0 bg-black/50" onClick={close} />
           <div className="relative w-full sm:max-w-[420px] bg-[#ffffff] dark:bg-[#151c27] sm:rounded-[20px] rounded-t-[20px] shadow-2xl flex flex-col max-h-[92dvh]">
             <div className="flex items-start justify-between px-5 pt-5 pb-3">

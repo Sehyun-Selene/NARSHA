@@ -413,6 +413,8 @@ export default function AdminDashboard() {
   const [accuracyItems, setAccuracyItems] = useState<AccuracyCheck[]>([]);
   const [reports, setReports] = useState<ReportedReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [alertsError, setAlertsError] = useState<string | null>(null);
+  const [reportsError, setReportsError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -425,17 +427,20 @@ export default function AdminDashboard() {
       ]);
       setBoostItems(boost);
       setAccuracyItems(accuracy);
-    } catch {
-      toast.error('Failed to load alerts.');
+      setAlertsError(null);
+    } catch (e) {
+      // 토스트로 띄우지 않는다 — 숨김·검토완료 직후에도 load() 가 돌아서
+      // 성공 토스트 위에 빨간 토스트가 겹쳐 떴다. 화면 안에 상태로 표시한다.
+      setAlertsError(e instanceof Error ? e.message : 'UNKNOWN');
     } finally {
       setLoading(false);
     }
 
     try {
       setReports(await fetchReportedReviews());
+      setReportsError(null);
     } catch (e) {
-      const code = e instanceof Error ? e.message : 'UNKNOWN';
-      toast.error(`신고 목록을 불러오지 못했습니다 (${code})`);
+      setReportsError(e instanceof Error ? e.message : 'UNKNOWN');
     }
   };
 
@@ -488,6 +493,15 @@ export default function AdminDashboard() {
               정확성 검토: 리뷰 {ALERT_THRESHOLDS.accuracyCheck.minReviews}개↑ &amp; {ALERT_THRESHOLDS.accuracyCheck.maxSupporterPct}%↓
             </p>
           </div>
+
+          {/* 조회 실패는 토스트가 아니라 화면에 남긴다 — 토스트는 사라져서
+              "무엇이 안 되고 있는지" 를 계속 보여주지 못한다 */}
+          {(alertsError || reportsError) && (
+            <div className="mb-8 rounded-[12px] border border-[#fca5a5] bg-[#fef2f2] dark:bg-[#3f1d1d] px-4 py-3 text-[13px] text-[#dc2626]">
+              {alertsError && <p>태그 알림을 불러오지 못했습니다 — {alertsError}</p>}
+              {reportsError && <p>신고 목록을 불러오지 못했습니다 — {reportsError}</p>}
+            </div>
+          )}
 
           {/* 신고된 후기 (REQ-E / E-3) — 태그 알림과 성격이 달라 위쪽에 따로 둔다.
               스팸·개인정보 노출은 태그 검토보다 급하다. */}

@@ -286,6 +286,23 @@ export async function getMyReviews(userId: string): Promise<Review[]> {
   return (data as ReviewRow[]).map(rowToReview);
 }
 
+/**
+ * 이 회원이 이 앱에 이미 후기를 남겼는지 (REQ-E / E-1 앱당 1건).
+ * 작성 화면에 들어가기 전에 알려주기 위한 조회다 — 다 쓰고 제출한 뒤에
+ * 거절하면 작성한 내용을 잃는다.
+ */
+export async function hasMyReviewForApp(appId: string, userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id')
+    .eq('app_id', appId)
+    .eq('author_id', userId)
+    .limit(1);
+
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
+
 export async function updateMyReview(
   reviewId: string,
   patch: { content: string; rating: number },

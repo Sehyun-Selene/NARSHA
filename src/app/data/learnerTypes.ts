@@ -159,30 +159,42 @@ export const surveyQuestions: SurveyQuestion[] = [
 ];
 
 // Calculate learner type from survey responses
+/**
+ * 두 축이 같은 척도 위에 있도록, 방향마다 **문항 수로 나눈 평균**을 쓴다.
+ *
+ * 왜 합산이 아니라 평균인가 — 문항 수가 방향마다 다르다.
+ *   감각 축: 시각 2문항(Q1·Q2) vs 청각 1문항(Q3)
+ *   방식 축: 탐색 1문항(Q4) vs 구조 6문항(Q5~Q10)
+ * 합산하면 문항이 많은 쪽이 항상 이긴다. 실제로 이전 구현은
+ * `-Q4 + (Q5..Q10)` 이라 최솟값이 `-5 + 6 = 1` 이었고, **어떤 응답을 넣어도
+ * 항상 구조형**이 나왔다. 탐색형(가·다·마)이 수학적으로 나올 수 없었다.
+ */
+const MIXED_THRESHOLD = 1.0; // 5점 척도에서 평균 1점 이내면 선호가 갈리지 않은 것으로 본다
+
 export function calculateLearnerType(responses: number[]): LearnerType {
-  // Q1-Q2: Visual score
-  const visualScore = responses[0] + responses[1];
-  
-  // Q3: Auditory score
-  const auditoryScore = responses[2];
-  
-  // Q4: Exploratory (negative contribution to styleScore)
-  // Q5-Q10: Structured (positive contribution to styleScore)
-  const styleScore = -responses[3] + responses[4] + responses[5] + responses[6] + responses[7] + responses[8] + responses[9];
-  
-  // Determine sensory preference
+  const avg = (values: number[]) => values.reduce((s, v) => s + v, 0) / values.length;
+
+  // 감각 축 — 시각 Q1·Q2 / 청각 Q3
+  const visualAvg = avg([responses[0], responses[1]]);
+  const auditoryAvg = responses[2];
+
+  // 방식 축 — 탐색 Q4 / 구조 Q5~Q10
+  const exploratoryAvg = responses[3];
+  const structuredAvg = avg([responses[4], responses[5], responses[6], responses[7], responses[8], responses[9]]);
+
   let sensory: Sensory;
-  if (Math.abs(visualScore - auditoryScore) <= 4) {
+  if (Math.abs(visualAvg - auditoryAvg) < MIXED_THRESHOLD) {
     sensory = 'mixed';
-  } else if (visualScore > auditoryScore) {
+  } else if (visualAvg > auditoryAvg) {
     sensory = 'visual';
   } else {
     sensory = 'auditory';
   }
-  
-  // Determine style preference
-  const style: Style = styleScore > 0 ? 'structured' : 'exploratory';
-  
+
+  // 동점은 탐색형으로 본다. 구조형 문항이 6개라 "구조적 학습을 원한다"는
+  // 진술을 모두 부정했는데도 구조형이 되는 것은 응답과 어긋난다.
+  const style: Style = structuredAvg > exploratoryAvg ? 'structured' : 'exploratory';
+
   // Map to learner type
   if (sensory === 'visual' && style === 'exploratory') return '가';
   if (sensory === 'visual' && style === 'structured') return '나';
