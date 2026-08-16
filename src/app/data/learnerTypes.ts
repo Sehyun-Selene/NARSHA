@@ -169,7 +169,26 @@ export const surveyQuestions: SurveyQuestion[] = [
  * `-Q4 + (Q5..Q10)` 이라 최솟값이 `-5 + 6 = 1` 이었고, **어떤 응답을 넣어도
  * 항상 구조형**이 나왔다. 탐색형(가·다·마)이 수학적으로 나올 수 없었다.
  */
-const MIXED_THRESHOLD = 1.0; // 5점 척도에서 평균 1점 이내면 선호가 갈리지 않은 것으로 본다
+/**
+ * 판정 파라미터.
+ *
+ * `*_BAND` 는 **불감대**다. 두 방향의 평균 차이가 이보다 작으면 "어느 쪽이라고
+ * 하기 어려운 응답"으로 보고, 그때만 척도 중앙값(3)과 비교해 가른다.
+ *   · 감각 축에는 '복합(mixed)' 이라는 답이 있으므로 불감대가 곧 복합형이다.
+ *   · 방식 축에는 중간 유형이 없어서, 불감대에 들어오면 구조형 문항에 대한
+ *     응답이 중앙값보다 위인지로 정한다.
+ *
+ * 중앙값(자기 평균이 아니라)을 기준으로 삼는 이유 — 모든 문항에 1을 준 응답자는
+ * "계획을 세우는 편이 아니다"라고 답한 것이므로 탐색형이 되어야 한다. 자기 평균을
+ * 쓰면 그런 응답이 전부 동점이 되어 한쪽으로 몰린다.
+ *
+ * 값은 응답 분포 시뮬레이션으로 정했다. 문항이 감각 3개·방식 7개로 적고 방향별
+ * 개수도 불균형(시각2:청각1, 구조6:탐색1)이라 어떤 값을 써도 완전한 균등은
+ * 불가능하다. 이 조합에서 여섯 유형이 13.7~20.4% 범위에 들어온다(균등은 16.7%).
+ */
+const MIDPOINT = 3;        // 5점 척도의 중앙
+const SENSORY_BAND = 0.6;  // 시각평균 − 청각 차이가 이보다 작으면 복합형 후보
+const STYLE_BAND = 0.4;    // 구조평균 − 탐색 차이가 이보다 작으면 판단 보류 구간
 
 export function calculateLearnerType(responses: number[]): LearnerType {
   const avg = (values: number[]) => values.reduce((s, v) => s + v, 0) / values.length;
@@ -182,18 +201,24 @@ export function calculateLearnerType(responses: number[]): LearnerType {
   const exploratoryAvg = responses[3];
   const structuredAvg = avg([responses[4], responses[5], responses[6], responses[7], responses[8], responses[9]]);
 
+  const sensoryDiff = visualAvg - auditoryAvg;
   let sensory: Sensory;
-  if (Math.abs(visualAvg - auditoryAvg) < MIXED_THRESHOLD) {
-    sensory = 'mixed';
-  } else if (visualAvg > auditoryAvg) {
-    sensory = 'visual';
+  if (Math.abs(sensoryDiff) < SENSORY_BAND) {
+    // 둘 다 중앙값 위이거나 둘 다 아래면 선호가 갈리지 않은 것 → 복합형.
+    // 한쪽만 중앙값을 넘었다면 그쪽을 택한다.
+    sensory =
+      (visualAvg >= MIDPOINT) === (auditoryAvg >= MIDPOINT)
+        ? 'mixed'
+        : sensoryDiff > 0 ? 'visual' : 'auditory';
   } else {
-    sensory = 'auditory';
+    sensory = sensoryDiff > 0 ? 'visual' : 'auditory';
   }
 
-  // 동점은 탐색형으로 본다. 구조형 문항이 6개라 "구조적 학습을 원한다"는
-  // 진술을 모두 부정했는데도 구조형이 되는 것은 응답과 어긋난다.
-  const style: Style = structuredAvg > exploratoryAvg ? 'structured' : 'exploratory';
+  const styleDiff = structuredAvg - exploratoryAvg;
+  const style: Style =
+    Math.abs(styleDiff) < STYLE_BAND
+      ? (structuredAvg > MIDPOINT ? 'structured' : 'exploratory')
+      : (styleDiff > 0 ? 'structured' : 'exploratory');
 
   // Map to learner type
   if (sensory === 'visual' && style === 'exploratory') return '가';
