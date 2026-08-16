@@ -110,3 +110,25 @@ revoke all on public.app_tag_support       from anon;
 revoke all on public.app_curated_tags      from anon;
 revoke all on public.tag_boost_suggestions from anon;
 revoke all on public.tag_accuracy_checks   from anon;
+
+-- =============================================================================
+-- desk 테스트 데이터 삭제
+--
+-- '동의 기록 테스트' 글과 'consent-test' 저자 계정은 동의 기록 기능을
+-- 시험할 때 만든 데이터다. 실제 저자가 아니라 피드에 남아 있을 이유가 없다.
+--
+-- ⚠️ auth.users 의 계정 자체는 여기서 지우지 않는다.
+--    Supabase 대시보드 > Authentication > Users 에서 직접 삭제할 것.
+-- =============================================================================
+
+delete from public.desk_posts where slug = 'post-g4rewf';
+delete from public.profiles  where handle = 'consent-test';
+
+-- 확인 — 뷰 4개가 만들어졌고 테스트 데이터가 지워졌는지
+select
+  (select count(*) from information_schema.views
+     where table_schema = 'public'
+       and table_name in ('app_review_totals','app_tag_support','app_curated_tags',
+                          'tag_boost_suggestions','tag_accuracy_checks')) as 생성된_뷰,
+  (select count(*) from public.desk_posts where slug = 'post-g4rewf')     as 남은_글,
+  (select count(*) from public.profiles  where handle = 'consent-test')   as 남은_저자;
