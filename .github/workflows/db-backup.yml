@@ -13,9 +13,46 @@
 #   BACKUP_PASSPHRASE   : 백업 파일을 여는 암호. 길고 무작위한 값으로 직접 정한다.
 #                         이 값을 잃어버리면 백업을 영원히 못 연다. 비밀번호 관리자에 따로 보관할 것.
 #
-# 복구 방법 (아티팩트를 내려받은 뒤)
-#   gpg --decrypt --passphrase "<BACKUP_PASSPHRASE>" backup_20260809.sql.gpg > backup.sql
-#   psql "<SUPABASE_DB_URL>" -f backup.sql
+# 복구 방법 — 실제로 한 번 해보고 정리한 절차다 (2026-08-16 시연 완료).
+# 아티팩트 zip 을 풀면 backup_<날짜>.tar.gz.gpg 하나가 나온다.
+#
+# 1) 복호화 · 압축 해제
+#    암호를 명령줄에 직접 적으면 셸 히스토리에 남는다. 프롬프트로 받는다.
+#
+#    [Git Bash]
+#      read -rsp "passphrase: " PW; echo
+#      gpg --batch --yes --passphrase "$PW" -o backup.tar.gz -d backup_<날짜>.tar.gz.gpg
+#      unset PW
+#      tar -xzf backup.tar.gz          # → schema.sql, data.sql
+#
+#    [PowerShell] gpg 가 PATH 에 없으면 Git 설치본을 직접 지정한다
+#      $gpg = "C:\Program Files\Git\usr\bin\gpg.exe"
+#      $sec = Read-Host "passphrase" -AsSecureString
+#      $PW = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+#              [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
+#      & $gpg --batch --yes --passphrase $PW -o backup.tar.gz -d backup_<날짜>.tar.gz.gpg
+#      $PW = $null
+#      tar -xzf backup.tar.gz
+#
+# 2) 복원 — psql 이 있으면
+#      psql "<SUPABASE_DB_URL>" -f schema.sql
+#      psql "<SUPABASE_DB_URL>" -f data.sql
+#
+#    psql 이 없으면 Supabase SQL Editor 에 붙여넣어도 된다 (덤프가 작다).
+#    schema.sql 먼저, data.sql 나중. 순서를 바꾸면 테이블이 없어 실패한다.
+#
+#    ⚠️ Windows PowerShell 5.1 함정 — 클립보드로 옮길 때 반드시 -Encoding UTF8 을 준다.
+#       Get-Content data.sql -Raw -Encoding UTF8 | Set-Clipboard
+#       빼면 시스템 코드페이지(949)로 읽어 한글이 깨지고, 깨진 바이트가 따옴표를
+#       망가뜨려 `syntax error at or near "{"` 로 실패한다. 실제로 겪었다.
+#
+# 3) 검증 — 행 수와 한글이 원본과 맞는지 본다
+#      select count(*) from public.apps;                      -- 시드 앱 수
+#      select learning_type from public.apps where id='memrise';  -- 한글이 안 깨졌는지
+#
+# 4) 뒤처리 — schema.sql · data.sql · backup.tar.gz 는 즉시 삭제한다.
+#    덤프에는 auth.users 가 통째로 들어 있어 **회원 이메일이 평문**이다.
+#    .gpg 파일만 남긴다.
 #
 # 주의 — 백업은 복구를 해봐야 백업이다. 처음 한 번은 반드시 복구를 시연해 볼 것.
 
