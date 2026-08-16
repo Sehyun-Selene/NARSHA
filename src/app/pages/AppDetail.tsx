@@ -97,7 +97,6 @@ export default function AppDetail() {
 
   // 서비스 고유명사는 번역하지 않는다 (PRD §5.5) — 앱 이름을 그대로 타이틀에 쓴다.
   useDocumentTitle(undefined, app?.name);
-  const [filterByType, setFilterByType] = useState(false);
   const [userLearnerType, setUserLearnerType] = useState<string | null>(null);
 
   useEffect(() => {
@@ -243,9 +242,9 @@ export default function AppDetail() {
 
   // 학습자 평가 집계는 본문 없는 경량 조회(tagStats)를 쓴다. 게이팅으로 목록이
   // 3건만 내려오는 비로그인 상태에서도 "후기 N개 기준"이 사실과 맞아야 한다.
-  const reviewsForEval = filterByType && userLearnerType
-    ? tagStats.filter(r => r.learnerType === userLearnerType)
-    : tagStats;
+  // 집계는 항상 전체 기준이다 — 유형별로 쪼개면 표본이 6분의 1이 되어 순위가
+  // 의미를 잃는다. 유형별로 보고 싶으면 아래 후기 목록의 유형 필터를 쓴다.
+  const reviewsForEval = tagStats;
   const reviewsWithStrengths = reviewsForEval.filter(r => (r.chosenStrengths ?? []).length > 0);
   const reviewsWithLimits   = reviewsForEval.filter(r => (r.chosenLimits   ?? []).length > 0);
 
@@ -450,19 +449,14 @@ export default function AppDetail() {
                     {t('myType.learnerReviews')}
                   </span>
                 </div>
-                {userLearnerType && (
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={filterByType}
-                      onChange={e => setFilterByType(e.target.checked)}
-                      className="w-3.5 h-3.5 accent-[#0ea5e9]"
-                    />
-                    <span className="text-[12px] text-[#64748b] dark:text-[#8a94a6]">
-                      {t('myType.evalOnly').replace('{t}', userLearnerType)}
-                    </span>
-                  </label>
-                )}
+                {/*
+                  '내 유형만' 체크박스를 뺐다.
+                    · 집계는 표본이 있어야 의미가 있는데 유형별로 나누면 6분의 1로
+                      쪼개져, 지금 물량에서는 1~2건 기준 순위가 되어 노이즈가 된다.
+                    · 같은 화면에 유형 필터가 둘(이 체크박스 + 후기 목록 토글)이라
+                      어느 쪽에 걸리는지 알기 어려웠다.
+                  유형별 관점은 상단 유형별 평점 카드와 후기 목록 필터가 담당한다.
+                */}
               </div>
 
               {/* Content */}
@@ -516,11 +510,7 @@ export default function AppDetail() {
 
                   {/* Footer */}
                   <p className="text-[11px] text-[#94a3b8] dark:text-[#3f4850] mt-3 pt-3 border-t border-[#e2e8f0] dark:border-[#232a36]">
-                    {filterByType && userLearnerType
-                      ? t('myType.evalBasisType')
-                          .replace('{t}', userLearnerType)
-                          .replace('{n}', String(reviewsWithStrengths.length))
-                      : t('myType.evalBasisAll').replace('{n}', String(reviewsWithStrengths.length))}
+                    {t('myType.evalBasisAll').replace('{n}', String(reviewsWithStrengths.length))}
                     {reviewsWithLimits.length > 0 &&
                       t('myType.evalLimits').replace('{n}', String(reviewsWithLimits.length))}
                   </p>
@@ -560,12 +550,15 @@ export default function AppDetail() {
             </div>
 
             {/*
-              내 학습유형 후기만 보기 (REQ-F / F-3).
+              내 학습유형 후기만 보기 (REQ-F / F-3) + 정렬.
               검사를 마친 사용자에게만 토글을 노출하고, 미검사자에게는 검사로 가는
               링크를 대신 둔다. 유형 칩과 따로 상태를 두지 않고 selectedFilter 를
               그대로 조작한다 — 필터가 두 개가 되면 서로 어긋난다.
+
+              토글(왼쪽)과 정렬(오른쪽)을 한 줄에 둔다 — 둘 다 아래 후기 목록에
+              걸리는 조작이라 붙여 두는 편이 읽기 쉽다.
             */}
-            <div className="mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               {userLearnerType ? (
                 <button
                   type="button"
@@ -593,11 +586,7 @@ export default function AppDetail() {
                   {t('myType.takeTest')}
                 </Link>
               )}
-            </div>
 
-            {/* 정렬은 칩과 성격이 다르다 (필터가 아니라 순서) — 칩 줄에 끼워 넣으면
-                줄바꿈에 따라 위치가 떠다닌다. 별도 줄 오른쪽에 고정한다. */}
-            <div className="flex justify-end mb-3">
               <ReviewSortSelect value={reviewSort} onChange={setReviewSort} />
             </div>
 
