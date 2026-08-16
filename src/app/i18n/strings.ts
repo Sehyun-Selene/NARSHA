@@ -69,7 +69,7 @@ export const DICT = {
   // 2행은 정보량 없는 슬로건이라 걷어내고, 그 자리를 안내 페이지 진입점으로 쓴다
   // (GNB PRD REQ-B). 1행만 남긴다.
   'home.hero.sub': [
-    { ko: '“학습 유형 검사부터 학습 서비스 검색까지”', en: '“From learning-type test to the right service”' },
+    { ko: '학습 유형 검사부터 학습 서비스 검색까지', en: 'From learning-type test to the right service' },
   ],
   'home.hero.linkAbout':  { ko: 'NARSHA는 어떤 팀인가요 →', en: 'Who we are →' },
   'home.hero.linkMethod': { ko: '학습유형은 어떻게 만들었나요 →', en: 'How we built the test →' },

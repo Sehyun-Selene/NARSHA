@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MoreHorizontal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { REPORT_REASONS, submitReport, type ReportReason } from '../data/reports';
@@ -93,8 +94,10 @@ export default function ReviewReportMenu({ reviewId }: { reviewId: string }) {
         </div>
       )}
 
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* 모달도 body 로 portal 한다 — 후기 카드는 <Link> 안이고, 조상에 filter·
+          transform 이 걸리면 fixed 가 그 박스에 갇혀 잘린다 (헤더에서 실제로 겪었다) */}
+      {modalOpen && createPortal(
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/50" onClick={close} />
           <div className="relative w-full sm:max-w-[420px] bg-[#ffffff] dark:bg-[#151c27] sm:rounded-[20px] rounded-t-[20px] shadow-2xl flex flex-col max-h-[92dvh]">
             <div className="flex items-start justify-between px-5 pt-5 pb-3">
@@ -159,7 +162,8 @@ export default function ReviewReportMenu({ reviewId }: { reviewId: string }) {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

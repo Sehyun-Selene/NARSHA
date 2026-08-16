@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -97,8 +98,12 @@ export default function MemberAuthModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  // ⚠️ 반드시 body 로 portal 한다.
+  // 헤더에 `backdrop-blur` 가 걸려 있는데, backdrop-filter 가 있는 요소는
+  // position:fixed 자손의 기준 박스가 된다. 헤더 안에서 그냥 렌더하면 모달이
+  // 높이 64px 짜리 헤더 박스에 갇혀 위쪽(Google 버튼·구분선)이 잘린다.
+  return createPortal(
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full sm:max-w-[400px] bg-[#ffffff] dark:bg-[#151c27] sm:rounded-[20px] rounded-t-[20px] shadow-2xl flex flex-col max-h-[92dvh]">
         <div className="flex items-start justify-between px-5 pt-5 pb-1">
@@ -214,6 +219,7 @@ export default function MemberAuthModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

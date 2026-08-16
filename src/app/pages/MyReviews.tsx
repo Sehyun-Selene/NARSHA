@@ -4,7 +4,7 @@ import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { useT } from '../i18n';
+import { useT, tNow } from '../i18n';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { useMemberAuth } from '../../features/auth/useMemberAuth';
 import MemberAuthModal from '../../features/auth/MemberAuthModal';
@@ -56,13 +56,16 @@ export default function MyReviews() {
         setAppMap(new Map(apps.map(a => [a.id, a])));
       } catch (e) {
         const code = e instanceof Error ? e.message : 'UNKNOWN';
-        toast.error(`${t('member.err.UNKNOWN')} (${code})`);
+        toast.error(`${tNow('member.err.UNKNOWN')} (${code})`);
       } finally {
         if (active) setLoading(false);
       }
     })();
     return () => { active = false; };
-  }, [authLoading, session, t]);
+    // ⚠️ `t` 를 의존성에 넣으면 안 된다 — useT() 가 렌더마다 새 함수를 만들기 때문에
+    // 매 렌더 effect 가 다시 돌고, setLoading(true) → 재렌더 → 재실행으로
+    // 스피너가 끝없이 깜빡인다. 에러 문구는 훅 밖에서 쓰는 tNow() 로 얻는다.
+  }, [authLoading, session]);
 
   const startEdit = (r: Review) => {
     setEditingId(r.id);
