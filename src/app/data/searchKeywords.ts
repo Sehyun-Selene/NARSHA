@@ -101,6 +101,35 @@ const KEYWORD_TO_TAGS: Record<string, string[]> = {
   '한국어': ['lang.korean'],
 };
 
+const HANGUL = /[가-힣]/;
+
+/**
+ * 서비스 이름·별칭 매칭.
+ *
+ * 이전에는 `name.includes(query)` 였다. 문자열 아무 위치나 일치시키므로
+ * `r` 한 글자가 Korean·Drops·Coursera 에 모두 걸려, 의미 없는 입력에도 결과가
+ * 쏟아졌다. 검색이 아니라 필터가 안 되는 상태였다.
+ *
+ * 로마자는 **단어 시작**에서만 맞춘다 — `duo` → Duolingo 는 되고,
+ * `r` → Korean 은 안 된다.
+ *
+ * 한글은 단어 경계가 공백으로 드러나지 않아(`한국어능력시험`) 단어 시작만 보면
+ * 놓치는 게 많다. 그래서 두 글자 이상이면 부분 일치를 허용하고, 한 글자는
+ * 시작 일치만 본다.
+ */
+function matchesName(text: string | null | undefined, query: string): boolean {
+  if (!text) return false;
+  const t = text.toLowerCase();
+
+  if (HANGUL.test(query)) {
+    return query.length >= 2 ? t.includes(query) : t.startsWith(query);
+  }
+
+  return t
+    .split(/[^a-z0-9]+/)
+    .some(word => word.length > 0 && word.startsWith(query));
+}
+
 export function matchesTag(tag: string | null | undefined, query: string): boolean {
   if (!tag) return false;
   const lower = tag.toLowerCase();
@@ -153,9 +182,9 @@ export function applySearch(app: App, normalizedQuery: string): boolean {
   // 이름은 KO/EN 양쪽을 다 본다 — EN 화면에서 `듀오링고`를 쳐도 Duolingo 가
   // 나와야 하고, 그 반대도 마찬가지다 (PRD R5.18).
   return (
-    app.name.toLowerCase().includes(normalizedQuery) ||
-    app.nameKo.toLowerCase().includes(normalizedQuery) ||
-    app.aliases.some(a => a.toLowerCase().includes(normalizedQuery)) ||
+    matchesName(app.name, normalizedQuery) ||
+    matchesName(app.nameKo, normalizedQuery) ||
+    app.aliases.some(a => matchesName(a, normalizedQuery)) ||
     app.learningField.some(f => matchesTag(f, normalizedQuery)) ||
     app.levels.some(l => matchesTag(l, normalizedQuery)) ||
     app.purposes.some(p => matchesTag(p, normalizedQuery)) ||

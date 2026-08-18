@@ -99,7 +99,8 @@ export async function memberSignInWithGoogle(redirectPath?: string): Promise<voi
 /** 비밀번호 재설정 메일. desk 쪽과 동일한 수단을 쓴다. */
 export async function memberResetPassword(email: string): Promise<void> {
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-    redirectTo: `${window.location.origin}/`,
+    // 홈으로 보내면 새 비밀번호를 정할 화면이 없다 (실제로 흐름이 끊겨 있었다)
+    redirectTo: `${window.location.origin}/reset-password`,
   });
   if (error) throw new Error('UNKNOWN' satisfies MemberAuthError);
 }

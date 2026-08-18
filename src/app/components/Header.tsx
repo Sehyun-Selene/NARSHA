@@ -104,23 +104,16 @@ function MemberNav({ onRequestAuth }: { onRequestAuth: (mode: 'login' | 'signup'
     );
   }
 
+  // 로그인과 가입이 같은 모달을 열고 그 안에서 서로 전환된다. 헤더에 둘을 나란히
+  // 두면 서로 다른 목적지처럼 보여 혼란만 준다. 진입점을 하나로 합친다.
   return (
-    <div className="flex items-center gap-2 shrink-0">
-      <button
-        type="button"
-        onClick={() => onRequestAuth('login')}
-        className="text-[13px] font-medium text-[#64748b] dark:text-[#bec7d2] hover:text-[#0ea5e9] dark:hover:text-[#8ecdff] whitespace-nowrap"
-      >
-        {t('member.login')}
-      </button>
-      <button
-        type="button"
-        onClick={() => onRequestAuth('signup')}
-        className="text-[13px] font-bold px-3 py-1.5 rounded-full bg-[#e0f2fe] dark:bg-[#1b5a7a]/40 text-[#0369a1] dark:text-[#8ecdff] whitespace-nowrap"
-      >
-        {t('member.signup')}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={() => onRequestAuth('login')}
+      className="shrink-0 text-[13px] font-bold px-3.5 py-1.5 rounded-full bg-[#e0f2fe] dark:bg-[#1b5a7a]/40 text-[#0369a1] dark:text-[#8ecdff] whitespace-nowrap hover:bg-[#bae6fd] dark:hover:bg-[#1b5a7a]/60 transition-colors"
+    >
+      {t('member.loginOrSignup')}
+    </button>
   );
 }
 
@@ -240,10 +233,7 @@ export default function Header() {
             ) : (
               <>
                 <button type="button" onClick={() => setAuthMode('login')} className={`${drawerLinkClass({ isActive: false })} w-full text-left`}>
-                  {t('member.login')}
-                </button>
-                <button type="button" onClick={() => setAuthMode('signup')} className={`${drawerLinkClass({ isActive: false })} w-full text-left`}>
-                  {t('member.signup')}
+                  {t('member.loginOrSignup')}
                 </button>
               </>
             )}

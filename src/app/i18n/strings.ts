@@ -492,6 +492,22 @@ export const DICT = {
   'sort.ratingLow':  { ko: '평점 낮은순', en: 'Lowest rated' },
 
   // ── 일반회원 로그인·가입 (GNB PRD REQ-C / C-3) ───────────────────────────
+  'member.loginOrSignup': { ko: '로그인 · 가입', en: 'Log in / Sign up' },
+
+  // 비밀번호 재설정 — 메일 링크가 도착하는 화면 (/reset-password)
+  'reset.title':    { ko: '새 비밀번호 설정', en: 'Set a new password' },
+  'reset.lead':     { ko: '새로 쓸 비밀번호를 입력해 주세요.', en: 'Enter the password you want to use from now on.' },
+  'reset.newLabel': { ko: '새 비밀번호', en: 'New password' },
+  'reset.again':    { ko: '한 번 더 입력', en: 'Confirm password' },
+  'reset.submit':   { ko: '비밀번호 변경', en: 'Change password' },
+  'reset.saving':   { ko: '변경 중…', en: 'Saving…' },
+  'reset.done':     { ko: '비밀번호를 변경했어요. 이제 새 비밀번호로 로그인됩니다.', en: 'Password changed. You are now signed in with it.' },
+  'reset.mismatch': { ko: '두 번 입력한 비밀번호가 서로 달라요.', en: 'The two passwords do not match.' },
+  'reset.tooShort': { ko: '비밀번호는 8자 이상이어야 해요.', en: 'Password must be at least 8 characters.' },
+  'reset.noLink':   { ko: '링크가 만료되었거나 올바르지 않아요. 로그인 창에서 재설정 메일을 다시 요청해 주세요.', en: 'This link has expired or is invalid. Please request a new reset email from the log-in dialog.' },
+  'reset.failed':   { ko: '비밀번호를 변경하지 못했어요.', en: 'Could not change the password.' },
+  'reset.goHome':   { ko: '홈으로', en: 'Go home' },
+
   'member.login':          { ko: '로그인', en: 'Log in' },
   'member.logout':         { ko: '로그아웃', en: 'Log out' },
   'member.signup':         { ko: '가입하기', en: 'Sign up' },
