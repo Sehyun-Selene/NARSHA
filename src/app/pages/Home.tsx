@@ -224,7 +224,21 @@ export default function Home() {
   const [loadError, setLoadError] = useState(false);
 
   // Quick filters (4 axes)
-  const [searchQuery, setSearchQuery] = useState('');
+  /**
+   * 검색어는 URL 에 둔다 (?q=).
+   *   · 좌상단 로고는 "/" 로 이동한다 — 쿼리가 사라지므로 검색이 자동으로 초기화된다.
+   *     컴포넌트 state 에 두면 같은 경로라 리마운트가 없어 검색어가 그대로 남는다.
+   *   · 검색 결과 링크를 그대로 공유할 수 있게 되는 이점도 있다.
+   * view·sort 도 같은 방식으로 URL 에 있다.
+   */
+  const searchQuery = searchParams.get('q') ?? '';
+  const setSearchQuery = (next: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (next) params.set('q', next);
+    else params.delete('q');
+    // replace — 글자마다 히스토리가 쌓이면 뒤로가기가 먹통이 된다
+    setSearchParams(params, { replace: true });
+  };
   const [levelFilter, setLevelFilter] = useState<string | null>(null);
   const [purposeFilter, setPurposeFilter] = useState<string | null>(null);
   const [learnerTypeFilter, setLearnerTypeFilter] = useState<string | null>(null);
@@ -455,30 +469,31 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Search + chip filters */}
-          <div className="w-full flex flex-col gap-3">
+          {/*
+            Search + chip filters.
+            검색 중에는 가로 배치로 바꾼다 (사용자 요청) — 검색창이 화면 폭을 다 쓰면
+            아래 앱 카드가 잘려 보인다. 검색창을 필요한 만큼만 두고 남는 폭에 필터
+            손잡이를 나란히 놓는다.
+          */}
+          <div
+            className={`w-full gap-3 transition-all duration-500 ease-out ${
+              searching ? 'flex flex-col lg:flex-row lg:items-start lg:gap-6' : 'flex flex-col'
+            }`}
+          >
 
             {/* Search bar */}
-            <div className="relative">
+            <div className={`relative transition-all duration-500 ease-out ${searching ? 'lg:w-[420px] lg:shrink-0' : 'w-full'}`}>
               {/*
                 다크에서 배경(#070e19)이 페이지 배경(#0c141f)과 거의 같아 검색창이
                 묻혔다. 한 단계 밝은 표면 + 보더로 경계를 만들고, 포커스 시 sky 링을
                 준다. 그림자만으로는 어두운 배경에서 형태가 드러나지 않는다.
               */}
               <div className="bg-[#f1f5f9] dark:bg-[#1e293b] rounded-[12px] border-2 border-[#94a3b8] dark:border-[#35708f] shadow-[0px_20px_40px_-16px_rgba(15,23,42,0.28)] dark:shadow-[0px_20px_40px_-16px_rgba(0,0,0,0.7)] overflow-hidden transition-colors focus-within:border-[#0ea5e9] dark:focus-within:border-[#8ecdff]">
-                <div className="flex items-center pl-16 pr-6 py-6">
+                <div className={`flex items-center pl-16 pr-6 transition-all duration-500 ease-out ${searching ? 'py-4' : 'py-6'}`}>
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={e => {
-                      const wasEmpty = searchQuery.trim().length === 0;
-                      setSearchQuery(e.target.value);
-                      // 첫 글자를 칠 때 한 번만 위로 올린다. 매 입력마다 스크롤하면
-                      // 타이핑 중 화면이 계속 흔들린다.
-                      if (wasEmpty && e.target.value.trim().length > 0) {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }
-                    }}
+                    onChange={e => setSearchQuery(e.target.value)}
                     aria-label={t('home.searchLabel')}
                     className="w-full bg-transparent font-['Inter:Regular',sans-serif] font-normal text-[16px] text-[#1e293b] dark:text-[#dce3f3] outline-none"
                   />
@@ -502,7 +517,7 @@ export default function Home() {
               칩 96개를 한 번에 보여주면 글자가 너무 많아 지저분해 보인다.
               mt-8 은 검색바 그림자(아래로 25px 번짐)를 피하기 위한 간격이다.
             */}
-            <div className="mt-8 flex flex-col gap-2">
+            <div className={`flex flex-col gap-2 transition-all duration-500 ease-out ${searching ? 'mt-0 lg:flex-1 lg:min-w-0' : 'mt-8'}`}>
               <div className="flex flex-wrap gap-2">
                 {AXES.filter(axis => axis.key !== 'type' || hasTakenSurvey).map(axis => {
                   const open = openAxis === axis.key;
@@ -545,7 +560,7 @@ export default function Home() {
                 xl 은 모든 축이 한 줄(51px)로 들어가므로 한 줄 기준으로 잡는다.
                 칩을 더 추가해 줄 수가 늘면 이 값도 같이 올려야 한다.
               */}
-              <div className="lg:min-h-[84px] xl:min-h-[52px]">
+              <div className={searching ? '' : 'lg:min-h-[84px] xl:min-h-[52px]'}>
               {openAxis && (
                 <div
                   id="axis-panel"

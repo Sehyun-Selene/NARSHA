@@ -18,6 +18,11 @@ import {
   resolveReports,
   type ReportedReview,
 } from '../data/reports';
+import {
+  fetchBugReports,
+  resolveBugReport,
+  type BugReport,
+} from '../data/bugReports';
 import { STRENGTH_LABELS } from '../lib/tagLabels';
 import { ALERT_THRESHOLDS } from '../lib/alertThresholds';
 import { useDeskAuth } from '../../features/desk/auth/useDeskAuth';
@@ -205,6 +210,75 @@ function AccuracyCard({
  * `/desk` 운영 탭에서 이미 쓰던 방식(Supabase Auth 세션 + 서버에 저장된 역할)으로
  * 통일한다. 경로를 숨기는 `VITE_ADMIN_PATH` 는 유지하되 보안 수단으로 보지 않는다.
  */
+/**
+ * 오류 제보 카드.
+ *
+ * 발생 화면 URL 과 브라우저 정보를 같이 보여준다 — 이게 없으면 "안 돼요" 한 줄로는
+ * 재현할 수 없다. 처리 완료는 삭제가 아니라 표시다 (오판을 되돌릴 수 있어야 한다).
+ */
+function BugCard({ item, onAction }: { item: BugReport; onAction: () => void }) {
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async () => {
+    setBusy(true);
+    try {
+      await resolveBugReport(item.id, item.resolvedAt === null);
+      onAction();
+    } catch (e) {
+      const code = e instanceof Error ? e.message : 'UNKNOWN';
+      toast.error(`처리 실패 (${code})`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-[12px] border border-[#e2e8f0] dark:border-[#232a36] p-4">
+      <div className="flex items-center gap-2 flex-wrap mb-2">
+        <span className="text-[11px] text-[#94a3b8]">{item.createdAt.toLocaleString('ko-KR')}</span>
+        {item.resolvedAt && (
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#dcfce7] dark:bg-[#14532d] text-[#166534] dark:text-[#86efac]">
+            처리 완료
+          </span>
+        )}
+        {item.reporterEmail && (
+          <a
+            href={`mailto:${item.reporterEmail}?subject=NARSHA%20%EC%98%A4%EB%A5%98%20%EC%A0%9C%EB%B3%B4%20%ED%9A%8C%EC%8B%A0`}
+            className="ml-auto text-[12px] text-[#1b99dc] hover:underline"
+          >
+            {item.reporterEmail}
+          </a>
+        )}
+      </div>
+
+      <p className="text-[14px] leading-[1.7] text-[#1e293b] dark:text-[#dce3f3] whitespace-pre-wrap break-words mb-3">
+        {item.description}
+      </p>
+
+      {/* 재현에 필요한 맥락 */}
+      <div className="space-y-1 mb-3 text-[11px] text-[#64748b] dark:text-[#8a94a6]">
+        {item.pageUrl && (
+          <p className="break-all">
+            화면{' '}
+            <a href={item.pageUrl} target="_blank" rel="noopener noreferrer" className="text-[#1b99dc] hover:underline">
+              {item.pageUrl}
+            </a>
+          </p>
+        )}
+        {item.userAgent && <p className="break-all">브라우저 {item.userAgent}</p>}
+      </div>
+
+      <button
+        onClick={() => void toggle()}
+        disabled={busy}
+        className={`text-[13px] hover:underline disabled:opacity-50 ${item.resolvedAt ? 'text-[#64748b]' : 'font-bold text-[#1b99dc]'}`}
+      >
+        {item.resolvedAt ? '미처리로 되돌리기' : '처리 완료'}
+      </button>
+    </div>
+  );
+}
+
 /**
  * 신고된 후기 카드 (GNB PRD REQ-E / E-3, 결정 D10).
  *
@@ -415,6 +489,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [alertsError, setAlertsError] = useState<string | null>(null);
   const [reportsError, setReportsError] = useState<string | null>(null);
+  const [bugs, setBugs] = useState<BugReport[]>([]);
+  const [bugsError, setBugsError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -441,6 +517,14 @@ export default function AdminDashboard() {
       setReportsError(null);
     } catch (e) {
       setReportsError(e instanceof Error ? e.message : 'UNKNOWN');
+    }
+
+    // 신고와 따로 잡는다 — 한쪽이 실패해도 다른 쪽은 보여야 한다
+    try {
+      setBugs(await fetchBugReports());
+      setBugsError(null);
+    } catch (e) {
+      setBugsError(e instanceof Error ? e.message : 'UNKNOWN');
     }
   };
 
@@ -496,11 +580,29 @@ export default function AdminDashboard() {
 
           {/* 조회 실패는 토스트가 아니라 화면에 남긴다 — 토스트는 사라져서
               "무엇이 안 되고 있는지" 를 계속 보여주지 못한다 */}
-          {(alertsError || reportsError) && (
+          {(alertsError || reportsError || bugsError) && (
             <div className="mb-8 rounded-[12px] border border-[#fca5a5] bg-[#fef2f2] dark:bg-[#3f1d1d] px-4 py-3 text-[13px] text-[#dc2626]">
               {alertsError && <p>태그 알림을 불러오지 못했습니다 — {alertsError}</p>}
               {reportsError && <p>신고 목록을 불러오지 못했습니다 — {reportsError}</p>}
+              {bugsError && <p>오류 제보를 불러오지 못했습니다 — {bugsError}</p>}
             </div>
+          )}
+
+          {/* 오류 제보 — 사이트가 깨진 건 콘텐츠 검토보다 급하므로 맨 위에 둔다 */}
+          {bugs.length > 0 && (
+            <section className="mb-12">
+              <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] text-[#1e293b] dark:text-[#dce3f3] mb-1">
+                🐞 오류 제보 <span className="text-[#dc2626]">{bugs.length}</span>
+              </h2>
+              <p className="text-[13px] text-[#64748b] dark:text-[#bec7d2] mb-4">
+                미처리 제보만 보입니다. 처리 완료를 누르면 목록에서 내려가고, 필요하면 되돌릴 수 있습니다.
+              </p>
+              <div className="space-y-3">
+                {bugs.map(item => (
+                  <BugCard key={item.id} item={item} onAction={load} />
+                ))}
+              </div>
+            </section>
           )}
 
           {/* 신고된 후기 (REQ-E / E-3) — 태그 알림과 성격이 달라 위쪽에 따로 둔다.

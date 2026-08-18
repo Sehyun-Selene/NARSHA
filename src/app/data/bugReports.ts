@@ -53,3 +53,48 @@ export async function saveBugReport(input: BugReportInput): Promise<void> {
     // 사파리 프라이빗 모드 등 — 중복 방지가 안 될 뿐 제보는 이미 저장됐다
   }
 }
+
+// ── 운영자 화면 ─────────────────────────────────────────────────────────────
+// 조회·처리는 RLS 의 `public.is_admin()` 이 통제한다.
+
+export interface BugReport {
+  id: string;
+  description: string;
+  reporterEmail: string | null;
+  pageUrl: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  resolvedAt: Date | null;
+}
+
+/** 미처리 제보를 최신순으로. `includeResolved` 면 처리분까지 함께 본다. */
+export async function fetchBugReports(includeResolved = false): Promise<BugReport[]> {
+  let q = supabase
+    .from('bug_reports')
+    .select('id, description, reporter_email, page_url, user_agent, created_at, resolved_at')
+    .order('created_at', { ascending: false });
+
+  if (!includeResolved) q = q.is('resolved_at', null);
+
+  const { data, error } = await q;
+  if (error) throw error;
+
+  return (data ?? []).map((r: Record<string, unknown>) => ({
+    id: r.id as string,
+    description: r.description as string,
+    reporterEmail: (r.reporter_email as string) ?? null,
+    pageUrl: (r.page_url as string) ?? null,
+    userAgent: (r.user_agent as string) ?? null,
+    createdAt: new Date(r.created_at as string),
+    resolvedAt: r.resolved_at ? new Date(r.resolved_at as string) : null,
+  }));
+}
+
+/** 처리 완료 표시. 되돌릴 수 있게 삭제하지 않는다. */
+export async function resolveBugReport(id: string, resolved = true): Promise<void> {
+  const { error } = await supabase
+    .from('bug_reports')
+    .update({ resolved_at: resolved ? new Date().toISOString() : null })
+    .eq('id', id);
+  if (error) throw error;
+}
