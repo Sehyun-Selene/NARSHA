@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import {
   Search, X, SlidersHorizontal, SearchX, ChevronDown,
@@ -11,7 +11,7 @@ import { AppLogoMark } from '../components/AppLogoMark';
 import ReviewsByType from './home/ReviewsByType';
 import { fetchApps, getAppLevelDisplayTags, appDescription, appName, type App } from '../data/apps';
 import { getAllReviews, isReviewSort, type Review, type ReviewSort } from '../data/reviews';
-import { applySearch } from '../data/searchKeywords';
+import { buildSearchPlan, matchesSearchPlan } from '../data/searchKeywords';
 import { useT } from '../i18n';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
@@ -231,14 +231,38 @@ export default function Home() {
    *   · 검색 결과 링크를 그대로 공유할 수 있게 되는 이점도 있다.
    * view·sort 도 같은 방식으로 URL 에 있다.
    */
-  const searchQuery = searchParams.get('q') ?? '';
-  const setSearchQuery = (next: string) => {
+  /**
+   * ⚠️ 입력값의 주인은 로컬 state 다. URL 은 거울로만 쓴다.
+   *
+   * 예전에는 input 의 `value` 를 `searchParams.get('q')` 에서 바로 읽었다.
+   * 그러면 글자마다 `setSearchParams` → 라우터 내비게이션 → 리렌더가 돌고, 그
+   * 과정에서 value 가 재할당된다. 영문은 티가 안 나지만 **한글은 IME 조합이
+   * 끊겨 자모가 중복 입력된다** ("영어로" → "ㅇ여영ㅇ어얼로"). value 를 로컬
+   * state 로 두면 사용자가 친 값과 항상 같아서 React 가 DOM value 를 건드리지 않는다.
+   */
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') ?? '');
+
+  // 우리가 URL 에 마지막으로 써 넣은 값. 외부 변경(로고 클릭·뒤로가기)과 구분한다
+  const pushedQuery = useRef(searchQuery);
+
+  // state → URL
+  useEffect(() => {
+    if (searchQuery === (searchParams.get('q') ?? '')) return;
     const params = new URLSearchParams(searchParams);
-    if (next) params.set('q', next);
+    if (searchQuery) params.set('q', searchQuery);
     else params.delete('q');
+    pushedQuery.current = searchQuery;
     // replace — 글자마다 히스토리가 쌓이면 뒤로가기가 먹통이 된다
     setSearchParams(params, { replace: true });
-  };
+  }, [searchQuery]);
+
+  // URL → state. 우리가 쓴 값이 아닐 때만 되돌린다 (로고로 `/` 이동, 뒤로가기, 링크 진입)
+  const urlQuery = searchParams.get('q') ?? '';
+  useEffect(() => {
+    if (urlQuery === pushedQuery.current) return;
+    pushedQuery.current = urlQuery;
+    setSearchQuery(urlQuery);
+  }, [urlQuery]);
   const [levelFilter, setLevelFilter] = useState<string | null>(null);
   const [purposeFilter, setPurposeFilter] = useState<string | null>(null);
   const [learnerTypeFilter, setLearnerTypeFilter] = useState<string | null>(null);
@@ -307,10 +331,11 @@ export default function Home() {
 
   // ── Filtered results ────────────────────────────────────────────────────────
 
-  const filteredApps = apps.filter((app: App) => {
-    const q = searchQuery.trim().toLowerCase();
+  // 검색 계획은 낱말 사전을 한 번만 훑으면 되므로 앱 목록·검색어가 바뀔 때만 다시 만든다
+  const searchPlan = useMemo(() => buildSearchPlan(searchQuery, apps), [searchQuery, apps]);
 
-    if (!applySearch(app, q)) return false;
+  const filteredApps = apps.filter((app: App) => {
+    if (!matchesSearchPlan(app, searchPlan)) return false;
 
     if (levelFilter && !app.levels.includes(levelFilter)) return false;
     if (purposeFilter && !app.purposes.includes(purposeFilter)) return false;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -24,6 +25,42 @@ const PASSWORD_MIN = 8;
 
 const inputClass =
   'w-full bg-[#f8fafc] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-3 py-2.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]';
+
+/** 비밀번호 입력 + 눈 아이콘. 두 번 입력이 서로 다를 때 눈으로 확인할 수 있어야 한다. */
+function PasswordField({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+}) {
+  const { t } = useT();
+  const [shown, setShown] = useState(false);
+  return (
+    <>
+      <label className="block text-[12px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1.5">{label}</label>
+      <div className="relative">
+        <input
+          type={shown ? 'text' : 'password'}
+          autoComplete="new-password"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className={`${inputClass} pr-10`}
+        />
+        <button
+          type="button"
+          onClick={() => setShown(!shown)}
+          aria-label={t(shown ? 'member.hidePw' : 'member.showPw')}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#94a3b8] hover:text-[#64748b]"
+        >
+          {shown ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
+    </>
+  );
+}
 
 export default function ResetPassword() {
   const { t } = useT();
@@ -101,37 +138,20 @@ export default function ResetPassword() {
                 {t('reset.lead')}
               </p>
 
-              <label className="block text-[12px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1.5">
-                {t('reset.newLabel')}
-              </label>
-              <input
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className={`${inputClass} mb-1`}
-              />
-              <p className="text-[11px] text-[#94a3b8] mb-4">{t('member.passwordHint')}</p>
+              <form onSubmit={e => { e.preventDefault(); void submit(); }}>
+                <PasswordField value={password} onChange={setPassword} label={t('reset.newLabel')} />
+                <p className="mt-1 text-[11px] text-[#94a3b8] mb-4">{t('member.passwordHint')}</p>
 
-              <label className="block text-[12px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1.5">
-                {t('reset.again')}
-              </label>
-              <input
-                type="password"
-                autoComplete="new-password"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                className={`${inputClass} mb-5`}
-              />
+                <PasswordField value={confirm} onChange={setConfirm} label={t('reset.again')} />
 
-              <button
-                type="button"
-                onClick={() => void submit()}
-                disabled={saving}
-                className="w-full h-11 rounded-[10px] bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-extrabold text-[14px] disabled:opacity-50"
-              >
-                {saving ? t('reset.saving') : t('reset.submit')}
-              </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="mt-5 w-full h-11 rounded-[10px] bg-gradient-to-r from-[#8ecdff] to-[#1b99dc] text-[#00344f] font-extrabold text-[14px] disabled:opacity-50"
+                >
+                  {saving ? t('reset.saving') : t('reset.submit')}
+                </button>
+              </form>
             </>
           )}
         </div>

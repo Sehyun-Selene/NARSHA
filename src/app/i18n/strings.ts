@@ -529,6 +529,16 @@ export const DICT = {
   'member.toLogin':        { ko: '이미 계정이 있으신가요? 로그인', en: 'Already have an account? Log in' },
   'member.forgot':         { ko: '비밀번호를 잊으셨나요?', en: 'Forgot your password?' },
   'member.resetSent':      { ko: '비밀번호 재설정 메일을 보냈어요.', en: 'Password reset email sent.' },
+  // 재설정은 이메일을 따로 받는다 — 로그인 폼의 값을 몰래 쓰면 어디로 갔는지 알 수 없다
+  'member.resetTitle':     { ko: '비밀번호 재설정', en: 'Reset your password' },
+  'member.resetLead':      { ko: '가입할 때 쓴 이메일을 입력하면 재설정 링크를 보내드려요.', en: "Enter the email you signed up with and we'll send you a reset link." },
+  'member.resetSend':      { ko: '재설정 메일 보내기', en: 'Send reset link' },
+  'member.resetSending':   { ko: '보내는 중…', en: 'Sending…' },
+  'member.backToLogin':    { ko: '로그인으로 돌아가기', en: 'Back to log in' },
+  // 실제로 스팸함으로 분류된 사례가 있었다. gmail 발송이라 도달률이 낮다
+  'member.checkSpam':      { ko: '메일이 보이지 않으면 스팸함(정크메일)도 확인해 주세요.', en: "If you don't see it, please check your spam or junk folder too." },
+  'member.showPw':         { ko: '비밀번호 표시', en: 'Show password' },
+  'member.hidePw':         { ko: '비밀번호 숨기기', en: 'Hide password' },
   'member.welcome':        { ko: '로그인했어요.', en: 'You are logged in.' },
   'member.signedUp':       { ko: '가입이 완료됐어요.', en: 'Your account is ready.' },
   'member.confirmEmail':   { ko: '메일로 보낸 확인 링크를 눌러 주세요.', en: 'Please click the confirmation link we emailed you.' },
