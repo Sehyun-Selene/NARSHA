@@ -429,7 +429,19 @@ export default function Home() {
             }`}
           >
 
-          <div className={`flex-col items-center lg:items-start gap-6 w-full text-center lg:text-left lg:pl-6 ${searching ? 'hidden' : 'flex'}`}>
+          {/*
+            히어로 문구 접힘/펼침.
+            max-height 를 큰 값으로 전환하면 실제 높이에 도달한 뒤에도 애니메이션이
+            남아 중간에 끊긴 것처럼 보인다. grid-template-rows 0fr↔1fr 는 내용 높이를
+            기준으로 보간되어 양방향 모두 매끄럽다.
+          */}
+          <div
+            className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
+              searching ? 'grid-rows-[0fr] opacity-0 pointer-events-none' : 'grid-rows-[1fr] opacity-100'
+            }`}
+            aria-hidden={searching}
+          >
+          <div className="min-h-0 flex flex-col items-center lg:items-start gap-6 w-full text-center lg:text-left lg:pl-6">
             <h1 className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold ${heroSize} leading-[1.08] tracking-[-0.042em] bg-clip-text text-transparent bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] pb-[0.1em] overflow-visible`}>
               {tLines('home.hero.title').map((line, i) => (
                 <span key={i} className="block">{line}</span>
@@ -468,6 +480,7 @@ export default function Home() {
               </div>
             </div>
           </div>
+          </div>
 
           {/*
             Search + chip filters.
@@ -482,7 +495,7 @@ export default function Home() {
           >
 
             {/* Search bar */}
-            <div className={`relative transition-all duration-500 ease-out ${searching ? 'lg:w-[480px] lg:shrink-0' : 'w-full'}`}>
+            <div className={`relative transition-all duration-500 ease-out ${searching ? 'lg:flex-1 lg:min-w-[320px]' : 'w-full'}`}>
               {/*
                 다크에서 배경(#070e19)이 페이지 배경(#0c141f)과 거의 같아 검색창이
                 묻혔다. 한 단계 밝은 표면 + 보더로 경계를 만들고, 포커스 시 sky 링을
@@ -517,7 +530,7 @@ export default function Home() {
               칩 96개를 한 번에 보여주면 글자가 너무 많아 지저분해 보인다.
               mt-8 은 검색바 그림자(아래로 25px 번짐)를 피하기 위한 간격이다.
             */}
-            <div className={`flex flex-col gap-2 transition-all duration-500 ease-out ${searching ? 'mt-0 lg:min-w-0' : 'mt-8'}`}>
+            <div className={`flex flex-col gap-2 transition-all duration-500 ease-out ${searching ? 'mt-0 lg:shrink-0' : 'mt-8'}`}>
               <div className={searching ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap gap-2'}>
                 {AXES.filter(axis => axis.key !== 'type' || hasTakenSurvey).map(axis => {
                   const open = openAxis === axis.key;
@@ -587,7 +600,7 @@ export default function Home() {
             <div
               className={
                 searching
-                  ? 'lg:pl-4 lg:border-l border-[#e2e8f0] dark:border-[#232a36]'
+                  ? 'lg:pl-4 lg:shrink-0 lg:border-l border-[#e2e8f0] dark:border-[#232a36]'
                   : 'mt-2 pt-3 border-t border-[#e2e8f0] dark:border-[#232a36]'
               }
             >

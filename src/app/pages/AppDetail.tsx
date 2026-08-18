@@ -26,6 +26,7 @@ import {
 } from '../data/reviews';
 import ReviewSortSelect from '../components/ReviewSortSelect';
 import ReviewReportMenu from '../components/ReviewReportMenu';
+import { LearnerTypeLogo } from '../components/LearnerTypeLogo';
 import { useMemberAuth } from '../../features/auth/useMemberAuth';
 import MemberAuthModal from '../../features/auth/MemberAuthModal';
 import { learnerTypes, type LearnerType } from '../data/learnerTypes';
@@ -885,11 +886,8 @@ export default function AppDetail() {
                       className="bg-[#f8fafc] dark:bg-[#0c141f] rounded-[12px] p-3 border border-[#e2e8f0] dark:border-[#232a36]"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-9 h-9 rounded-full bg-[#0ea5e9] dark:bg-[#1b5a7a] flex items-center justify-center">
-                          <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] text-[#ffffff] dark:text-[#8ecdff]">
-                            {type}
-                          </span>
-                        </div>
+                        {/* 유형 뱃지 이미지 — 검사 결과·Discover 칩과 같은 자산 */}
+                        <LearnerTypeLogo type={type} size={36} />
                         <div className="font-['Manrope:Bold',sans-serif] font-bold text-[16px] text-[#1e293b] dark:text-[#dce3f3]">
                           {rating > 0 ? rating.toFixed(1) : '-'}
                         </div>

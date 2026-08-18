@@ -491,6 +491,9 @@ export default function AdminDashboard() {
   const [reportsError, setReportsError] = useState<string | null>(null);
   const [bugs, setBugs] = useState<BugReport[]>([]);
   const [bugsError, setBugsError] = useState<string | null>(null);
+  // 처리 완료분은 기본으로 접어 둔다 — 미처리가 묻히면 안 된다
+  const [resolvedBugs, setResolvedBugs] = useState<BugReport[]>([]);
+  const [showResolved, setShowResolved] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -521,7 +524,9 @@ export default function AdminDashboard() {
 
     // 신고와 따로 잡는다 — 한쪽이 실패해도 다른 쪽은 보여야 한다
     try {
-      setBugs(await fetchBugReports());
+      const all = await fetchBugReports(true);
+      setBugs(all.filter(b => b.resolvedAt === null));
+      setResolvedBugs(all.filter(b => b.resolvedAt !== null));
       setBugsError(null);
     } catch (e) {
       setBugsError(e instanceof Error ? e.message : 'UNKNOWN');
@@ -543,6 +548,9 @@ export default function AdminDashboard() {
   if (profile?.role !== 'admin') return <NotAdmin onSignOut={logout} />;
 
   const totalAlerts = boostItems.length + accuracyItems.length;
+  // "검토할 알림이 없어요" 는 정말 아무것도 없을 때만 띄운다. 태그 알림만 세면
+  // 신고·제보가 쌓여 있는데도 "없어요" 가 함께 떠 앞뒤가 어긋난다.
+  const nothingToReview = totalAlerts === 0 && reports.length === 0 && bugs.length === 0;
 
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-[#0c141f] flex flex-col">
@@ -605,6 +613,25 @@ export default function AdminDashboard() {
             </section>
           )}
 
+          {/* 처리 완료된 제보 — 기본은 접어 둔다. 되돌리기 진입점이 여기에 있다 */}
+          {resolvedBugs.length > 0 && (
+            <section className="mb-12">
+              <button
+                onClick={() => setShowResolved(v => !v)}
+                className="text-[13px] text-[#64748b] dark:text-[#8a94a6] hover:text-[#1e293b] dark:hover:text-[#dce3f3]"
+              >
+                {showResolved ? '▾' : '▸'} 처리 완료된 제보 {resolvedBugs.length}건
+              </button>
+              {showResolved && (
+                <div className="space-y-3 mt-4">
+                  {resolvedBugs.map(item => (
+                    <BugCard key={item.id} item={item} onAction={load} />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
           {/* 신고된 후기 (REQ-E / E-3) — 태그 알림과 성격이 달라 위쪽에 따로 둔다.
               스팸·개인정보 노출은 태그 검토보다 급하다. */}
           {reports.length > 0 && (
@@ -627,7 +654,7 @@ export default function AdminDashboard() {
             <div className="flex justify-center py-24">
               <div className="w-8 h-8 border-4 border-[#0ea5e9] border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : totalAlerts === 0 ? (
+          ) : nothingToReview ? (
             <div className="text-center py-24">
               <p className="text-[40px] mb-4">✅</p>
               <p className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-2">

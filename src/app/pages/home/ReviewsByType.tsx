@@ -13,7 +13,7 @@ import { useMemberAuth } from '../../../features/auth/useMemberAuth';
 import MemberAuthModal from '../../../features/auth/MemberAuthModal';
 import { fetchApps, appName, type App } from '../../data/apps';
 import { learnerTypes, type LearnerType } from '../../data/learnerTypes';
-import { LEARNER_TYPE_BADGE } from '../../lib/learnerTypeStyles';
+import { LearnerTypeLogo } from '../../components/LearnerTypeLogo';
 import { useT } from '../../i18n';
 import type { StringKey } from '../../i18n';
 
@@ -170,17 +170,12 @@ export default function ReviewsByType({
         </button>
         {TYPE_ORDER.map(type => {
           const count = inScope.filter(r => r.learnerType === type).length;
-          const colors = LEARNER_TYPE_BADGE[type];
           const info = learnerTypes[type];
           const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
           return (
             <button key={type} onClick={() => setFilterType(type)} className={chipClass(filterType === type)}>
               <span className="flex items-center gap-1.5">
-                <span className={`w-6 h-6 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                  <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[12px] ${colors.text}`}>
-                    {type}
-                  </span>
-                </span>
+                <LearnerTypeLogo type={type} size={22} />
                 <span className="font-bold text-[13px]">{t('rbt.type').replace('{t}', type)}</span>
                 <span className="text-[11px] opacity-70">({count})</span>
               </span>

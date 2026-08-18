@@ -1,10 +1,11 @@
 import Header from '../components/Header';
-import { LEARNER_TYPE_BADGE } from '../lib/learnerTypeStyles';
+import { LearnerTypeLogo } from '../components/LearnerTypeLogo';
+import type { LearnerType } from '../data/learnerTypes';
 import Footer from '../components/Footer';
 import { useLang } from '../lib/useLang';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
-const TYPES = [
+const TYPES: { code: LearnerType; sensory: string; style: string; sensoryKo: string; styleKo: string }[] = [
   { code: '가', sensory: 'Visual',   style: 'Exploratory', sensoryKo: '시각', styleKo: '탐색형' },
   { code: '나', sensory: 'Visual',   style: 'Structured',  sensoryKo: '시각', styleKo: '구조형' },
   { code: '다', sensory: 'Auditory', style: 'Exploratory', sensoryKo: '청각', styleKo: '탐색형' },
@@ -112,10 +113,8 @@ export default function Methodology() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
               {TYPES.map(t => (
                 <div key={t.code} className="bg-[#f8fafc] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] p-4 flex items-center gap-3">
-                  {/* Discover 칩과 같은 유형별 색을 쓴다 — 같은 유형이 화면마다 다른 색이면 안 된다 */}
-                  <div className={`w-10 h-10 rounded-full ${LEARNER_TYPE_BADGE[t.code].bg} flex items-center justify-center shrink-0`}>
-                    <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] ${LEARNER_TYPE_BADGE[t.code].text}`}>{t.code}</span>
-                  </div>
+                  {/* 유형 뱃지는 이미지로 통일한다 — Discover 칩·검사 결과와 같은 자산 */}
+                  <LearnerTypeLogo type={t.code} size={40} />
                   <div>
                     <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3]">
                       {isEn ? `${t.sensory} · ${t.style}` : `${t.sensoryKo} · ${t.styleKo}`}
@@ -145,12 +144,13 @@ export default function Methodology() {
               <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
                 {isEn ? 'Item composition' : '문항 구성'}
               </p>
-              <ul className="space-y-1.5 font-['Inter:Regular',sans-serif] text-[14px] leading-[1.7] text-[#64748b] dark:text-[#bec7d2] mb-5">
-                <li>{isEn ? 'Visual 2 items' : '시각 2문항'}</li>
-                <li>{isEn ? 'Auditory 2 items' : '청각 2문항'}</li>
-                <li>{isEn ? 'Exploratory 3 items' : '탐색 3문항'}</li>
-                <li>{isEn ? 'Structured 3 items' : '구조 3문항'}</li>
-              </ul>
+              {/* 네 항목을 한 줄에 — 짧은 정보라 목록으로 쌓으면 공간만 먹는다 */}
+              <p className="font-['Inter:Regular',sans-serif] text-[14px] leading-[1.7] text-[#64748b] dark:text-[#bec7d2] mb-5">
+                {(isEn
+                  ? ['Visual 2', 'Auditory 2', 'Exploratory 3', 'Structured 3']
+                  : ['시각 2문항', '청각 2문항', '탐색 3문항', '구조 3문항']
+                ).join('  /  ')}
+              </p>
 
               <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
                 {isEn ? 'Turning answers into scores' : '응답을 점수로'}
