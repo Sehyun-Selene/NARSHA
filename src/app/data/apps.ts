@@ -1,6 +1,7 @@
 import { supabase, type AppRow } from '../../lib/supabase';
 
 import type { Lang } from '../lib/useLang';
+import { tagsMissingLabels } from './searchKeywords';
 
 export interface App {
   id: string;
@@ -100,7 +101,18 @@ export async function fetchApps(): Promise<App[]> {
     .order('name');
 
   if (error) throw error;
-  return (data as AppRow[]).map(rowToApp);
+  const apps = (data as AppRow[]).map(rowToApp);
+
+  // 라벨 없는 태그는 한국어로 검색되지 않는다. 태그를 새로 만들고 라벨을 잊는 것이
+  // 검색 사전의 유일한 구멍이라 개발 중에만 콘솔로 알려 준다.
+  if (import.meta.env.DEV) {
+    const missing = tagsMissingLabels(apps);
+    if (missing.length) {
+      console.warn(`[tags] 라벨(TAG_CHIP/TAG_LONG)이 없어 한국어 검색이 안 되는 태그: ${missing.join(', ')}`);
+    }
+  }
+
+  return apps;
 }
 
 /** Fetch a single app by id */

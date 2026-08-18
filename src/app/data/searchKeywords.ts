@@ -69,20 +69,18 @@ for (const table of [TAG_CHIP, TAG_LONG] as Array<Record<string, { ko: string; e
  *   낱말 하나로는 걸리지 않는다
  */
 const SYNONYMS: Array<[string[], string[]]> = [
-  // 학습 영역 (learning_field)
-  [['어휘', '단어', '보캐', 'vocabulary', 'vocab', 'words'], ['vocabulary', 'strength.vocabulary_volume']],
-  [['듣기', '리스닝', 'listening'], ['listening']],
-  [['말하기', '스피킹', '회화', 'speaking', 'conversation'], ['speaking']],
+  // 학습 영역·감각·방식의 정식 라벨은 `TAG_CHIP` 에 있다. 여기엔 라벨과 다른 말만 둔다.
+  [['단어', '보캐', 'vocab', 'words'], ['vocabulary', 'strength.vocabulary_volume']],
+  [['리스닝'], ['listening']],
+  [['스피킹', '회화', 'conversation'], ['speaking']],
+  [['리딩'], ['reading']],
+  [['작문'], ['writing']],
+  // 어휘·문법은 학습 영역과 강점 태그 양쪽을 가리켜야 한다
+  [['어휘'], ['vocabulary', 'strength.vocabulary_volume']],
   [['문법', 'grammar'], ['grammar', 'strength.grammar_explanation']],
-  [['읽기', '리딩', 'reading'], ['reading']],
-  [['쓰기', '작문', 'writing'], ['writing']],
-
-  // 감각 선호 / 접근 방식
-  [['시각', '시각형', 'visual'], ['visual']],
-  [['청각', '청각형', 'auditory'], ['auditory']],
-  [['복합', '복합형', 'mixed'], ['mixed']],
-  [['탐색', '탐색형', 'exploratory'], ['exploratory']],
-  [['구조', '구조형', 'structured'], ['structured', 'fit.needs_structure']],
+  // `형` 없이 쓰는 말
+  [['탐색'], ['exploratory']],
+  [['구조'], ['structured', 'fit.needs_structure']],
 
   // 목적·시험
   [['토픽', 'topik'], ['topikPreparation', 'strength.exam_focused']],
@@ -112,7 +110,12 @@ const SYNONYMS: Array<[string[], string[]]> = [
   [['원어민', 'native'], ['instructor.native_speaker', 'format.native_speaker_clips']],
 
   // 기능
-  [['오프라인', 'offline'], ['ux.offline_available']],
+  // 오프라인은 무료 구간과 유료 구간이 다른 태그다. 검색은 둘 다 잡고,
+  // 카드에 붙는 칩(`오프라인` / `오프라인(유료)`)이 어느 쪽인지 알려 준다.
+  [['오프라인', 'offline'], ['ux.offline_available', 'ux.offline_paid_only']],
+  // 서술형 라벨(`오프라인 이용`)도 두 값을 같이 잡게 한다 — 자동 생성만으로는
+  // 무료 태그 하나만 걸린다
+  [['오프라인 이용', 'offline access'], ['ux.offline_available', 'ux.offline_paid_only']],
   [['플래시카드', '단어카드', 'flashcard'], ['format.flashcard']],
   [['게임', '게임식', 'gamification', 'game'], ['ux.gamification']],
   [['발음', 'pronunciation'], ['strength.pronunciation']],
@@ -315,6 +318,26 @@ export function buildSearchPlan(rawQuery: string, apps: App[]): SearchPlan {
   }
 
   return { active: true, terms, unknown };
+}
+
+/**
+ * 라벨이 없어서 **한국어로 검색되지 않는** 태그 값을 찾아낸다.
+ *
+ * 검색 사전이 `TAG_CHIP`/`TAG_LONG` 라벨에서 자동 생성되므로, 라벨 없는 태그는
+ * 영문 값으로만 걸린다. 태그를 새로 만들고 라벨을 잊는 것이 유일한 구멍이라
+ * 개발 중에 콘솔로 알려 준다 (`data/apps.ts` 의 `fetchApps` 에서 호출).
+ */
+export function tagsMissingLabels(apps: App[]): string[] {
+  const missing = new Set<string>();
+  for (const app of apps) {
+    for (const tag of appTags(app)) {
+      // 학습유형 코드(가~바)는 칩 라벨이 `가 시각·탐색` 형태라 별도 취급이다
+      if (/^[가-바]$/.test(tag)) continue;
+      const labelled = Object.values(KEYWORD_TO_TAGS).some(v => v.includes(tag));
+      if (!labelled) missing.add(tag);
+    }
+  }
+  return [...missing].sort();
 }
 
 /** 계획의 모든 낱말을 만족해야 통과 (AND) */

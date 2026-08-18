@@ -115,6 +115,8 @@ const FIT_CHIPS = [
 
 // Group J: Accessibility / UX (excludes ux.offline_available already in axis 4)
 const UX_CHIPS = [
+  // 무료 오프라인은 4번 축에 있고, 유료 오프라인은 여기서 고른다
+  'ux.offline_paid_only',
   'ux.gamification',
   'ux.short_videos',
   'ux.long_form_content',

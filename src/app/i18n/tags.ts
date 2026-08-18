@@ -10,6 +10,23 @@ import type { Entry } from './strings';
 
 /** 칩에 쓰는 짧은 라벨 */
 export const TAG_CHIP = {
+  // ── Learning field (learning_field) ──
+  // 화면에 아직 안 쓰이지만 라벨을 둔다 — 검색 사전이 이 표에서 자동 생성되므로
+  // 라벨이 없으면 그 태그는 한국어로 검색되지 않는다.
+  'vocabulary': { ko: '어휘',   en: 'Vocabulary' },
+  'listening':  { ko: '듣기',   en: 'Listening' },
+  'speaking':   { ko: '말하기', en: 'Speaking' },
+  'grammar':    { ko: '문법',   en: 'Grammar' },
+  'reading':    { ko: '읽기',   en: 'Reading' },
+  'writing':    { ko: '쓰기',   en: 'Writing' },
+
+  // ── Sensory / Style (감각 선호 · 접근 방식 원값) ──
+  'visual':      { ko: '시각',   en: 'Visual' },
+  'auditory':    { ko: '청각',   en: 'Auditory' },
+  'mixed':       { ko: '복합',   en: 'Mixed' },
+  'exploratory': { ko: '탐색형', en: 'Exploratory' },
+  'structured':  { ko: '구조형', en: 'Structured' },
+
   // ── Level ────────────────────────────────────────────────────────────────
   'beginner':     { ko: '입문', en: 'Beginner' },
   'elementary':   { ko: '초급', en: 'Elementary' },
@@ -117,7 +134,11 @@ export const TAG_CHIP = {
   'fit.shy_speaker':     { ko: '말하기 부담',   en: 'Shy Speaker' },
 
   // ── Accessibility / UX ───────────────────────────────────────────────────
+  // 오프라인은 두 값으로 나눈다 — 무료 구간에서 되는 것과 결제해야 열리는 것은
+  // 사용자에게 전혀 다른 정보다. 검색 `오프라인` 은 둘 다 잡고 칩으로 구분된다.
   'ux.offline_available':      { ko: '오프라인',   en: 'Offline' },
+  // 6자 원칙의 예외 — 유료라는 조건이 빠지면 뜻이 바뀐다
+  'ux.offline_paid_only':      { ko: '오프라인(유료)', en: 'Offline (Paid)' },
   'ux.gamification':           { ko: '게임형',     en: 'Gamification' },
   'ux.short_videos':           { ko: '숏폼',       en: 'Short Videos' },
   'ux.long_form_content':      { ko: '롱폼',       en: 'Long-form' },
@@ -168,6 +189,7 @@ export const TAG_LONG = {
   'fit.career_focused':           { ko: '진학·취업 목적',       en: 'Career / Exam Focus' },
   'fit.shy_speaker':              { ko: '말하기가 부담되는 학습자', en: 'Shy Speakers' },
   'ux.offline_available':         { ko: '오프라인 이용',        en: 'Offline Access' },
+  'ux.offline_paid_only':         { ko: '오프라인 이용 (유료)',  en: 'Offline Access (Paid)' },
   'ux.gamification':              { ko: '게임형 학습',          en: 'Gamification' },
   'ux.short_videos':              { ko: '짧은 영상 (5–15분)',   en: 'Short Videos (5–15 min)' },
   'ux.multilingual_interface':    { ko: '다국어 인터페이스',    en: 'Multilingual UI' },
