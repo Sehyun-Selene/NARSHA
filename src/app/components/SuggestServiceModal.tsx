@@ -24,11 +24,13 @@ const CHIP_ON  = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cur
 const CHIP_WARN = 'text-[12px] px-2.5 py-1 rounded-full border transition-all cursor-pointer font-medium bg-[#f59e0b] text-white border-transparent';
 
 interface Props {
+  /** 탭 컨테이너(FeedbackModal) 안에서 쓸 때 — 자기 껍데기(오버레이·헤더)를 그리지 않는다 */
+  embedded?: boolean;
   open: boolean;
   onClose: () => void;
 }
 
-export default function SuggestServiceModal({ open, onClose }: Props) {
+export default function SuggestServiceModal({ open, onClose, embedded = false }: Props) {
   const { t, tag, lang } = useT();
   const [serviceName, setServiceName]           = useState('');
   const [serviceUrl, setServiceUrl]             = useState('');
@@ -121,32 +123,9 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative w-full sm:max-w-[480px] bg-[#ffffff] dark:bg-[#151c27] sm:rounded-[20px] rounded-t-[20px] shadow-2xl flex flex-col max-h-[92dvh]">
-
-        {/* Header */}
-        <div className="flex items-start justify-between px-6 py-5 border-b border-[#e2e8f0] dark:border-[#232a36] shrink-0">
-          <div>
-            <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3]">
-              {t('suggest.title')}
-            </h2>
-            <p className="text-[13px] text-[#64748b] dark:text-[#8a94a6] mt-0.5">
-              {t('suggest.subtitle')}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            aria-label={t('suggest.cancel')}
-            className="text-[#94a3b8] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors ml-4 mt-0.5"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Scrollable form body */}
+  // 껍데기(오버레이·헤더)는 embedded 가 아닐 때만 그린다. 탭 컨테이너 안에서는
+  // 컨테이너가 이미 오버레이와 헤더를 갖고 있어 두 겹이 되면 안 된다.
+  const formBody = (
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
@@ -254,7 +233,33 @@ export default function SuggestServiceModal({ open, onClose }: Props) {
             </button>
           </div>
         </form>
+  );
 
+  if (embedded) return formBody;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+      <div className="relative w-full sm:max-w-[480px] bg-[#ffffff] dark:bg-[#151c27] sm:rounded-[20px] rounded-t-[20px] shadow-2xl flex flex-col max-h-[92dvh]">
+        <div className="flex items-start justify-between px-6 py-5 border-b border-[#e2e8f0] dark:border-[#232a36] shrink-0">
+          <div>
+            <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3]">
+              {t("suggest.title")}
+            </h2>
+            <p className="text-[13px] text-[#64748b] dark:text-[#8a94a6] mt-0.5">
+              {t("suggest.subtitle")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label={t("suggest.cancel")}
+            className="text-[#94a3b8] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors ml-4 mt-0.5"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        {formBody}
       </div>
     </div>
   );

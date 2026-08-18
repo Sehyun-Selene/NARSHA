@@ -108,6 +108,67 @@ export default function Methodology() {
               ))}
             </div>
 
+            {/*
+              채점 방식 설명.
+              히어로에서 '학습유형은 어떻게 구분하나요' 로 들어오는 페이지인데
+              정작 '어떻게' 가 없었다. 문항 구성과 점수 환산을 밝힌다.
+              ⚠️ 이 서술은 data/learnerTypes.ts 의 실제 구성·채점과 일치해야 한다.
+            */}
+            <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] text-[#1e293b] dark:text-[#dce3f3] mb-4">
+              {isEn ? 'How the Test Is Scored' : '어떻게 판정하나요'}
+            </h2>
+
+            <div className="bg-[#f8fafc] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] p-6 mb-10">
+              <p className="font-['Inter:Regular',sans-serif] text-[15px] leading-[1.75] text-[#1e293b] dark:text-[#dce3f3] mb-5">
+                {isEn
+                  ? 'The test has 10 statements. Each is answered on a 5-point scale, and the items are split evenly across the four directions so that no single question decides your type.'
+                  : '검사는 10개 문항으로 이루어집니다. 각 문항에 5점 척도로 답하고, 문항은 네 방향에 고르게 나뉘어 있어 한 문항이 유형을 결정하지 않습니다.'}
+              </p>
+
+              <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
+                {isEn ? 'Item composition' : '문항 구성'}
+              </p>
+              <ul className="space-y-1.5 font-['Inter:Regular',sans-serif] text-[14px] leading-[1.7] text-[#64748b] dark:text-[#bec7d2] mb-5">
+                <li>{isEn ? 'Visual — 2 items' : '시각 — 2문항'}</li>
+                <li>{isEn ? 'Auditory — 2 items' : '청각 — 2문항'}</li>
+                <li>{isEn ? 'Exploratory — 3 items' : '탐색 — 3문항'}</li>
+                <li>{isEn ? 'Structured — 3 items' : '구조 — 3문항'}</li>
+              </ul>
+
+              <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
+                {isEn ? 'Turning answers into scores' : '응답을 점수로'}
+              </p>
+              <p className="font-['Inter:Regular',sans-serif] text-[14px] leading-[1.75] text-[#64748b] dark:text-[#bec7d2] mb-3">
+                {isEn
+                  ? 'The middle of the scale counts as zero. Agreeing is evidence for that direction; disagreeing is evidence for the opposite one. Strength matters — a 5 counts twice as much as a 4.'
+                  : '척도의 중앙은 0점입니다. 동의하면 그 방향의 근거가 되고, 동의하지 않으면 반대 방향의 근거가 됩니다. 강도도 반영되어 5는 4의 두 배로 계산됩니다.'}
+              </p>
+              <div className="flex flex-wrap gap-2 mb-5">
+                {[
+                  { a: '1', v: '−2' },
+                  { a: '2', v: '−1' },
+                  { a: '3', v: '0' },
+                  { a: '4', v: '+1' },
+                  { a: '5', v: '+2' },
+                ].map(x => (
+                  <span key={x.a} className="inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] px-3 py-1.5 text-[13px]">
+                    <span className="font-bold text-[#1e293b] dark:text-[#dce3f3]">{x.a}</span>
+                    <span className="text-[#94a3b8]">→</span>
+                    <span className="font-mono text-[#0ea5e9] dark:text-[#8ecdff]">{x.v}</span>
+                  </span>
+                ))}
+              </div>
+
+              <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
+                {isEn ? 'Deciding each axis' : '축을 정하는 방법'}
+              </p>
+              <p className="font-['Inter:Regular',sans-serif] text-[14px] leading-[1.75] text-[#64748b] dark:text-[#bec7d2]">
+                {isEn
+                  ? 'Each direction is averaged, then the two sides of an axis are compared. On the sensory axis, when the two sides are close, we only name a side if you actually agreed with its statements — merely disliking one less does not make it your preference, so that case becomes Mixed. The style axis has no middle type: the higher side wins, and a tie is read as Exploratory.'
+                  : '방향마다 평균을 낸 뒤 축의 두 편을 비교합니다. 감각 축에서 두 편의 차이가 근소할 때는, 해당 방향의 문항에 실제로 동의했을 때만 그 유형으로 봅니다 — 한쪽을 덜 싫어한 것만으로는 선호라고 할 수 없어, 그 경우는 혼합형이 됩니다. 스타일 축에는 중간 유형이 없어 더 높은 쪽을 택하고, 완전히 같으면 탐색형으로 봅니다.'}
+              </p>
+            </div>
+
             {/* Citations */}
             <div className="bg-[#f8fafc] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] p-6">
               <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-4">

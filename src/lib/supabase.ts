@@ -13,6 +13,7 @@ export type Database = {
       review_replies: { Row: ReviewReplyRow };
       review_reports: { Row: ReviewReportRow };
       members: { Row: MemberRow };
+      bug_reports: { Row: BugReportRow };
       profiles: { Row: ProfileRow };
       desk_posts: { Row: DeskPostRow };
       desk_post_revisions: { Row: DeskPostRevisionRow };
@@ -72,7 +73,18 @@ export interface ReviewRow {
   created_at: string;
 }
 
-/** 일반회원 프로필 (REQ-C / C-3). desk 저자는 `profiles` 쪽이다 */
+/** 오류 제보. 조회는 운영자만 (제보에 이메일이 담길 수 있다) */
+export interface BugReportRow {
+  id: string;
+  description: string;
+  reporter_email: string | null;
+  page_url: string | null;
+  user_agent: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+/** 일반회원 프로필 (REQ-C / C-3). desk 저자는 profiles 쪽이다 */
 export interface MemberRow {
   id: string;
   display_name: string;

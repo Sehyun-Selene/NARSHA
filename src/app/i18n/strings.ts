@@ -29,7 +29,23 @@ export const DICT = {
   'footer.terms':       { ko: '이용약관',          en: 'Terms' },
   'footer.suggest':     { ko: '서비스 제안하기',   en: 'Suggest a Service' },
 
-  // ── 서비스 제안 (플로팅 버튼 + 모달) ──────────────────────────────────────
+  // ── 제보 창구 (플로팅 버튼 → 탭 2개: 서비스 제안 / 오류 제보) ─────────────
+  'feedback.tabSuggest': { ko: '서비스 제안', en: 'Suggest a service' },
+  'feedback.tabBug':     { ko: '오류 제보', en: 'Report a problem' },
+  'bug.title':      { ko: '오류 제보', en: 'Report a problem' },
+  'bug.subtitle':   { ko: '동작하지 않는 부분을 알려주세요. 바로 확인하겠습니다.', en: 'Tell us what is not working. We will look into it.' },
+  'bug.descLabel':  { ko: '무엇이 잘못되었나요?', en: 'What went wrong?' },
+  'bug.descPh':     { ko: '어느 화면에서 무엇을 하려다 어떻게 됐는지 적어 주세요. 예: 후기를 저장했는데 목록에 나타나지 않아요.', en: 'Tell us what you were doing and what happened. e.g. I saved a review but it does not appear in the list.' },
+  'bug.contextNote': { ko: '지금 보고 있는 화면 주소와 브라우저 정보가 함께 전송됩니다. 재현에 필요한 정보입니다.', en: 'The current page address and your browser details are sent along. We need them to reproduce the problem.' },
+  'bug.emailLabel': { ko: '이메일', en: 'Your Email' },
+  'bug.emailHint':  { ko: '(선택 — 확인 후 회신드립니다)', en: '(optional — we will reply once resolved)' },
+  'bug.submit':     { ko: '제보 보내기', en: 'Send report' },
+  'bug.submitting': { ko: '보내는 중…', en: 'Sending…' },
+  'bug.errShort':   { ko: '조금 더 자세히 적어 주세요 (10자 이상).', en: 'Please add a little more detail (at least 10 characters).' },
+  'bug.errDupe':    { ko: '방금 같은 내용을 보내셨어요.', en: 'You just sent the same report.' },
+  'bug.done':       { ko: '제보가 접수됐습니다. 확인 후 처리하겠습니다.', en: 'Report received. We will look into it.' },
+  'bug.fail':       { ko: '제보 전송에 실패했어요. 잠시 후 다시 시도해 주세요.', en: 'Could not send the report. Please try again.' },
+
   'suggest.bubble':          { ko: '없는 서비스가 있나요? 추천해주세요!', en: 'Missing a service? Suggest one!' },
   'suggest.tooltip':         { ko: '서비스 제안하기',                    en: 'Suggest a service' },
   'suggest.title':           { ko: '서비스 제안하기',                    en: 'Suggest a Service' },

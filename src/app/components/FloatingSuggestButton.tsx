@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, X } from 'lucide-react';
-import SuggestServiceModal from './SuggestServiceModal';
+import FeedbackModal from './FeedbackModal';
 import { useT } from '../i18n';
 
 const BUBBLE_SHOWN_KEY = 'narsha-suggest-bubble-shown';
@@ -78,7 +78,7 @@ export default function FloatingSuggestButton() {
         <Plus className="w-6 h-6" />
       </button>
 
-      <SuggestServiceModal open={showModal} onClose={() => setShowModal(false)} />
+      <FeedbackModal open={showModal} onClose={() => setShowModal(false)} />
     </>
   );
 }
