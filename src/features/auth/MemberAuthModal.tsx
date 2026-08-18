@@ -57,10 +57,10 @@ export default function MemberAuthModal({
     setBusy(true);
     try {
       if (mode === 'signup') {
-        await memberSignUp({ email, password, displayName, agreed });
-        // 이메일 확인이 켜진 프로젝트에서는 세션 없이 끝난다 — 안내를 나눠 띄운다
+        const { needsEmailConfirm } = await memberSignUp({ email, password, displayName, agreed });
         toast.success(t('member.signedUp'));
-        toast.message(t('member.confirmEmail'));
+        // 확인 메일이 필요한 설정일 때만 안내한다 — 아니면 오지 않는 메일을 기다리게 된다
+        if (needsEmailConfirm) toast.message(t('member.confirmEmail'));
       } else {
         await memberSignIn(email, password);
         toast.success(t('member.welcome'));

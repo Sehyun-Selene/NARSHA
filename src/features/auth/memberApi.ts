@@ -24,13 +24,19 @@ export type MemberAuthError =
 const PASSWORD_MIN = 8;
 const DISPLAY_NAME_MAX = 40;
 
-/** 회원 가입 — 이메일·비밀번호. 표시명은 `members` 행에 저장한다. */
+/**
+ * 회원 가입 — 이메일·비밀번호. 표시명은 `members` 행에 저장한다.
+ *
+ * 반환값 `needsEmailConfirm` — Supabase 의 "Confirm email" 설정에 따라 달라진다.
+ * 확인이 필요하면 세션이 없는 상태로 끝나므로 그때만 안내를 띄워야 한다.
+ * 설정을 끈 뒤에도 "메일을 확인하세요" 가 뜨면 오지 않는 메일을 기다리게 된다.
+ */
 export async function memberSignUp(input: {
   email: string;
   password: string;
   displayName: string;
   agreed: boolean;
-}): Promise<void> {
+}): Promise<{ needsEmailConfirm: boolean }> {
   const email = input.email.trim().toLowerCase();
   const displayName = input.displayName.trim();
 
@@ -58,7 +64,7 @@ export async function memberSignUp(input: {
 
   // 이메일 확인이 켜져 있으면 세션이 없다. 그 경우 members 행은 첫 로그인 때 만든다.
   const userId = data.user?.id;
-  if (!userId || !data.session) return;
+  if (!userId || !data.session) return { needsEmailConfirm: true };
 
   const { error: memberError } = await supabase
     .from('members')
@@ -66,6 +72,8 @@ export async function memberSignUp(input: {
 
   // 행 생성이 실패해도 계정은 살아 있다. Provider 가 다음 로드에서 다시 만든다.
   if (memberError) console.error('member row insert failed', memberError.message);
+
+  return { needsEmailConfirm: false };
 }
 
 export async function memberSignIn(email: string, password: string): Promise<void> {
