@@ -482,7 +482,7 @@ export default function Home() {
           >
 
             {/* Search bar */}
-            <div className={`relative transition-all duration-500 ease-out ${searching ? 'lg:w-[420px] lg:shrink-0' : 'w-full'}`}>
+            <div className={`relative transition-all duration-500 ease-out ${searching ? 'lg:w-[480px] lg:shrink-0' : 'w-full'}`}>
               {/*
                 다크에서 배경(#070e19)이 페이지 배경(#0c141f)과 거의 같아 검색창이
                 묻혔다. 한 단계 밝은 표면 + 보더로 경계를 만들고, 포커스 시 sky 링을
@@ -517,7 +517,7 @@ export default function Home() {
               칩 96개를 한 번에 보여주면 글자가 너무 많아 지저분해 보인다.
               mt-8 은 검색바 그림자(아래로 25px 번짐)를 피하기 위한 간격이다.
             */}
-            <div className={`flex flex-col gap-2 transition-all duration-500 ease-out ${searching ? 'mt-0 lg:flex-1 lg:min-w-0' : 'mt-8'}`}>
+            <div className={`flex flex-col gap-2 transition-all duration-500 ease-out ${searching ? 'mt-0 lg:min-w-0' : 'mt-8'}`}>
               <div className="flex flex-wrap gap-2">
                 {AXES.filter(axis => axis.key !== 'type' || hasTakenSurvey).map(axis => {
                   const open = openAxis === axis.key;
@@ -584,7 +584,13 @@ export default function Home() {
             </div>
 
             {/* Advanced Filters button */}
-            <div className="mt-2 pt-3 border-t border-[#e2e8f0] dark:border-[#232a36]">
+            <div
+              className={
+                searching
+                  ? 'lg:pl-4 lg:border-l border-[#e2e8f0] dark:border-[#232a36]'
+                  : 'mt-2 pt-3 border-t border-[#e2e8f0] dark:border-[#232a36]'
+              }
+            >
               <button
                 onClick={() => setShowAdvancedFilters(true)}
                 className="flex items-center gap-1.5 text-[13px] text-[#64748b] dark:text-[#8a94a6] hover:text-[#1e293b] dark:hover:text-[#dce3f3] transition-colors"
@@ -690,7 +696,9 @@ export default function Home() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            /* 좁은 창에서 1열이면 카드 하나가 폭을 다 차지하고, 정사각 이미지 때문에
+               세로도 그만큼 커져 화면을 넘긴다. 단계를 촘촘히 두고 로고 높이에 상한. */
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {filteredApps.map(app => {
                 const rating = computeRating(reviews, app.id);
                 const reviewCount = reviews.filter(r => r.appId === app.id).length;
@@ -701,10 +709,10 @@ export default function Home() {
                         <span key={level} className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full">{tag(level)}</span>
                       ))}
                     </div>
-                    <div className="aspect-square bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
+                    <div className="aspect-square max-h-[220px] bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
                       <AppLogoMark app={app} variant="grid" />
                     </div>
-                    <div className="p-6">
+                    <div className="p-4 sm:p-6">
                       <div className="flex items-start justify-between mb-3">
                         <h3 className="font-['Manrope:Bold',sans-serif] font-bold text-[20px] leading-[24px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.5px]">{appName(app, lang)}</h3>
                         {rating > 0 && (

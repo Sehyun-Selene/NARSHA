@@ -136,8 +136,9 @@ export default function ReviewsByType({
     (r) => counts[r.id] ?? r.helpfulCount,
   );
 
+  // 7개가 한 줄에 들어가야 하므로 폭을 균등하게(그리드가 담당) 하고 내용은 2줄로 쌓는다
   const chipClass = (on: boolean) =>
-    `flex items-center gap-2.5 px-5 py-2.5 rounded-full font-['Manrope:Medium',sans-serif] font-medium text-[13px] transition-all whitespace-nowrap ${
+    `h-[52px] px-2 rounded-[12px] font-['Manrope:Medium',sans-serif] font-medium leading-tight transition-all flex flex-col items-center justify-center gap-0.5 ${
       on
         ? 'bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] shadow-lg'
         : 'bg-[#e2e8f0] dark:bg-[#232a36] text-[#1e293b] dark:text-[#dce3f3] hover:bg-[#cbd5e1] dark:hover:bg-[#2e3541]'
@@ -165,24 +166,38 @@ export default function ReviewsByType({
         <ReviewSortSelect value={sort} onChange={onSortChange} />
       </div>
 
-      {/* 유형 필터 칩 */}
-      <div className="mb-8 max-w-[800px] mx-auto flex gap-3 justify-center flex-wrap">
+      {/*
+        유형 필터 칩.
+        라벨 길이가 제각각이라 flex-wrap 에서는 마·바만 아랫줄로 내려갔다.
+        폭이 같은 2줄 칩 + 7열 그리드로 바꿔 데스크톱에서 한 줄에 들어오게 한다.
+        2줄째에 감각·방식(시각 탐색형 등)을 붙여 유형 코드만 보고 헷갈리지 않게 한다.
+      */}
+      <div className="mb-8 max-w-[1000px] mx-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         <button onClick={() => setFilterType(null)} className={chipClass(filterType === null)}>
-          <span>{t('rbt.allTypes')}</span>
-          <span className="opacity-60">({inScope.length})</span>
+          <span className="font-bold text-[13px]">{t('rbt.allTypes')}</span>
+          <span className="text-[11px] opacity-70">({inScope.length})</span>
         </button>
         {TYPE_ORDER.map(type => {
           const count = inScope.filter(r => r.learnerType === type).length;
           const colors = TYPE_COLORS[type];
+          const info = learnerTypes[type];
+          const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
           return (
             <button key={type} onClick={() => setFilterType(type)} className={chipClass(filterType === type)}>
-              <div className={`w-7 h-7 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[14px] ${colors.text}`}>
-                  {type}
+              <span className="flex items-center gap-1.5">
+                <span className={`w-6 h-6 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                  <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[12px] ${colors.text}`}>
+                    {type}
+                  </span>
                 </span>
-              </div>
-              <span>{t('rbt.type').replace('{t}', type)}</span>
-              <span className="opacity-60">({count})</span>
+                <span className="font-bold text-[13px]">{t('rbt.type').replace('{t}', type)}</span>
+                <span className="text-[11px] opacity-70">({count})</span>
+              </span>
+              <span className="text-[11px] opacity-80 whitespace-nowrap">
+                {lang === 'ko'
+                  ? info.nameKo.replace(' 학습자', '')
+                  : `${cap(info.sensory)} ${cap(info.style)}`}
+              </span>
             </button>
           );
         })}
