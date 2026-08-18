@@ -61,8 +61,22 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
     }
   };
 
+  /**
+   * 추천 이유는 필수다 (별표 항목).
+   * `해당 없음` 은 그 자체로 답이 아니라 직접 적겠다는 뜻이므로, 적어야 답이 된다.
+   */
+  const reasonAnswered = showCustomReason
+    ? customReason.trim().length > 0
+    : selectedStrengths.length > 0;
+
   const validate = () => {
     let valid = true;
+    if (!reasonAnswered) {
+      setReasonError(t(showCustomReason ? 'suggest.errCustom' : 'suggest.errReason'));
+      valid = false;
+    } else {
+      setReasonError('');
+    }
     if (!serviceName.trim()) {
       setNameError(t('suggest.errName'));
       valid = false;
@@ -84,6 +98,9 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
     return valid;
   };
 
+  /** 별표 항목이 다 채워졌는가 — 버튼 활성 조건 */
+  const canSubmit = serviceName.trim().length > 0 && reasonAnswered;
+
   const resetForm = () => {
     setServiceName('');
     setServiceUrl('');
@@ -92,6 +109,7 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
     setCustomReason('');
     setReporterEmail('');
     setNameError('');
+    setReasonError('');
     setUrlError('');
     setEmailError('');
   };
@@ -162,7 +180,7 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
             {/* Strength tags */}
             <div>
               <label className="block text-[13px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1">
-                {t('suggest.whyLabel')}{' '}
+                {t('suggest.whyLabel')} <span className="text-[#0ea5e9]">*</span>{' '}
                 <span className="text-[#94a3b8] font-normal">
                   ({t('suggest.whyHint')}{selectedStrengths.length > 0 ? ` · ${selectedLabel}` : ''})
                 </span>
@@ -172,7 +190,7 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
                   <button
                     key={value}
                     type="button"
-                    onClick={() => { setShowCustomReason(false); toggleStrength(value); }}
+                    onClick={() => { setShowCustomReason(false); setReasonError(''); toggleStrength(value); }}
                     className={selectedStrengths.includes(value) ? CHIP_ON : CHIP_OFF}
                   >
                     {tag(value)}
@@ -180,7 +198,7 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
                 ))}
                 <button
                   type="button"
-                  onClick={() => { setShowCustomReason(p => !p); setSelectedStrengths([]); }}
+                  onClick={() => { setShowCustomReason(p => !p); setSelectedStrengths([]); setReasonError(''); }}
                   className={showCustomReason ? CHIP_WARN : CHIP_OFF}
                 >
                   {t('suggest.noneOfAbove')}
@@ -189,12 +207,13 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
               {showCustomReason && (
                 <textarea
                   value={customReason}
-                  onChange={e => setCustomReason(e.target.value)}
+                  onChange={e => { setCustomReason(e.target.value); if (reasonError) setReasonError(''); }}
                   placeholder={t('suggest.customPlaceholder')}
                   rows={2}
                   className="mt-2.5 w-full bg-[#f8fafc] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-3 py-2 text-[14px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] resize-none"
                 />
               )}
+              {reasonError && <p className="mt-1.5 text-[12px] text-[#ef4444]">{reasonError}</p>}
             </div>
 
             {/* Email */}
@@ -216,7 +235,12 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-[#e2e8f0] dark:border-[#232a36] flex justify-end gap-3 shrink-0">
+          <div className="px-6 py-4 border-t border-[#e2e8f0] dark:border-[#232a36] flex items-center justify-end gap-3 shrink-0">
+            {/* 버튼이 비활성인 이유를 알려 준다 — 비활성 버튼은 submit 이 안 되므로
+                validate() 의 오류 문구가 뜰 기회가 없다 */}
+            {!canSubmit && (
+              <p className="mr-auto text-[12px] text-[#94a3b8]">{t('suggest.needRequired')}</p>
+            )}
             <button
               type="button"
               onClick={handleClose}
@@ -226,7 +250,8 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !canSubmit}
+              title={canSubmit ? undefined : t('suggest.needRequired')}
               className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-white dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[14px] px-5 py-2 rounded-full hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               {submitting ? t('suggest.submitting') : t('suggest.submit')}
