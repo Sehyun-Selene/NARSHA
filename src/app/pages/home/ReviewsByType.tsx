@@ -13,6 +13,7 @@ import { useMemberAuth } from '../../../features/auth/useMemberAuth';
 import MemberAuthModal from '../../../features/auth/MemberAuthModal';
 import { fetchApps, appName, type App } from '../../data/apps';
 import { learnerTypes, type LearnerType } from '../../data/learnerTypes';
+import { LEARNER_TYPE_BADGE } from '../../lib/learnerTypeStyles';
 import { useT } from '../../i18n';
 import type { StringKey } from '../../i18n';
 
@@ -30,14 +31,6 @@ import type { StringKey } from '../../i18n';
 
 const TYPE_ORDER: LearnerType[] = ['가', '나', '다', '라', '마', '바'];
 
-const TYPE_COLORS: Record<LearnerType, { bg: string; text: string }> = {
-  '가': { bg: 'bg-gradient-to-br from-[#8ecdff] to-[#1b99dc]', text: 'text-[#00344f]' },
-  '나': { bg: 'bg-gradient-to-br from-[#60a5fa] to-[#3b82f6]', text: 'text-[#1e3a8a]' },
-  '다': { bg: 'bg-gradient-to-br from-[#a78bfa] to-[#8b5cf6]', text: 'text-[#4c1d95]' },
-  '라': { bg: 'bg-gradient-to-br from-[#f472b6] to-[#ec4899]', text: 'text-[#831843]' },
-  '마': { bg: 'bg-gradient-to-br from-[#fbbf24] to-[#f59e0b]', text: 'text-[#78350f]' },
-  '바': { bg: 'bg-gradient-to-br from-[#34d399] to-[#10b981]', text: 'text-[#064e3b]' },
-};
 
 type ReviewWithAppName = Review & { appLabel: string };
 
@@ -161,10 +154,6 @@ export default function ReviewsByType({
         </div>
       )}
 
-      {/* 정렬 (REQ-F / F-2) */}
-      <div className="mb-4 flex justify-end">
-        <ReviewSortSelect value={sort} onChange={onSortChange} />
-      </div>
 
       {/*
         유형 필터 칩.
@@ -172,14 +161,16 @@ export default function ReviewsByType({
         폭이 같은 2줄 칩 + 7열 그리드로 바꿔 데스크톱에서 한 줄에 들어오게 한다.
         2줄째에 감각·방식(시각 탐색형 등)을 붙여 유형 코드만 보고 헷갈리지 않게 한다.
       */}
-      <div className="mb-8 max-w-[1000px] mx-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+      {/* 토글 바로 아래에 유형 칩을 두고, 정렬을 같은 줄 오른쪽에 붙인다 (사용자 요청) */}
+      <div className="mb-8 flex flex-col lg:flex-row lg:items-center gap-3">
+        <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         <button onClick={() => setFilterType(null)} className={chipClass(filterType === null)}>
           <span className="font-bold text-[13px]">{t('rbt.allTypes')}</span>
           <span className="text-[11px] opacity-70">({inScope.length})</span>
         </button>
         {TYPE_ORDER.map(type => {
           const count = inScope.filter(r => r.learnerType === type).length;
-          const colors = TYPE_COLORS[type];
+          const colors = LEARNER_TYPE_BADGE[type];
           const info = learnerTypes[type];
           const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
           return (
@@ -201,6 +192,11 @@ export default function ReviewsByType({
             </button>
           );
         })}
+      </div>
+        {/* 정렬 (REQ-F / F-2) — 칩과 같은 줄 오른쪽 끝 */}
+        <div className="shrink-0">
+          <ReviewSortSelect value={sort} onChange={onSortChange} />
+        </div>
       </div>
 
       {loading ? (

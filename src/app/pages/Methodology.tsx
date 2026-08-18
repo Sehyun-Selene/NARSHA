@@ -1,4 +1,5 @@
 import Header from '../components/Header';
+import { LEARNER_TYPE_BADGE } from '../lib/learnerTypeStyles';
 import Footer from '../components/Footer';
 import { useLang } from '../lib/useLang';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
@@ -63,7 +64,7 @@ export default function Methodology() {
             <p className="font-['Inter:Regular',sans-serif] text-[16px] leading-[1.75] text-[#64748b] dark:text-[#bec7d2] mb-10">
               {isEn
                 ? "NARSHA's Learner Type Assessment is a simplified tool adapted from academic research for the Korean-learning context. It identifies six learner types along two axes: sensory preference and learning style approach."
-                : '나르샤의 학습 유형 검사는 학술 연구에 기반해 한국어 학습 맥락에 맞춰 단순화한 도구입니다. 학습자의 감각 선호와 학습 접근 방식 두 축으로 6가지 유형을 도출합니다.'}
+                : '나르샤의 학습 유형 검사는 학술 연구에 기반해 단순화한 도구입니다. 학습자의 감각 선호와 학습 접근 방식 두 가지 축으로 6가지 유형을 도출합니다.'}
             </p>
 
             {/* Axes */}
@@ -72,19 +73,34 @@ export default function Methodology() {
                 <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#0ea5e9] dark:text-[#8ecdff] mb-2">
                   {isEn ? 'Sensory Axis' : '감각 축 (Sensory)'}
                 </p>
-                <ul className="space-y-1.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] leading-snug">
-                  <li><strong>Visual {isEn ? '' : '(시각)'}</strong> — {isEn ? 'Learns best through text, charts, and video' : '글, 차트, 영상으로 학습할 때 효율적'}</li>
-                  <li><strong>Auditory {isEn ? '' : '(청각)'}</strong> — {isEn ? 'Learns best through conversation, lectures, and audio' : '대화, 강의, 음원으로 학습할 때 효율적'}</li>
-                  <li><strong>Mixed {isEn ? '' : '(혼합)'}</strong> — {isEn ? 'Combines visual and auditory resources' : '시각/청각 자원을 함께 활용'}</li>
+                <ul className="space-y-3 text-[14px] text-[#1e293b] dark:text-[#dce3f3] leading-snug">
+                  <li>
+                    <p className="font-bold">Visual{isEn ? '' : ' (시각)'}</p>
+                    <p className="text-[#64748b] dark:text-[#bec7d2]">{isEn ? 'Learns best through text, charts, and video' : '글, 차트, 영상으로 학습할 때 효율적'}</p>
+                  </li>
+                  <li>
+                    <p className="font-bold">Auditory{isEn ? '' : ' (청각)'}</p>
+                    <p className="text-[#64748b] dark:text-[#bec7d2]">{isEn ? 'Learns best through conversation, lectures, and audio' : '대화, 강의, 음원으로 학습할 때 효율적'}</p>
+                  </li>
+                  <li>
+                    <p className="font-bold">Mixed{isEn ? '' : ' (혼합)'}</p>
+                    <p className="text-[#64748b] dark:text-[#bec7d2]">{isEn ? 'Combines visual and auditory resources' : '시각·청각 자원을 함께 활용'}</p>
+                  </li>
                 </ul>
               </div>
               <div className="bg-[#fdf4ff] dark:bg-[#1a0f2e] border-l-4 border-[#a855f7] rounded-r-[12px] p-5">
                 <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#a855f7] mb-2">
                   {isEn ? 'Style Axis' : '스타일 축 (Style)'}
                 </p>
-                <ul className="space-y-1.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] leading-snug">
-                  <li><strong>Exploratory {isEn ? '' : '(탐색형)'}</strong> — {isEn ? 'Learns by freely exploring' : '자유롭게 탐색하며 학습'}</li>
-                  <li><strong>Structured {isEn ? '' : '(구조형)'}</strong> — {isEn ? 'Prefers step-by-step curricula' : '단계적 커리큘럼을 선호'}</li>
+                <ul className="space-y-3 text-[14px] text-[#1e293b] dark:text-[#dce3f3] leading-snug">
+                  <li>
+                    <p className="font-bold">Exploratory{isEn ? '' : ' (탐색형)'}</p>
+                    <p className="text-[#64748b] dark:text-[#bec7d2]">{isEn ? 'Learns by freely exploring' : '자유롭게 탐색하며 학습'}</p>
+                  </li>
+                  <li>
+                    <p className="font-bold">Structured{isEn ? '' : ' (구조형)'}</p>
+                    <p className="text-[#64748b] dark:text-[#bec7d2]">{isEn ? 'Prefers step-by-step curricula' : '단계적 커리큘럼을 선호'}</p>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -96,8 +112,9 @@ export default function Methodology() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
               {TYPES.map(t => (
                 <div key={t.code} className="bg-[#f8fafc] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8ecdff] to-[#1b99dc] flex items-center justify-center shrink-0">
-                    <span className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] text-[#00344f]">{t.code}</span>
+                  {/* Discover 칩과 같은 유형별 색을 쓴다 — 같은 유형이 화면마다 다른 색이면 안 된다 */}
+                  <div className={`w-10 h-10 rounded-full ${LEARNER_TYPE_BADGE[t.code].bg} flex items-center justify-center shrink-0`}>
+                    <span className={`font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[18px] ${LEARNER_TYPE_BADGE[t.code].text}`}>{t.code}</span>
                   </div>
                   <div>
                     <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] text-[#1e293b] dark:text-[#dce3f3]">
@@ -121,18 +138,18 @@ export default function Methodology() {
             <div className="bg-[#f8fafc] dark:bg-[#151c27] border border-[#e2e8f0] dark:border-[#232a36] rounded-[12px] p-6 mb-10">
               <p className="font-['Inter:Regular',sans-serif] text-[15px] leading-[1.75] text-[#1e293b] dark:text-[#dce3f3] mb-5">
                 {isEn
-                  ? 'The test has 10 statements. Each is answered on a 5-point scale, and the items are split evenly across the four directions so that no single question decides your type.'
-                  : '검사는 10개 문항으로 이루어집니다. 각 문항에 5점 척도로 답하고, 문항은 네 방향에 고르게 나뉘어 있어 한 문항이 유형을 결정하지 않습니다.'}
+                  ? 'The test has 10 statements, each answered on a 5-point scale.'
+                  : '검사는 10개 문항으로 이루어집니다. 각 문항에 5점 척도로 답합니다.'}
               </p>
 
               <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
                 {isEn ? 'Item composition' : '문항 구성'}
               </p>
               <ul className="space-y-1.5 font-['Inter:Regular',sans-serif] text-[14px] leading-[1.7] text-[#64748b] dark:text-[#bec7d2] mb-5">
-                <li>{isEn ? 'Visual — 2 items' : '시각 — 2문항'}</li>
-                <li>{isEn ? 'Auditory — 2 items' : '청각 — 2문항'}</li>
-                <li>{isEn ? 'Exploratory — 3 items' : '탐색 — 3문항'}</li>
-                <li>{isEn ? 'Structured — 3 items' : '구조 — 3문항'}</li>
+                <li>{isEn ? 'Visual 2 items' : '시각 2문항'}</li>
+                <li>{isEn ? 'Auditory 2 items' : '청각 2문항'}</li>
+                <li>{isEn ? 'Exploratory 3 items' : '탐색 3문항'}</li>
+                <li>{isEn ? 'Structured 3 items' : '구조 3문항'}</li>
               </ul>
 
               <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
@@ -140,10 +157,10 @@ export default function Methodology() {
               </p>
               <p className="font-['Inter:Regular',sans-serif] text-[14px] leading-[1.75] text-[#64748b] dark:text-[#bec7d2] mb-3">
                 {isEn
-                  ? 'The middle of the scale counts as zero. Agreeing is evidence for that direction; disagreeing is evidence for the opposite one. Strength matters — a 5 counts twice as much as a 4.'
-                  : '척도의 중앙은 0점입니다. 동의하면 그 방향의 근거가 되고, 동의하지 않으면 반대 방향의 근거가 됩니다. 강도도 반영되어 5는 4의 두 배로 계산됩니다.'}
+                  ? 'The middle of the scale counts as zero. Your answers are converted into a final score that determines your type.'
+                  : '척도의 중앙을 0점으로 두고 응답에 따라 최종 점수를 환산하여 유형을 판별합니다.'}
               </p>
-              <div className="flex flex-wrap gap-2 mb-5">
+              <div className="flex flex-wrap gap-2">
                 {[
                   { a: '1', v: '−2' },
                   { a: '2', v: '−1' },
@@ -158,15 +175,6 @@ export default function Methodology() {
                   </span>
                 ))}
               </div>
-
-              <p className="font-['Manrope:Bold',sans-serif] font-bold text-[13px] uppercase tracking-[0.08em] text-[#64748b] dark:text-[#8a94a6] mb-2">
-                {isEn ? 'Deciding each axis' : '축을 정하는 방법'}
-              </p>
-              <p className="font-['Inter:Regular',sans-serif] text-[14px] leading-[1.75] text-[#64748b] dark:text-[#bec7d2]">
-                {isEn
-                  ? 'Each direction is averaged, then the two sides of an axis are compared. On the sensory axis, when the two sides are close, we only name a side if you actually agreed with its statements — merely disliking one less does not make it your preference, so that case becomes Mixed. The style axis has no middle type: the higher side wins, and a tie is read as Exploratory.'
-                  : '방향마다 평균을 낸 뒤 축의 두 편을 비교합니다. 감각 축에서 두 편의 차이가 근소할 때는, 해당 방향의 문항에 실제로 동의했을 때만 그 유형으로 봅니다 — 한쪽을 덜 싫어한 것만으로는 선호라고 할 수 없어, 그 경우는 혼합형이 됩니다. 스타일 축에는 중간 유형이 없어 더 높은 쪽을 택하고, 완전히 같으면 탐색형으로 봅니다.'}
-              </p>
             </div>
 
             {/* Citations */}

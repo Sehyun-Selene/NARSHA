@@ -518,7 +518,7 @@ export default function Home() {
               mt-8 은 검색바 그림자(아래로 25px 번짐)를 피하기 위한 간격이다.
             */}
             <div className={`flex flex-col gap-2 transition-all duration-500 ease-out ${searching ? 'mt-0 lg:min-w-0' : 'mt-8'}`}>
-              <div className="flex flex-wrap gap-2">
+              <div className={searching ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap gap-2'}>
                 {AXES.filter(axis => axis.key !== 'type' || hasTakenSurvey).map(axis => {
                   const open = openAxis === axis.key;
                   const count = axisCounts[axis.key];
