@@ -85,6 +85,18 @@ export interface SurveyQuestion {
   direction: 'visual' | 'auditory' | 'exploratory' | 'structured';
 }
 
+/**
+ * 10문항 고정. 방향별 문항 수를 대칭으로 둔다 — 시각2 · 청각2 · 탐색3 · 구조3.
+ *
+ * 한 방향을 1문항으로 재면 그 문항의 응답 노이즈가 축의 절반을 지배한다.
+ * (이전 구성은 청각 1 · 탐색 1 · 구조 6 이라 사실상 두 문항이 유형을 결정했다.)
+ *
+ * 방식 축 문항은 탐색·구조를 번갈아 배치했다. 같은 방향이 연달아 나오면
+ * 응답자가 같은 칸을 계속 누르는 경향(straight-lining)이 커진다.
+ *
+ * ⚠️ 문항을 고칠 때는 `direction` 을 정확히 달 것. 채점은 이 값만 보고 한다
+ *    (`calculateLearnerType`). 인덱스를 세지 않으므로 순서는 자유롭다.
+ */
 export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 1,
@@ -109,17 +121,17 @@ export const surveyQuestions: SurveyQuestion[] = [
   },
   {
     id: 4,
+    textEn: 'I enjoy discussing topics out loud to understand them better.',
+    textKo: '나는 주제를 소리 내어 토론하면 더 잘 이해할 수 있다.',
+    axis: 'sensory',
+    direction: 'auditory'
+  },
+  {
+    id: 5,
     textEn: 'I like to experiment and try different approaches before finding what works.',
     textKo: '나는 무엇이 효과가 있는지 찾기 전에 실험하고 다양한 방법을 시도하는 것을 좋아한다.',
     axis: 'style',
     direction: 'exploratory'
-  },
-  {
-    id: 5,
-    textEn: 'I like having a detailed plan before starting to learn something new.',
-    textKo: '나는 새로운 것을 배우기 전에 상세한 계획을 세우는 것을 좋아한다.',
-    axis: 'style',
-    direction: 'structured'
   },
   {
     id: 6,
@@ -130,10 +142,10 @@ export const surveyQuestions: SurveyQuestion[] = [
   },
   {
     id: 7,
-    textEn: 'I like to have my learning progress tracked and measured.',
-    textKo: '나는 학습 진행 상황이 추적되고 측정되는 것을 좋아한다.',
+    textEn: 'I like to jump around and explore topics that interest me.',
+    textKo: '나는 이리저리 옮겨 다니며 흥미로운 주제를 탐구하는 것을 좋아한다.',
     axis: 'style',
-    direction: 'structured'
+    direction: 'exploratory'
   },
   {
     id: 8,
@@ -144,10 +156,10 @@ export const surveyQuestions: SurveyQuestion[] = [
   },
   {
     id: 9,
-    textEn: 'I want to understand the "why" behind every rule.',
-    textKo: '나는 모든 규칙 뒤에 있는 "왜"를 이해하고 싶다.',
+    textEn: 'I learn better through trial and error.',
+    textKo: '나는 시행착오를 통해 더 잘 배운다.',
     axis: 'style',
-    direction: 'structured'
+    direction: 'exploratory'
   },
   {
     id: 10,
@@ -158,75 +170,93 @@ export const surveyQuestions: SurveyQuestion[] = [
   }
 ];
 
-// Calculate learner type from survey responses
+
+// ── 학습 유형 판정 ───────────────────────────────────────────────────────────
 /**
- * 두 축이 같은 척도 위에 있도록, 방향마다 **문항 수로 나눈 평균**을 쓴다.
+ * 채점 방식 — 중앙값 보정 + 방향별 평균.
  *
- * 왜 합산이 아니라 평균인가 — 문항 수가 방향마다 다르다.
- *   감각 축: 시각 2문항(Q1·Q2) vs 청각 1문항(Q3)
- *   방식 축: 탐색 1문항(Q4) vs 구조 6문항(Q5~Q10)
- * 합산하면 문항이 많은 쪽이 항상 이긴다. 실제로 이전 구현은
- * `-Q4 + (Q5..Q10)` 이라 최솟값이 `-5 + 6 = 1` 이었고, **어떤 응답을 넣어도
- * 항상 구조형**이 나왔다. 탐색형(가·다·마)이 수학적으로 나올 수 없었다.
+ * 5점 척도의 중앙(3)을 0으로 보고 편차를 쓴다.
+ *   4·5 → 그 방향에 찬성한다는 신호 (+1, +2)
+ *   3    → 판단 보류. 어느 쪽에도 점수를 주지 않는다 (0)
+ *   1·2 → 그 방향에 반대한다는 신호 (−1, −2) = 반대 방향의 근거
+ *
+ * 즉 "구조적으로 배우고 싶다"에 1을 준 응답은 탐색형의 근거로 쓰인다.
+ * 이 보정이 없으면(원점수를 그냥 합하면) 부호가 생기지 않아 문항이 많은 쪽이
+ * 항상 이긴다. 실제로 이전 구현이 `-Q4 + (Q5..Q10)` 이라 최솟값이 `-5 + 6 = 1`,
+ * **어떤 응답을 넣어도 항상 구조형**이었고 탐색형은 나올 수 없었다.
+ *
+ * 문항 인덱스를 하드코딩하지 않고 `surveyQuestions` 의 `direction` 을 읽는다.
+ * 문항을 교체·재배치해도 이 함수는 고치지 않아도 된다. 방향별 문항 수가
+ * 달라지면 평균이 알아서 맞춰 준다.
+ *
+ * ⚠️ 문항 수 균형이 바꾸는 것은 판정 방향이 아니라 **정밀도**다.
+ *    한 방향을 1문항으로 재면 그 문항의 응답 노이즈가 축의 절반을 지배한다.
+ *    방향별 문항 수를 대칭으로 두는 편이 좋다 (예: 시각2·청각2·탐색3·구조3).
  */
+const MIDPOINT = 3;
+
 /**
- * 판정 파라미터.
+ * 감각축 불감대. 시각·청각 편차 차이가 이보다 작거나 같으면 '근소한 차이' 구간이다.
  *
- * `*_BAND` 는 **불감대**다. 두 방향의 평균 차이가 이보다 작으면 "어느 쪽이라고
- * 하기 어려운 응답"으로 보고, 그때만 척도 중앙값(3)과 비교해 가른다.
- *   · 감각 축에는 '복합(mixed)' 이라는 답이 있으므로 불감대가 곧 복합형이다.
- *   · 방식 축에는 중간 유형이 없어서, 불감대에 들어오면 구조형 문항에 대한
- *     응답이 중앙값보다 위인지로 정한다.
- *
- * 중앙값(자기 평균이 아니라)을 기준으로 삼는 이유 — 모든 문항에 1을 준 응답자는
- * "계획을 세우는 편이 아니다"라고 답한 것이므로 탐색형이 되어야 한다. 자기 평균을
- * 쓰면 그런 응답이 전부 동점이 되어 한쪽으로 몰린다.
- *
- * 값은 응답 분포 시뮬레이션으로 정했다. 문항이 감각 3개·방식 7개로 적고 방향별
- * 개수도 불균형(시각2:청각1, 구조6:탐색1)이라 어떤 값을 써도 완전한 균등은
- * 불가능하다. 이 조합에서 여섯 유형이 13.7~20.4% 범위에 들어온다(균등은 16.7%).
+ * ⚠️ 이 값은 **방향별 문항 수에 딸려 있다.** 시각2·청각2 구성에서 두 평균의 차이는
+ *    0.5 단위로만 나온다. 그래서 이 값을 0.5 로 두면 근소 구간이 '차이 0.5' 한 칸이
+ *    되고, 그 칸을 아래 규칙으로 다시 가른다. 문항 수를 바꾸면 다시 맞춰야 한다.
  */
-const MIDPOINT = 3;        // 5점 척도의 중앙
-const SENSORY_BAND = 0.6;  // 시각평균 − 청각 차이가 이보다 작으면 복합형 후보
-const STYLE_BAND = 0.4;    // 구조평균 − 탐색 차이가 이보다 작으면 판단 보류 구간
+const SENSORY_BAND = 0.5;
+
+type Direction = SurveyQuestion['direction'];
+
+/** 방향별 평균 편차. 해당 방향 문항이 없으면 0 (판단 근거 없음). */
+function meanDeviation(responses: number[], direction: Direction): number {
+  let sum = 0;
+  let count = 0;
+  surveyQuestions.forEach((q, i) => {
+    if (q.direction !== direction) return;
+    const answer = responses[i];
+    // 미응답은 '보류'로 취급한다 — 0 을 더하면 평균이 왜곡되므로 아예 세지 않는다
+    if (typeof answer !== 'number' || answer < 1) return;
+    sum += answer - MIDPOINT;
+    count += 1;
+  });
+  return count === 0 ? 0 : sum / count;
+}
 
 export function calculateLearnerType(responses: number[]): LearnerType {
-  const avg = (values: number[]) => values.reduce((s, v) => s + v, 0) / values.length;
+  const visual = meanDeviation(responses, 'visual');
+  const auditory = meanDeviation(responses, 'auditory');
+  const exploratory = meanDeviation(responses, 'exploratory');
+  const structured = meanDeviation(responses, 'structured');
 
-  // 감각 축 — 시각 Q1·Q2 / 청각 Q3
-  const visualAvg = avg([responses[0], responses[1]]);
-  const auditoryAvg = responses[2];
-
-  // 방식 축 — 탐색 Q4 / 구조 Q5~Q10
-  const exploratoryAvg = responses[3];
-  const structuredAvg = avg([responses[4], responses[5], responses[6], responses[7], responses[8], responses[9]]);
-
-  const sensoryDiff = visualAvg - auditoryAvg;
+  // 감각 축 —
+  //   차이가 뚜렷하면 그대로 높은 쪽.
+  //   차이가 근소하면(0.5 한 칸) 이긴 쪽이 실제로 **동의**를 받았는지 본다.
+  //   '시각형'이라 부르려면 시각 문항에 동의(편차 > 0)했어야 한다. 둘 다 싫어했는데
+  //   덜 싫어한 쪽을 유형으로 붙이면 응답과 어긋나므로, 그때는 복합형으로 둔다.
+  const sensoryDiff = visual - auditory;
   let sensory: Sensory;
-  if (Math.abs(sensoryDiff) < SENSORY_BAND) {
-    // 둘 다 중앙값 위이거나 둘 다 아래면 선호가 갈리지 않은 것 → 복합형.
-    // 한쪽만 중앙값을 넘었다면 그쪽을 택한다.
-    sensory =
-      (visualAvg >= MIDPOINT) === (auditoryAvg >= MIDPOINT)
-        ? 'mixed'
-        : sensoryDiff > 0 ? 'visual' : 'auditory';
+  if (sensoryDiff === 0) {
+    sensory = 'mixed';
+  } else if (Math.abs(sensoryDiff) <= SENSORY_BAND) {
+    const winner = sensoryDiff > 0 ? visual : auditory;
+    sensory = winner > 0 ? (sensoryDiff > 0 ? 'visual' : 'auditory') : 'mixed';
   } else {
     sensory = sensoryDiff > 0 ? 'visual' : 'auditory';
   }
 
-  const styleDiff = structuredAvg - exploratoryAvg;
+  // 방식축에는 중간 유형이 없다. 동점은 탐색형으로 둔다 — 구조적 학습을 원한다는
+  // 진술에 동의하지 않았는데 구조형으로 분류되면 응답과 어긋난다.
+  const styleDiff = structured - exploratory;
   const style: Style =
-    Math.abs(styleDiff) < STYLE_BAND
-      ? (structuredAvg > MIDPOINT ? 'structured' : 'exploratory')
-      : (styleDiff > 0 ? 'structured' : 'exploratory');
+    styleDiff > 0 ? 'structured'
+    : styleDiff < 0 ? 'exploratory'
+    // 정확히 동점 — 방식축에는 중간 유형이 없다. 구조형 문항에 동의했는지로 가른다.
+    // 모든 문항에 1을 준 응답(구조형 진술을 전부 부정)은 탐색형이 된다.
+    : structured > 0 ? 'structured' : 'exploratory';
 
-  // Map to learner type
   if (sensory === 'visual' && style === 'exploratory') return '가';
   if (sensory === 'visual' && style === 'structured') return '나';
   if (sensory === 'auditory' && style === 'exploratory') return '다';
   if (sensory === 'auditory' && style === 'structured') return '라';
   if (sensory === 'mixed' && style === 'exploratory') return '마';
-  if (sensory === 'mixed' && style === 'structured') return '바';
-  
-  return '가'; // Default fallback
+  return '바';
 }

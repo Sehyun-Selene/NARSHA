@@ -16,7 +16,7 @@ export default function Survey() {
   // 로그인 상태면 검사 결과를 계정에도 저장한다 (REQ-G)
   const { session } = useMemberAuth();
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [responses, setResponses] = useState<number[]>(Array(10).fill(0));
+  const [responses, setResponses] = useState<number[]>(() => Array(surveyQuestions.length).fill(0));
 
   const progress = ((currentQuestion + 1) / surveyQuestions.length) * 100;
   const question = surveyQuestions[currentQuestion];
