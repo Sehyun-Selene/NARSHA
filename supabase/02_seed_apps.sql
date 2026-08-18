@@ -532,7 +532,7 @@ insert into apps (
   array['one-time purchase'],
   array['lang.english'],
   array['noFeedback'],
-  array['instructor.foreign_learner','strength.grammar_explanation','mechanism.numbered_curriculum','ux.offline_paid_only'],
+  array['instructor.foreign_learner','strength.grammar_explanation','mechanism.numbered_curriculum','ux.offline_available'],
   array[]::text[],
   array['Android','iOS'],
   null,

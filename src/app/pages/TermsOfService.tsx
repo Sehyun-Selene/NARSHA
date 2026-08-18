@@ -109,14 +109,6 @@ const KO = () => (
       </p>
     </section>
 
-    <section>
-      <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">제9조 (분쟁 해결)</h2>
-      <ol className="list-decimal pl-5 space-y-1 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
-        <li>서비스 이용 관련 분쟁은 대한민국 법률에 따라 처리됩니다.</li>
-        <li>분쟁 발생 시 관할 법원은 서울중앙지방법원으로 합니다.</li>
-      </ol>
-    </section>
-
     <p className="text-[13px] text-[#64748b] dark:text-[#8a94a6] border-t border-[#e2e8f0] dark:border-[#232a36] pt-4">
       부칙: 본 약관은 <strong>2026-XX-XX</strong>부터 시행합니다.
     </p>
@@ -212,14 +204,6 @@ const EN = () => (
         To prevent abuse, review submissions and reports are rate-limited. Anonymous submissions are limited
         to 3 per hour from the same connection, and one per service per 24 hours.
       </p>
-    </section>
-
-    <section>
-      <h2 className="font-['Manrope:Bold',sans-serif] font-bold text-[18px] mb-3">Article 9 — Dispute Resolution</h2>
-      <ol className="list-decimal pl-5 space-y-1 text-[14px] text-[#64748b] dark:text-[#bec7d2]">
-        <li>Disputes related to use of the Service shall be governed by the laws of the Republic of Korea.</li>
-        <li>The Seoul Central District Court shall have exclusive jurisdiction over any disputes.</li>
-      </ol>
     </section>
 
     <p className="text-[13px] text-[#64748b] dark:text-[#8a94a6] border-t border-[#e2e8f0] dark:border-[#232a36] pt-4">
