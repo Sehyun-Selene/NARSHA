@@ -519,7 +519,10 @@ export const DICT = {
   'member.password':       { ko: '비밀번호', en: 'Password' },
   'member.passwordHint':   { ko: '8자 이상', en: 'At least 8 characters' },
   'member.displayName':    { ko: '표시할 이름', en: 'Display name' },
-  'member.displayNameHint': { ko: '후기에 이 이름이 표시돼요.', en: 'This name appears on your reviews.' },
+  'member.displayNameHint': { ko: '후기에 이 이름이 표시돼요. 다른 사람과 겹칠 수 없어요.', en: 'This name appears on your reviews. It must be unique.' },
+  'member.nameChecking':   { ko: '확인 중…', en: 'Checking…' },
+  'member.nameTaken':      { ko: '이미 사용 중인 이름이에요.', en: 'That name is already taken.' },
+  'member.nameFree':       { ko: '사용할 수 있어요.', en: 'This name is available.' },
   // 링크 두 개를 문장 사이에 끼워 넣어야 해서 앞·중간·뒤 세 조각으로 나눈다.
   // 문자열에 HTML 을 넣지 않는 규칙(§4)을 지키면서 링크를 살리기 위한 분할이다.
   'member.consentPre':  { ko: '', en: 'I agree to the ' },
@@ -548,6 +551,7 @@ export const DICT = {
   'member.err.EMAIL_INVALID':            { ko: '이메일 주소를 확인해 주세요.', en: 'Please check your email address.' },
   'member.err.PASSWORD_TOO_SHORT':       { ko: '비밀번호는 8자 이상이어야 해요.', en: 'Password must be at least 8 characters.' },
   'member.err.DISPLAY_NAME_REQUIRED':    { ko: '표시할 이름을 입력해 주세요.', en: 'Please enter a display name.' },
+  'member.err.DISPLAY_NAME_TAKEN':       { ko: '이미 사용 중인 이름이에요. 다른 이름을 써 주세요.', en: 'That name is already taken. Please choose another.' },
   'member.err.EMAIL_ALREADY_REGISTERED': { ko: '이미 가입된 이메일이에요. 로그인해 주세요.', en: 'This email is already registered. Please log in.' },
   'member.err.INVALID_CREDENTIALS':      { ko: '이메일 또는 비밀번호가 맞지 않아요.', en: 'Email or password is incorrect.' },
   'member.err.EMAIL_NOT_CONFIRMED':      { ko: '메일로 보낸 확인 링크를 먼저 눌러 주세요.', en: 'Please confirm your email first.' },

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 import { X, Eye, EyeOff } from 'lucide-react';
@@ -10,6 +10,7 @@ import {
   memberSignUp,
   memberSignInWithGoogle,
   memberResetPassword,
+  isDisplayNameAvailable,
 } from './memberApi';
 
 /**
@@ -83,6 +84,24 @@ export default function MemberAuthModal({
   const [busy, setBusy] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
+  /** 표시명 사용 가능 여부 — 제출 전에 알려 준다 */
+  const [nameState, setNameState] = useState<'idle' | 'checking' | 'free' | 'taken'>('idle');
+
+  // 타이핑이 멈춘 뒤에만 조회한다. 글자마다 부르면 요청이 쏟아진다.
+  useEffect(() => {
+    const name = displayName.trim();
+    if (mode !== 'signup' || name.length < 2) { setNameState('idle'); return; }
+
+    setNameState('checking');
+    let active = true;
+    const timer = setTimeout(() => {
+      void isDisplayNameAvailable(name).then(ok => {
+        if (active) setNameState(ok ? 'free' : 'taken');
+      });
+    }, 400);
+
+    return () => { active = false; clearTimeout(timer); };
+  }, [displayName, mode]);
 
   if (!open) return null;
 
@@ -98,12 +117,16 @@ export default function MemberAuthModal({
     setBusy(true);
     try {
       if (mode === 'signup') {
+        if (nameState === 'taken') throw new Error('DISPLAY_NAME_TAKEN');
         const { needsEmailConfirm } = await memberSignUp({ email, password, displayName, agreed });
-        toast.success(t('member.signedUp'));
-        // 확인 메일이 필요한 설정일 때만 안내한다 — 아니면 오지 않는 메일을 기다리게 된다
-        if (needsEmailConfirm) {
-          toast.message(t('member.confirmEmail'), { description: t('member.checkSpam') });
-        }
+        // 토스트는 하나만 띄운다. 두 개를 연달아 띄우면 뒤에 뜬 것이 앞을 덮어
+        // 가입 완료 안내가 보이지 않는다 (실제로 그렇게 가려졌다).
+        toast.success(
+          t('member.signedUp'),
+          needsEmailConfirm
+            ? { description: `${t('member.confirmEmail')} ${t('member.checkSpam')}`, duration: 8000 }
+            : undefined,
+        );
       } else {
         await memberSignIn(email, password);
         toast.success(t('member.welcome'));
@@ -260,8 +283,20 @@ export default function MemberAuthModal({
                     <label className="block text-[12px] font-bold text-[#1e293b] dark:text-[#dce3f3] mb-1.5">
                       {t('member.displayName')}
                     </label>
-                    <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className={inputClass} />
-                    <p className="mt-1 text-[11px] text-[#94a3b8]">{t('member.displayNameHint')}</p>
+                    <input
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className={`${inputClass} ${nameState === 'taken' ? 'border-[#dc2626] dark:border-[#f87171]' : ''}`}
+                    />
+                    {nameState === 'taken' ? (
+                      <p className="mt-1 text-[11px] text-[#dc2626] dark:text-[#f87171]">{t('member.nameTaken')}</p>
+                    ) : nameState === 'free' ? (
+                      <p className="mt-1 text-[11px] text-[#059669] dark:text-[#34d399]">{t('member.nameFree')}</p>
+                    ) : (
+                      <p className="mt-1 text-[11px] text-[#94a3b8]">
+                        {nameState === 'checking' ? t('member.nameChecking') : t('member.displayNameHint')}
+                      </p>
+                    )}
                   </div>
                 )}
 

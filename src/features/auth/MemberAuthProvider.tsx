@@ -91,15 +91,30 @@ export default function MemberAuthProvider({ children }: { children: ReactNode }
       (s?.user.email ?? '').split('@')[0] ||
       'Learner';
 
-    const { data: created, error: createError } = await supabase
-      .from('members')
-      .insert({ id: userId, display_name: fallbackName.slice(0, 40) })
-      .select('*')
-      .single();
+    // 표시명에 유일 제약이 걸려 있다. Google 이 준 이름이 이미 쓰이고 있으면
+    // 행을 못 만들어 계정이 반쪽이 된다 — 그럴 때는 꼬리를 붙여서라도 만든다.
+    // 사용자는 `내 후기` 화면에서 이름을 바꿀 수 있다.
+    const base = fallbackName.slice(0, 34);
+    let created: MemberRow | null = null;
+    let createError: { code?: string } | null = null;
+
+    for (const candidate of [base, `${base}-${userId.slice(0, 4)}`, `${base}-${userId.slice(0, 8)}`]) {
+      const r = await supabase
+        .from('members')
+        .insert({ id: userId, display_name: candidate })
+        .select('*')
+        .single();
+      if (!r.error) { created = r.data as MemberRow; createError = null; break; }
+      createError = r.error;
+      // 중복 말고 다른 이유면 재시도해도 같은 결과다
+      if (r.error.code !== '23505') break;
+    }
+
+    if (!created && createError) console.error('member row insert failed', createError);
 
     if (currentUserId.current !== userId) return;
-    setMember(createError ? null : (created as MemberRow));
-    if (!createError) void syncLearnerTypeOnce(userId);
+    setMember(created);
+    if (created) void syncLearnerTypeOnce(userId);
   }, []);
 
   const refreshMember = useCallback(async () => {

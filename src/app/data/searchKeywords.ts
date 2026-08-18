@@ -112,10 +112,12 @@ const SYNONYMS: Array<[string[], string[]]> = [
   // 기능
   // 오프라인은 무료 구간과 유료 구간이 다른 태그다. 검색은 둘 다 잡고,
   // 카드에 붙는 칩(`오프라인` / `오프라인(유료)`)이 어느 쪽인지 알려 준다.
-  [['오프라인', 'offline'], ['ux.offline_available', 'ux.offline_paid_only']],
-  // 서술형 라벨(`오프라인 이용`)도 두 값을 같이 잡게 한다 — 자동 생성만으로는
-  // 무료 태그 하나만 걸린다
-  [['오프라인 이용', 'offline access'], ['ux.offline_available', 'ux.offline_paid_only']],
+  [['오프라인', 'offline', '오프라인 이용', 'offline access'],
+   ['ux.offline_available', 'ux.offline_paid_only']],
+  // 가격 조건이 같이 오면 그쪽으로 좁히기 위한 내부 낱말. 사용자가 직접 칠 수 없는
+  // 형태(콜론 포함)로 두어 실수로 걸리지 않게 한다 — `narrowOffline()` 이 넣는다.
+  [['offline:free'], ['ux.offline_available']],
+  [['offline:paid'], ['ux.offline_paid_only']],
   [['플래시카드', '단어카드', 'flashcard'], ['format.flashcard']],
   [['게임', '게임식', 'gamification', 'game'], ['ux.gamification']],
   [['발음', 'pronunciation'], ['strength.pronunciation']],
@@ -287,6 +289,40 @@ function resolveToken(token: string, apps: App[]): string | null {
   return null;
 }
 
+/** 무료로 볼 수 있는 가격 태그 / 결제가 필요한 가격 태그 */
+const FREE_PRICING = ['free', 'freemium'];
+const PAID_PRICING = ['subscription-only', 'one-time purchase'];
+
+const OFFLINE_TERMS = ['오프라인', 'offline', '오프라인 이용', 'offline access'];
+
+/**
+ * 오프라인 낱말을 가격 의도에 맞게 좁힌다.
+ *
+ *   `오프라인`            → 무료·유료 둘 다 (서비스를 찾는 것이 목적이므로 넓게)
+ *   `무료 오프라인`       → 무료 구간에서 오프라인 되는 것만
+ *   `오프라인 구독` 등    → 결제해야 열리는 것만
+ *
+ * 가격 태그만으로는 판단할 수 없어서 값을 둘로 나눠 뒀다 — Duolingo 는 가격이
+ * `free`/`freemium` 인데 오프라인은 Super 전용이다. 가격 태그를 보고 추론하면
+ * "무료 오프라인" 결과에 Duolingo 가 섞인다.
+ */
+function narrowOffline(terms: string[]): string[] {
+  const offlineAt = terms.findIndex(t => OFFLINE_TERMS.includes(t));
+  if (offlineAt < 0) return terms;
+
+  const priced = (pool: string[]) =>
+    terms.some(t => (KEYWORD_TO_TAGS[t] ?? []).some(tag => pool.includes(tag)));
+
+  const wantsFree = priced(FREE_PRICING);
+  const wantsPaid = priced(PAID_PRICING);
+  // 둘 다 지정했으면 좁힐 이유가 없다
+  if (wantsFree === wantsPaid) return terms;
+
+  const next = [...terms];
+  next[offlineAt] = wantsFree ? 'offline:free' : 'offline:paid';
+  return next;
+}
+
 /**
  * 검색어를 낱말로 쪼개 계획을 만든다.
  *
@@ -317,7 +353,7 @@ export function buildSearchPlan(rawQuery: string, apps: App[]): SearchPlan {
     if (!terms.includes(resolved)) terms.push(resolved);
   }
 
-  return { active: true, terms, unknown };
+  return { active: true, terms: narrowOffline(terms), unknown };
 }
 
 /**

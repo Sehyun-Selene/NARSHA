@@ -13,6 +13,17 @@ import { supabase } from '../../lib/supabase';
 
 export const LEARNER_TYPE_KEY = 'narsha-learner-type';
 const LEARNER_TYPE_AT_KEY = 'narsha-learner-type-at';
+/**
+ * 이 기기의 검사 결과를 이미 계정에 올린 사용자 id.
+ *
+ * ⚠️ 없으면 계정 간에 결과가 새어 나간다. 한 기기에서 A 계정으로 로그인해 유형이
+ * 올라간 뒤 B 계정으로 로그인하면, B 는 계정 값이 비어 있으니 localStorage 에 남은
+ * **A 의 결과**가 B 계정에 저장됐다. 실제로 재현된 문제다.
+ *
+ * 그래서 로컬 값에 임자를 표시한다. 임자가 있는 값은 다른 계정으로 올리지 않는다.
+ * 검사를 새로 하면 임자가 지워져서 그다음 로그인한 계정이 가져갈 수 있다.
+ */
+const LEARNER_TYPE_OWNER_KEY = 'narsha-learner-type-owner';
 
 /** 결정 결과 — 화면이 토스트를 띄울지 판단하는 데 쓴다. */
 export type LearnerTypeSyncResult =
@@ -20,25 +31,38 @@ export type LearnerTypeSyncResult =
   | { action: 'pulled'; type: string }   // 계정 값이 더 최신 → 로컬을 덮었다
   | { action: 'pushed'; type: string };  // 로컬 값이 더 최신 → 계정에 올렸다
 
-function readLocal(): { type: string | null; at: number } {
+function readLocal(): { type: string | null; at: number; owner: string | null } {
   try {
     return {
       type: localStorage.getItem(LEARNER_TYPE_KEY),
       at: Number(localStorage.getItem(LEARNER_TYPE_AT_KEY) ?? 0),
+      owner: localStorage.getItem(LEARNER_TYPE_OWNER_KEY),
     };
   } catch {
-    return { type: null, at: 0 };
+    return { type: null, at: 0, owner: null };
+  }
+}
+
+/** 로컬 값의 임자를 기록한다. `null` 이면 지운다 (검사를 새로 한 경우). */
+function setOwner(userId: string | null): void {
+  try {
+    if (userId) localStorage.setItem(LEARNER_TYPE_OWNER_KEY, userId);
+    else localStorage.removeItem(LEARNER_TYPE_OWNER_KEY);
+  } catch {
+    // 저장 실패는 치명적이지 않다 — 다만 이 경우 누출 방지가 동작하지 않는다
   }
 }
 
 /** 검사 완료 시 호출. 로컬에 시각까지 남겨 두어야 계정 값과 최신 비교가 된다. */
-export function saveLocalLearnerType(type: string): void {
+export function saveLocalLearnerType(type: string, owner: string | null = null): void {
   try {
     localStorage.setItem(LEARNER_TYPE_KEY, type);
     localStorage.setItem(LEARNER_TYPE_AT_KEY, new Date().toISOString());
   } catch {
     // 사파리 프라이빗 모드 등 — 저장 실패는 치명적이지 않다
   }
+  // 검사를 새로 했으면 임자가 없는 상태로 되돌린다
+  setOwner(owner);
 }
 
 /**
@@ -64,28 +88,38 @@ export async function syncLearnerType(userId: string): Promise<LearnerTypeSyncRe
     ? new Date(data.learner_type_updated_at as string).getTime()
     : 0;
 
+  // 로컬 값을 이 계정으로 올려도 되는지. 임자가 없거나(익명 검사) 나 자신일 때만이다.
+  const mayPush = !local.owner || local.owner === userId;
+
   // 계정에만 있음 → 내려받는다
   if (remoteType && !local.type) {
-    saveLocalLearnerType(remoteType);
+    saveLocalLearnerType(remoteType, userId);
     return { action: 'pulled', type: remoteType };
   }
 
-  // 로컬에만 있음 → 올린다
+  // 로컬에만 있음 → 임자가 없을 때만 올린다
   if (local.type && !remoteType) {
+    if (!mayPush) return { action: 'none' };
     await pushLearnerType(userId, local.type, local.at);
+    setOwner(userId);
     return { action: 'pushed', type: local.type };
   }
 
   if (!local.type || !remoteType) return { action: 'none' };
-  if (local.type === remoteType) return { action: 'none' };
+  if (local.type === remoteType) {
+    // 같은 값이면 이 계정의 것으로 봐도 된다
+    setOwner(userId);
+    return { action: 'none' };
+  }
 
-  // 둘 다 있고 다르다 → 최신 승
-  if (remoteAt > local.at) {
-    saveLocalLearnerType(remoteType);
+  // 둘 다 있고 다르다 → 최신 승. 단 남의 로컬 값으로는 계정을 덮지 않는다
+  if (remoteAt > local.at || !mayPush) {
+    saveLocalLearnerType(remoteType, userId);
     return { action: 'pulled', type: remoteType };
   }
 
   await pushLearnerType(userId, local.type, local.at);
+  setOwner(userId);
   return { action: 'pushed', type: local.type };
 }
 
@@ -103,7 +137,7 @@ async function pushLearnerType(userId: string, type: string, at: number): Promis
 
 /** 검사 완료 시점에 로그인 상태면 계정에도 바로 반영한다. */
 export async function recordLearnerType(type: string, userId?: string | null): Promise<void> {
-  saveLocalLearnerType(type);
+  saveLocalLearnerType(type, userId ?? null);
   if (!userId) return;
   try {
     await pushLearnerType(userId, type, Date.now());

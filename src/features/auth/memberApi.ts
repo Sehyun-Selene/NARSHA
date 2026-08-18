@@ -12,6 +12,7 @@ export type MemberAuthError =
   | 'EMAIL_INVALID'
   | 'PASSWORD_TOO_SHORT'
   | 'DISPLAY_NAME_REQUIRED'
+  | 'DISPLAY_NAME_TAKEN'
   | 'EMAIL_ALREADY_REGISTERED'
   | 'INVALID_CREDENTIALS'
   | 'EMAIL_NOT_CONFIRMED'
@@ -23,6 +24,25 @@ export type MemberAuthError =
 
 const PASSWORD_MIN = 8;
 const DISPLAY_NAME_MAX = 40;
+
+/** 유일 제약 위반 (Postgres) */
+const UNIQUE_VIOLATION = '23505';
+
+/**
+ * 표시명을 쓸 수 있는지 확인한다.
+ *
+ * `members` 는 자기 행만 읽히므로(members_select_own) 클라이언트가 직접 셀 수 없다.
+ * 서버 함수가 불린 하나만 돌려준다 — 남의 이름은 못 읽는다.
+ * 조회에 실패하면 `true` 로 둔다. 최종 판정은 DB 의 유일 인덱스가 하므로 통과시켜도
+ * 중복이 만들어지지 않고, 네트워크 오류로 가입을 막는 편이 더 나쁘다.
+ */
+export async function isDisplayNameAvailable(name: string): Promise<boolean> {
+  const candidate = name.trim();
+  if (!candidate) return false;
+  const { data, error } = await supabase.rpc('display_name_available', { candidate });
+  if (error) return true;
+  return data !== false;
+}
 
 /**
  * 회원 가입 — 이메일·비밀번호. 표시명은 `members` 행에 저장한다.
@@ -45,6 +65,11 @@ export async function memberSignUp(input: {
   if (!displayName) throw new Error('DISPLAY_NAME_REQUIRED' satisfies MemberAuthError);
   // 약관·개인정보 동의 없이 계정을 만들면 근거가 남지 않는다
   if (!input.agreed) throw new Error('CONSENT_REQUIRED' satisfies MemberAuthError);
+  // 계정을 만들기 전에 막는다. 확인 메일 흐름에서는 members 행이 첫 로그인 때
+  // 생기므로, 여기서 걸러 두지 않으면 한참 뒤에야 중복을 알게 된다.
+  if (!(await isDisplayNameAvailable(displayName))) {
+    throw new Error('DISPLAY_NAME_TAKEN' satisfies MemberAuthError);
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -71,7 +96,13 @@ export async function memberSignUp(input: {
     .insert({ id: userId, display_name: displayName.slice(0, DISPLAY_NAME_MAX) });
 
   // 행 생성이 실패해도 계정은 살아 있다. Provider 가 다음 로드에서 다시 만든다.
-  if (memberError) console.error('member row insert failed', memberError.message);
+  if (memberError) {
+    console.error('member row insert failed', memberError.message);
+    // 사전 확인 사이에 남이 먼저 차지한 경우 — 사용자에게 알려야 한다
+    if (memberError.code === UNIQUE_VIOLATION) {
+      throw new Error('DISPLAY_NAME_TAKEN' satisfies MemberAuthError);
+    }
+  }
 
   return { needsEmailConfirm: false };
 }
@@ -121,5 +152,10 @@ export async function updateMemberName(userId: string, displayName: string): Pro
     .from('members')
     .update({ display_name: name.slice(0, DISPLAY_NAME_MAX) })
     .eq('id', userId);
-  if (error) throw error;
+  if (error) {
+    if (error.code === UNIQUE_VIOLATION) {
+      throw new Error('DISPLAY_NAME_TAKEN' satisfies MemberAuthError);
+    }
+    throw error;
+  }
 }
