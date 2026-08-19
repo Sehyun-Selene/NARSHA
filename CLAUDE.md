@@ -272,7 +272,7 @@ type(scope): 한국어 요약
     | `docs/PRD_나의한국어책상.md` | Desk 전체 사양 | 구현됨 |
     | `docs/DESK_IMPLEMENTATION.md` / `HANDOFF.md` / `DESK_DEPLOY_CHECKLIST.md` | Desk 구현·인수인계·배포 | — |
     | `docs/LEGAL_REVIEW_PACKAGE.md` | 약관·개인정보처리방침 법무 검토 | §8-7의 근거 |
-    | `docs/db-backup.yml` | `.github/workflows/` 로 설치해야 할 백업 워크플로 | 미설치 |
+    | `docs/db-backup.yml` | 백업 워크플로 원본 | **설치 완료** — `.github/workflows/db-backup.yml` 로 커밋돼 있다 |
     | `src/imports/pasted_text/product-requirements.md` | 2026-03 초기 PRD. **스택이 "Next.js"로 적혀 있어 오해를 부른다** | 폐기됨 |
 
     → 새 기획 문서도 `docs/` 안에 두면 자동으로 제외된다. 에이전트는 이 파일들이 없을 수 있다고 가정하고, 필요한 규칙은 이 문서 §8 에서 읽을 것.
