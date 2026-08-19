@@ -79,6 +79,43 @@ DB 복구 절차는 [RESTORE.md](RESTORE.md), 매월 점검 항목은 [MONTHLY_C
 
 ---
 
+## private 전환 (저장소 비공개)
+
+기획·법무 문서와 DB 스키마를 공개하지 않으려면 저장소를 private 으로 둬야 한다.
+파일을 삭제해도 과거 커밋에 남으므로 삭제로는 해결되지 않는다 (CLAUDE.md §8-10).
+
+**Vercel 의 Git 연동 자동 배포는 private 저장소에서 동작하지 않는다.** 통제 테스트로
+확정한 내용이다 — 다른 변수를 고정하고 visibility 만 바꿨을 때 public 은 40초 내
+배포, private 은 4분간 시작조차 안 됨(`not a member of the team` 메일).
+
+그래서 `.github/workflows/deploy.yml` 이 Vercel CLI 로 직접 배포한다. 토큰 인증이라
+visibility 와 무관하다. **순서를 지켜야 배포가 끊기는 구간이 생기지 않는다.**
+
+1. **Vercel 토큰 발급** — Account Settings → Tokens. Scope 는 이 프로젝트가 있는 팀
+2. **ID 두 개 확인** — Vercel 프로젝트 → Settings → General 에서 Project ID / Team ID
+3. **GitHub Secrets 등록** — 저장소 Settings → Secrets and variables → Actions
+   `VERCEL_TOKEN` · `VERCEL_ORG_ID`(Team ID) · `VERCEL_PROJECT_ID`
+4. **Actions 배포를 먼저 검증** — Actions 탭 → `Deploy to Vercel` → Run workflow.
+   이 시점에는 Git 연동도 살아 있어 같은 커밋이 두 번 배포될 수 있다(무해)
+5. **Vercel 쪽 자동 배포 끄기** — `vercel.json` 에 추가
+   ```json
+   "git": { "deploymentEnabled": false }
+   ```
+6. **저장소를 private 으로** — GitHub Settings → General → Danger Zone
+7. **확인** — 아무 커밋이나 푸시해서 Actions 배포가 도는지, 프로덕션이 갱신되는지
+
+되돌리려면 6 → 5 를 역순으로. 워크플로는 그대로 둬도 무해하다.
+
+### private 전환 후 유의점
+
+| 항목 | 영향 |
+|---|---|
+| GitHub Actions 분 | public 은 무제한, **private 은 월 2,000분.** 배포 ~2분 + 주간 백업 ~1분 → 여유 있음 |
+| Vercel 배포 | Git 연동 대신 Actions 경로. Vercel 대시보드에는 그대로 기록됨 |
+| 이미 클론·포크된 사본 | private 으로 바꿔도 회수되지 않는다. 히스토리 노출을 완전히 끊으려면 새 private 저장소에 스쿼시 커밋으로 이관하고 기존 저장소를 삭제해야 한다 |
+
+---
+
 ## 구조 요약
 
 Vite 6 + React 18 + react-router 7 + Tailwind v4 + Supabase. **Next.js 가 아니다.**

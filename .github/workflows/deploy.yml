@@ -1,0 +1,102 @@
+# NARSHA — Vercel 프로덕션 배포 (GitHub Actions 경유)
+#
+# ## 왜 이 워크플로가 필요한가
+#
+# Vercel 의 Git 연동 자동 배포는 **저장소가 private 이면 동작하지 않았다.** 통제
+# 테스트로 확정한 내용이다 — 다른 변수를 전부 고정하고 visibility 만 바꿨을 때
+#
+#     public   → 40초 내 배포 성공
+#     private  → 4분간 배포가 시작조차 안 됨 ("not a member of the team" 메일)
+#
+# 폐기된 가설: 커밋 이메일 불일치 · remote URL · 작성자 미인식 · App 저장소 접근 ·
+# Team 멤버십. 원인은 저장소 공개 여부 단독이었다.
+#
+# 그래서 Git 연동 대신 **Vercel CLI 를 Actions 에서 직접 호출**한다. CLI 배포는
+# 토큰으로 인증하므로 저장소 visibility 와 무관하다. 이 경로를 쓰면 저장소를
+# private 으로 둘 수 있고, 과거 커밋의 기획·법무 문서 노출도 함께 끊긴다
+# (CLAUDE.md §8-10 — 히스토리 재작성은 하지 않는다).
+#
+# ## 사전 준비 — GitHub 저장소 Settings > Secrets and variables > Actions
+#
+#   VERCEL_TOKEN       : Vercel > Account Settings > Tokens 에서 발급 (Scope: 해당 팀)
+#   VERCEL_ORG_ID      : Vercel 프로젝트 > Settings > General > Project ID 아래 Team ID
+#   VERCEL_PROJECT_ID  : 같은 화면의 Project ID
+#
+# `VITE_*` 환경변수는 여기에 넣지 않는다. `vercel pull` 이 Vercel 프로젝트에
+# 등록된 값을 그대로 받아 오므로 시크릿이 GitHub 에 중복 저장되지 않는다.
+#
+# ## Git 연동과 겹치지 않게
+#
+# 전환이 끝나면 `vercel.json` 에 아래를 넣어 Vercel 쪽 자동 배포를 끈다. 두 경로를
+# 동시에 켜 두면 같은 커밋이 두 번 배포된다 (결과는 같지만 낭비다).
+#
+#     "git": { "deploymentEnabled": false }
+#
+# ⚠️ 시크릿 등록 전에 이걸 먼저 넣으면 배포 경로가 하나도 없는 구간이 생긴다.
+# 순서는 README 의 "private 전환" 절을 따른다.
+
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+  # 배포가 필요할 때 수동으로도 돌린다 (환경변수만 바꿨을 때 등)
+  workflow_dispatch:
+
+# 같은 브랜치에서 연달아 푸시하면 앞의 배포를 취소한다 — 뒤 커밋이 최신이다
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Vercel CLI 설치
+        run: npm i -g vercel@latest
+
+      # 프로젝트 설정과 환경변수를 Vercel 에서 받아 온다
+      - name: 프로덕션 환경 가져오기
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # 빌드를 러너에서 수행한다. 타입 에러는 빌드를 막지 않는다 (CLAUDE.md §8-9) —
+      # 여기서 걸리는 것은 문법 오류·의존성 문제뿐이다.
+      - name: 빌드
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: 배포
+        id: deploy
+        run: |
+          # CLI 가 진행 로그도 stdout 에 내므로 마지막 줄(=배포 URL)만 취한다
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | tail -1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "배포 완료: $url"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # 배포된 번들이 실제로 응답하는지 확인한다. 배포는 성공했는데 앱이 뜨지 않는
+      # 경우(환경변수 누락 등)를 워크플로 단계에서 잡는다.
+      - name: 응답 확인
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://narsha.vercel.app/)
+            echo "시도 $i — HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "프로덕션이 200 을 돌려주지 않는다"
+          exit 1
