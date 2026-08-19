@@ -40,6 +40,7 @@ export default function SuggestServiceModal({ open, onClose, embedded = false }:
   const [reporterEmail, setReporterEmail]       = useState('');
   const [submitting, setSubmitting]             = useState(false);
   const [nameError, setNameError]               = useState('');
+  const [reasonError, setReasonError]           = useState('');
   const [urlError, setUrlError]                 = useState('');
   const [emailError, setEmailError]             = useState('');
 
