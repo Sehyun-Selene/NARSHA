@@ -28,8 +28,19 @@ import {
 
 type Mode = 'login' | 'signup' | 'reset';
 
+/**
+ * 글자 크기가 16px 미만인 입력칸에 포커스가 가면 iOS Safari 가 화면을 강제로 확대한다
+ * (읽을 수 있게 키워 주는 브라우저 동작이라 JS 로 취소할 수 없다). 특히 재설정 화면의
+ * 이메일 칸은 autoFocus 라 모달이 열리는 순간 바로 확대·좌측 이동이 일어났다.
+ * viewport 에 maximum-scale=1 을 박으면 사용자의 손가락 확대까지 막히므로, 터치 기기
+ * 구간에서만 16px 로 올리고 lg 이상은 기존 14px 를 유지한다.
+ *
+ * 경계를 sm(640px) 이 아니라 `lg`(1024px) 로 잡은 이유: 햄버거 드로어와 데스크톱 내비가
+ * 갈리는 지점이 lg 이라, sm 으로 끊으면 640~1023px(태블릿 세로)에서 드로어는 뜨는데
+ * 입력칸은 14px 로 남아 그 기기에서 확대가 그대로 일어난다.
+ */
 const inputClass =
-  'w-full bg-[#f8fafc] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-3 py-2.5 text-[14px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]';
+  'w-full bg-[#f8fafc] dark:bg-[#0c141f] border border-[#e2e8f0] dark:border-[#232a36] rounded-[8px] px-3 py-2.5 text-[16px] lg:text-[14px] text-[#1e293b] dark:text-[#dce3f3] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9]';
 
 /** 비밀번호 입력 + 눈 아이콘. 오타로 로그인이 막히는 걸 사용자가 직접 확인한다. */
 function PasswordField({
