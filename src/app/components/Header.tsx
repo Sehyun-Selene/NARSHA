@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
-import { Moon, Sun, Menu, X } from 'lucide-react';
+import { Moon, Sun, Menu, X, CircleUserRound } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { type Lang } from '../lib/useLang';
 import { useT } from '../i18n';
 import { useMemberAuth } from '../../features/auth/useMemberAuth';
 import MemberAuthModal from '../../features/auth/MemberAuthModal';
+import MemberAccountModal from '../../features/auth/MemberAccountModal';
 
 const LOGO_SRC = '/narsha-logo.png';
 
@@ -72,6 +73,26 @@ function ThemeToggle({ theme, toggleTheme, label }: { theme: string; toggleTheme
 }
 
 /**
+ * 모바일 드로어 하단의 일반회원 진입점 (GNB PRD REQ-C / C-3).
+ * 목록에 '로그인·가입' 문구로 두면 탐색 항목처럼 읽힌다 — 계정·환경 묶음인
+ * 언어·테마와 같은 줄에 프로필 아이콘으로 둔다. 문구는 aria-label 로 남기므로
+ * 스크린리더에는 그대로 전달된다.
+ */
+function MemberIconButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-[#8ecdff] dark:text-[#8ecdff] hover:opacity-80 transition-opacity p-2 rounded-full shrink-0"
+      aria-label={label}
+      title={label}
+    >
+      <CircleUserRound className="w-5 h-5" />
+    </button>
+  );
+}
+
+/**
  * 일반회원 진입점 (GNB PRD REQ-C / C-3).
  * desk 저자 로그인(`/desk/login`)과 별개다 — 초대코드 화면을 일반 학습자에게
  * 보여주면 "코드가 없으면 못 쓰는 사이트"로 읽힌다.
@@ -122,7 +143,8 @@ export default function Header() {
   const { t, lang, setLang } = useT();
   const [open, setOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | null>(null);
-  const { session, signOut } = useMemberAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const { session } = useMemberAuth();
   const location = useLocation();
 
   // 페이지 이동 시 드로어 닫기
@@ -223,25 +245,24 @@ export default function Header() {
             <NavLink to="/survey" end className={drawerLinkClass} onClick={clearReturnApp}>
               {t('nav.survey')}
             </NavLink>
-            {session ? (
-              <>
-                <NavLink to="/my/reviews" className={drawerLinkClass}>{t('member.myReviews')}</NavLink>
-                <button type="button" onClick={() => void signOut()} className={`${drawerLinkClass({ isActive: false })} w-full text-left`}>
-                  {t('member.logout')}
-                </button>
-              </>
-            ) : (
-              <>
-                <button type="button" onClick={() => setAuthMode('login')} className={`${drawerLinkClass({ isActive: false })} w-full text-left`}>
-                  {t('member.loginOrSignup')}
-                </button>
-              </>
+            {/* 계정 관련 진입점은 목록이 아니라 하단 바의 프로필 아이콘에 모았다 —
+                비로그인은 로그인·가입 모달, 로그인 상태는 계정·로그아웃 모달.
+                목록에는 탐색 항목만 남기고, '내 후기'만 예외로 둔다. */}
+            {session && (
+              <NavLink to="/my/reviews" className={drawerLinkClass}>{t('member.myReviews')}</NavLink>
             )}
           </nav>
 
           <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-[#e2e8f0] dark:border-[#232a36]">
             <LangToggle lang={lang} setLang={setLang} />
-            <ThemeToggle theme={theme} toggleTheme={toggleTheme} label={t('nav.toggleTheme')} />
+            <div className="flex items-center gap-1">
+              <ThemeToggle theme={theme} toggleTheme={toggleTheme} label={t('nav.toggleTheme')} />
+              {/* 로그인 여부와 무관하게 같은 자리에 있다 — 목적지만 달라진다 */}
+              <MemberIconButton
+                onClick={() => (session ? setAccountOpen(true) : setAuthMode('login'))}
+                label={session ? t('member.accountTitle') : t('member.loginOrSignup')}
+              />
+            </div>
           </div>
         </div>
       </div>,
@@ -253,6 +274,14 @@ export default function Header() {
         open={authMode !== null}
         mode={authMode ?? 'login'}
         onClose={() => setAuthMode(null)}
+      />
+
+      {/* 계정·로그아웃 모달. 드로어의 프로필 아이콘에서만 열린다 (모바일) */}
+      <MemberAccountModal
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        // 홈에서 로그아웃하면 경로가 그대로라 드로어 자동 닫기(useEffect)가 걸리지 않는다
+        onSignedOut={() => setOpen(false)}
       />
     </header>
   );

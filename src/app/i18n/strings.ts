@@ -549,6 +549,8 @@ export const DICT = {
   'member.signedUp':       { ko: '가입이 완료됐어요.', en: 'Your account is ready.' },
   'member.confirmEmail':   { ko: '메일로 보낸 확인 링크를 눌러 주세요.', en: 'Please click the confirmation link we emailed you.' },
   'member.myReviews':      { ko: '내 후기', en: 'My reviews' },
+  // 모바일 드로어의 프로필 아이콘에서 열리는 계정 모달. 아이콘의 aria-label 로도 쓴다
+  'member.accountTitle':   { ko: '내 계정', en: 'Your account' },
 
   // 오류 문구 — 서버·SDK 가 주는 코드값을 사람이 읽을 문장으로 바꾼다
   'member.err.EMAIL_INVALID':            { ko: '이메일 주소를 확인해 주세요.', en: 'Please check your email address.' },
