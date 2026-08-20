@@ -368,9 +368,13 @@ export default function AppDetail() {
 
           {/* Learner Type Ratings */}
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-8">
+            {/* 좁은 화면에서 제목 옆에 버튼을 세우면 남는 폭이 모자라 버튼 문구가 접힌다
+                — 375px 에서 버튼 폭이 125px 로 눌려 KO 2줄 / EN 3줄이 됐다. sm 미만에서는
+                제목 → 설명 → 버튼 순으로 쌓고 버튼을 전체 폭으로 준다. sm 이상은 기존 배치 그대로.
+                경계를 sm(640px) 으로 잡은 이유: 태블릿 세로(768px)는 지금 배치로 충분하다. */}
+            <div className="flex flex-col items-start gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
               <div>
-                <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[32px] leading-[40px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px] mb-2">
+                <h2 className="font-['Manrope:ExtraBold',sans-serif] font-extrabold text-[26px] leading-[34px] sm:text-[32px] sm:leading-[40px] text-[#1e293b] dark:text-[#dce3f3] tracking-[-0.8px] mb-2">
                   {t('app.ratingByType')}
                 </h2>
                 <p className="font-['Inter:Regular',sans-serif] font-normal text-[16px] leading-[24px] text-[#64748b] dark:text-[#bec7d2]">
@@ -380,7 +384,7 @@ export default function AppDetail() {
 
               <button
                 onClick={() => setShowAnalysisModal(true)}
-                className="inline-flex items-center gap-2 bg-[#ffffff] dark:bg-[#151c27] border-2 border-[#0ea5e9] dark:border-[#8ecdff] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[16px] px-6 py-3 rounded-[8px] hover:bg-[#e0f2fe] dark:hover:bg-[#1e293b] transition-colors shadow-[0px_4px_12px_-2px_rgba(0,0,0,0.1)]"
+                className="inline-flex w-full justify-center whitespace-nowrap sm:w-auto sm:justify-start items-center gap-2 bg-[#ffffff] dark:bg-[#151c27] border-2 border-[#0ea5e9] dark:border-[#8ecdff] text-[#0ea5e9] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[16px] px-6 py-3 rounded-[8px] hover:bg-[#e0f2fe] dark:hover:bg-[#1e293b] transition-colors shadow-[0px_4px_12px_-2px_rgba(0,0,0,0.1)]"
               >
                 <BarChart3 className="w-5 h-5" />
                 {t('app.viewChart')}
