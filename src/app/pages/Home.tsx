@@ -735,7 +735,9 @@ export default function Home() {
             </div>
           ) : (
             /* 좁은 창에서 1열이면 카드 하나가 폭을 다 차지하고, 정사각 이미지 때문에
-               세로도 그만큼 커져 화면을 넘긴다. 단계를 촘촘히 두고 로고 높이에 상한. */
+               세로도 그만큼 커져 화면을 넘긴다. 단계를 촘촘히 두고 로고 높이에 상한.
+               상한(max-h)은 aspect-ratio 를 통해 max-width 로 전이된다 — w-full 로 폭을 고정하지
+               않으면 썸네일이 220px 에서 멈추고 카드 우측에 여백이 남는다. */
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {filteredApps.map(app => {
                 const rating = computeRating(reviews, app.id);
@@ -747,7 +749,7 @@ export default function Home() {
                         <span key={level} className="bg-[#0ea5e9] dark:bg-[#1b5a7a] text-[#ffffff] dark:text-[#8ecdff] font-['Manrope:Bold',sans-serif] font-bold text-[10px] tracking-[1px] uppercase px-3 py-1 rounded-full">{tag(level)}</span>
                       ))}
                     </div>
-                    <div className="aspect-square max-h-[220px] bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
+                    <div className="w-full aspect-square max-h-[220px] bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] dark:from-[#1e293b] dark:to-[#0f172a] flex items-center justify-center p-6 sm:p-8">
                       <AppLogoMark app={app} variant="grid" />
                     </div>
                     <div className="p-4 sm:p-6">
