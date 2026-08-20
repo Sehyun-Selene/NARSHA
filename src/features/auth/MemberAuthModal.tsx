@@ -97,6 +97,8 @@ export default function MemberAuthModal({
   const [resetSent, setResetSent] = useState(false);
   /** 표시명 사용 가능 여부 — 제출 전에 알려 준다 */
   const [nameState, setNameState] = useState<'idle' | 'checking' | 'free' | 'taken'>('idle');
+  /** 직전 `open` 값 — 열리는 순간을 잡아 상태를 초기화하기 위한 기준 */
+  const [wasOpen, setWasOpen] = useState(open);
 
   // 타이핑이 멈춘 뒤에만 조회한다. 글자마다 부르면 요청이 쏟아진다.
   useEffect(() => {
@@ -113,6 +115,31 @@ export default function MemberAuthModal({
 
     return () => { active = false; clearTimeout(timer); };
   }, [displayName, mode]);
+
+  /**
+   * 닫아도 이 컴포넌트는 살아 있다 — 호출부(헤더·앱 상세·후기 화면 등 5곳)가 항상
+   * 마운트해 두고 `open` 으로만 여닫는다. 그래서 재설정 화면까지 갔다가 닫으면 다음에
+   * 열 때도 그 화면이 그대로 남아 있었다. 열리는 순간 처음 상태로 되돌린다.
+   *
+   * useEffect 가 아니라 렌더 중에 맞추는 이유: effect 는 화면을 한 번 그린 뒤에 돌기
+   * 때문에 이전 화면이 한 프레임 스쳐 보인다. 재설정 화면의 이메일 칸은 autoFocus 라
+   * 그 사이에 모바일 키보드가 올라왔다 사라진다. 렌더 중 조정은 커밋 전에 다시 렌더하므로
+   * 이전 화면이 DOM 에 올라오지 않는다.
+   */
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setMode(initialMode);
+      setEmail('');
+      setPassword('');
+      setDisplayName('');
+      setAgreed(false);
+      setBusy(false);
+      setResetEmail('');
+      setResetSent(false);
+      setNameState('idle');
+    }
+  }
 
   if (!open) return null;
 
